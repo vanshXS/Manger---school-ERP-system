@@ -1,0 +1,63 @@
+package com.vansh.manger.Manger.DTO;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.vansh.manger.Manger.Entity.EmploymentType;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TeacherResponseDTO {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String password;
+    private String phoneNumber;
+
+    private String joinDate;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<TeacherAssignmentDTO> assignedClassrooms;
+
+    private boolean active;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String profilePictureUrl;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String employeeId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String qualification;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String specialization;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer yearsOfExperience;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private EmploymentType employmentType;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private BigDecimal salary;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String fullAddress;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String city;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String state;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String pincode;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String emergencyContactName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String emergencyContactNumber;
+
+    private com.vansh.manger.Manger.Entity.Gender gender;
+
+}
