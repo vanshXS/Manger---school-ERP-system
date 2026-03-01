@@ -93,9 +93,9 @@ export default function TimeTablePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <div className="p-2 bg-indigo-600 rounded-lg shadow-sm shadow-indigo-200">
-              <Calendar className="h-6 w-6 text-white" />
-            </div>
+            <span className="p-2 rounded-xl bg-blue-100 text-blue-600">
+              <Calendar className="h-6 w-6" />
+            </span>
             Class Timetable
           </h1>
           <p className="text-slate-500 text-sm mt-1 ml-1">

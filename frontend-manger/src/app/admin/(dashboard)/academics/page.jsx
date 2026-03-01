@@ -1,38 +1,51 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Plus, Calendar, CheckCircle2, XCircle, Edit, Trash2, Lock, Unlock,
-  ArrowRight, AlertTriangle, RefreshCw, Info, Users, GraduationCap,
-  ArrowUpCircle, Eye, Loader2, ChevronDown, ChevronUp, BookOpen,
-  Lightbulb, CircleHelp, Star, Zap, Shield
-} from 'lucide-react';
-import { format } from 'date-fns';
-import apiClient from '@/lib/axios';
-import { showSuccess, showError } from '@/lib/toastHelper';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import apiClient from '@/lib/axios';
+import { showError, showSuccess } from '@/lib/toastHelper';
+import { format } from 'date-fns';
+import {
+  AlertTriangle,
+  ArrowRight,
+  ArrowUpCircle,
+  Calendar, CheckCircle2,
+  ChevronDown, ChevronUp,
+  Edit,
+  Eye,
+  Info,
+  Lightbulb,
+  Loader2,
+  Lock,
+  Plus,
+  RefreshCw,
+  Shield,
+  Star,
+  Trash2,
+  Unlock,
+  XCircle,
+  Zap
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 
 /* ─── State helpers ────────────────────────────────────────────────────────── */
-const isCur    = (y) => y.current === true || y.current === 'true';
-const isClo    = (y) => y.closed === true    || y.closed === 'true';
-const isActive        = (y) =>  isCur(y) && !isClo(y);
-const isClosedCurrent = (y) =>  isCur(y) &&  isClo(y);
-const isHistorical    = (y) => !isCur(y) &&  isClo(y);
-const isAvailable     = (y) => !isCur(y) && !isClo(y);
+const isCur = (y) => y.current === true || y.current === 'true';
+const isClo = (y) => y.closed === true || y.closed === 'true';
+const isActive = (y) => isCur(y) && !isClo(y);
+const isClosedCurrent = (y) => isCur(y) && isClo(y);
+const isHistorical = (y) => !isCur(y) && isClo(y);
+const isAvailable = (y) => !isCur(y) && !isClo(y);
 
 /* ─── Step Guide ────────────────────────────────────────────────────────────── */
 function StepGuide({ steps }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 overflow-hidden">
       <button
@@ -80,10 +93,10 @@ function StepGuide({ steps }) {
 /* ─── Notice Banner ─────────────────────────────────────────────────────────── */
 function NoticeBanner({ type = 'info', title, children }) {
   const styles = {
-    info:    { wrap: 'bg-blue-50 border-blue-200',    icon: 'bg-blue-100 text-blue-600',    title: 'text-blue-900',  body: 'text-blue-800' },
-    warning: { wrap: 'bg-amber-50 border-amber-200',  icon: 'bg-amber-100 text-amber-600',  title: 'text-amber-900', body: 'text-amber-800' },
+    info: { wrap: 'bg-blue-50 border-blue-200', icon: 'bg-blue-100 text-blue-600', title: 'text-blue-900', body: 'text-blue-800' },
+    warning: { wrap: 'bg-amber-50 border-amber-200', icon: 'bg-amber-100 text-amber-600', title: 'text-amber-900', body: 'text-amber-800' },
     success: { wrap: 'bg-emerald-50 border-emerald-200', icon: 'bg-emerald-100 text-emerald-600', title: 'text-emerald-900', body: 'text-emerald-800' },
-    danger:  { wrap: 'bg-red-50 border-red-200',      icon: 'bg-red-100 text-red-600',      title: 'text-red-900',  body: 'text-red-800' },
+    danger: { wrap: 'bg-red-50 border-red-200', icon: 'bg-red-100 text-red-600', title: 'text-red-900', body: 'text-red-800' },
   };
   const s = styles[type];
   const Icon = type === 'warning' ? AlertTriangle : type === 'danger' ? XCircle : type === 'success' ? CheckCircle2 : Info;
@@ -102,10 +115,10 @@ function NoticeBanner({ type = 'info', title, children }) {
 
 /* ─── Status Pill ────────────────────────────────────────────────────────────── */
 function StatusPill({ year }) {
-  if (isActive(year))        return <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span>;
+  if (isActive(year)) return <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span>;
   if (isClosedCurrent(year)) return <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200"><Lock className="h-3 w-3" />Closed</span>;
-  if (isHistorical(year))    return <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200"><Lock className="h-3 w-3" />Historical</span>;
-  return                            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><Unlock className="h-3 w-3" />Available</span>;
+  if (isHistorical(year)) return <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200"><Lock className="h-3 w-3" />Historical</span>;
+  return <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"><Unlock className="h-3 w-3" />Available</span>;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -113,27 +126,27 @@ function StatusPill({ year }) {
 ══════════════════════════════════════════════════════════════════════════════ */
 export default function AcademicYearPage() {
   const [academicYears, setAcademicYears] = useState([]);
-  const [classrooms, setClassrooms]       = useState([]);
-  const [isLoading, setIsLoading]         = useState(true);
-  const [isRefreshing, setIsRefreshing]   = useState(false);
+  const [classrooms, setClassrooms] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen]         = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen]             = useState(false);
-  const [isCloseDialogOpen, setIsCloseDialogOpen]           = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen]         = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPromotionConfirmOpen, setIsPromotionConfirmOpen] = useState(false);
 
-  const [formData, setFormData]       = useState({ name: '', startDate: '', endDate: '' });
+  const [formData, setFormData] = useState({ name: '', startDate: '', endDate: '' });
   const [editingYear, setEditingYear] = useState(null);
   const [deletingYear, setDeletingYear] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentYear, setCurrentYear]   = useState(null);
-  const [activeTab, setActiveTab]       = useState('years');
+  const [currentYear, setCurrentYear] = useState(null);
+  const [activeTab, setActiveTab] = useState('years');
 
   // Promotion state
-  const [promotionResult, setPromotionResult]   = useState(null);   // SchoolPromotionResultDTO
+  const [promotionResult, setPromotionResult] = useState(null);   // SchoolPromotionResultDTO
   const [promotionLoading, setPromotionLoading] = useState(false);
-  const [promotionAction, setPromotionAction]   = useState(null);   // 'preview' | 'run'
+  const [promotionAction, setPromotionAction] = useState(null);   // 'preview' | 'run'
 
   const router = useRouter();
 
@@ -256,7 +269,8 @@ export default function AcademicYearPage() {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Calendar className="h-6 w-6 text-indigo-600" /> Academic Year Manager
+              <span className="p-2 rounded-xl bg-blue-100 text-blue-600"><Calendar className="h-6 w-6" /></span>
+              Academic Year Manager
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">Manage school years and promote students</p>
           </div>
@@ -313,7 +327,7 @@ export default function AcademicYearPage() {
               <div className="mt-3 pt-3 border-t border-amber-200 flex items-start gap-2">
                 <Info className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800">
-                  This year is <strong>closed and locked</strong>. Student records cannot be modified. 
+                  This year is <strong>closed and locked</strong>. Student records cannot be modified.
                   Click <strong>"Go to Promotions"</strong> to move students to the next grade.
                 </p>
               </div>
@@ -341,10 +355,10 @@ export default function AcademicYearPage() {
           {/* ── YEARS TAB ─────────────────────────────────────────────────── */}
           <TabsContent value="years" className="mt-5 space-y-4">
             <StepGuide steps={[
-              { title: 'Create a Year',    desc: 'Start by creating a new academic year e.g. "2025–2026" with its start and end dates.', tip: 'You can create next year\'s entry before the current one ends.' },
-              { title: 'Set as Active',    desc: 'Click "Set as Active" on the year you want to use. This makes it the current school year.', tip: 'Only ONE year can be active at a time.' },
-              { title: 'Manage Records',   desc: 'All student enrollments, attendance and marks are linked to the active year.', tip: 'You can edit dates anytime while the year is not yet closed.' },
-              { title: 'Close When Done',  desc: 'At year-end, close the year to lock records. Then promote students to the next grade.', tip: 'Closing does NOT delete the year — records are preserved.' },
+              { title: 'Create a Year', desc: 'Start by creating a new academic year e.g. "2025–2026" with its start and end dates.', tip: 'You can create next year\'s entry before the current one ends.' },
+              { title: 'Set as Active', desc: 'Click "Set as Active" on the year you want to use. This makes it the current school year.', tip: 'Only ONE year can be active at a time.' },
+              { title: 'Manage Records', desc: 'All student enrollments, attendance and marks are linked to the active year.', tip: 'You can edit dates anytime while the year is not yet closed.' },
+              { title: 'Close When Done', desc: 'At year-end, close the year to lock records. Then promote students to the next grade.', tip: 'Closing does NOT delete the year — records are preserved.' },
             ]} />
 
             {/* Table card */}
@@ -470,25 +484,6 @@ export default function AcademicYearPage() {
               )}
             </div>
 
-            {/* Status legend */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <CircleHelp className="h-3.5 w-3.5" /> What do the status labels mean?
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  { color: 'bg-emerald-100 text-emerald-800 border-emerald-200', label: 'Active',     desc: 'Current school year. Records are editable. Students can be enrolled.' },
-                  { color: 'bg-amber-100 text-amber-800 border-amber-200',       label: 'Closed',     desc: 'Year locked. No new records. Ready to run student promotions.' },
-                  { color: 'bg-slate-100 text-slate-600 border-slate-200',       label: 'Historical', desc: 'Past year, read-only. Can be reopened and set as active if needed.' },
-                  { color: 'bg-blue-50 text-blue-700 border-blue-200',           label: 'Available',  desc: 'Created but not yet active. Use "Set as Active" to begin using it.' },
-                ].map(({ color, label, desc }) => (
-                  <div key={label} className="flex flex-col gap-2">
-                    <span className={`self-start text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${color}`}>{label}</span>
-                    <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </TabsContent>
 
 
@@ -496,9 +491,9 @@ export default function AcademicYearPage() {
           <TabsContent value="promotions" className="mt-5 space-y-4">
             <StepGuide steps={[
               { title: 'Close Current Year', desc: 'Go to Academic Years tab → "Close This Year". This locks all records.', tip: 'You cannot promote while the year is still active.' },
-              { title: 'Create Next Year',   desc: 'Make sure the next year (e.g. 2025-26) is already created in Academic Years tab.', tip: 'It does NOT need to be set as active — just needs to exist.' },
-              { title: 'Preview',            desc: 'Click "Preview Promotion" to see exactly what will happen to every classroom before anything changes.', tip: 'Always preview first — this affects the entire school.' },
-              { title: 'Run Promotion',      desc: 'Click "Run School Promotion" — every student in every class moves to the next grade in one click.', tip: 'Grade 12 students graduate automatically. Safe to re-run.' },
+              { title: 'Create Next Year', desc: 'Make sure the next year (e.g. 2025-26) is already created in Academic Years tab.', tip: 'It does NOT need to be set as active — just needs to exist.' },
+              { title: 'Preview', desc: 'Click "Preview Promotion" to see exactly what will happen to every classroom before anything changes.', tip: 'Always preview first — this affects the entire school.' },
+              { title: 'Run Promotion', desc: 'Click "Run School Promotion" — every student in every class moves to the next grade in one click.', tip: 'Grade 12 students graduate automatically. Safe to re-run.' },
             ]} />
 
             {/* Year not closed warning */}
@@ -557,10 +552,10 @@ export default function AcademicYearPage() {
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">What happens when you run promotion</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {[
-                      { icon: '📈', label: 'Active Students',    color: 'bg-emerald-50 border-emerald-200', desc: 'Moved to next grade in the new year with a new roll number.' },
-                      { icon: '🎓', label: 'Grade 12 Students',  color: 'bg-violet-50 border-violet-200',   desc: 'Marked Graduated. They leave the school. No new enrollment.' },
+                      { icon: '📈', label: 'Active Students', color: 'bg-emerald-50 border-emerald-200', desc: 'Moved to next grade in the new year with a new roll number.' },
+                      { icon: '🎓', label: 'Grade 12 Students', color: 'bg-violet-50 border-violet-200', desc: 'Marked Graduated. They leave the school. No new enrollment.' },
                       { icon: '🔁', label: 'Dropped Out / Suspended', color: 'bg-amber-50 border-amber-200', desc: 'Counted as detained — handled separately by admin.' },
-                      { icon: '⏭', label: 'Already Promoted',   color: 'bg-slate-50 border-slate-200',    desc: 'Skipped automatically. Safe to re-run at any time.' },
+                      { icon: '⏭', label: 'Already Promoted', color: 'bg-slate-50 border-slate-200', desc: 'Skipped automatically. Safe to re-run at any time.' },
                     ].map(({ icon, label, color, desc }) => (
                       <div key={label} className={`border rounded-xl p-4 ${color}`}>
                         <div className="text-2xl mb-2">{icon}</div>
@@ -585,11 +580,11 @@ export default function AcademicYearPage() {
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                       {[
-                        { label: 'Promoted',    value: promotionResult.totalPromoted,    color: 'text-emerald-700' },
-                        { label: 'Graduated',   value: promotionResult.totalGraduated,   color: 'text-violet-700'  },
-                        { label: 'Detained',    value: promotionResult.totalDetained,    color: 'text-amber-700'   },
-                        { label: 'Skipped',     value: promotionResult.totalSkipped,     color: 'text-slate-500'   },
-                        { label: 'Already Done',value: promotionResult.totalAlreadyDone, color: 'text-slate-400'   },
+                        { label: 'Promoted', value: promotionResult.totalPromoted, color: 'text-emerald-700' },
+                        { label: 'Graduated', value: promotionResult.totalGraduated, color: 'text-violet-700' },
+                        { label: 'Detained', value: promotionResult.totalDetained, color: 'text-amber-700' },
+                        { label: 'Skipped', value: promotionResult.totalSkipped, color: 'text-slate-500' },
+                        { label: 'Already Done', value: promotionResult.totalAlreadyDone, color: 'text-slate-400' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="bg-white border border-slate-200 rounded-xl p-3 text-center">
                           <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -626,9 +621,9 @@ export default function AcademicYearPage() {
                         <TableBody>
                           {promotionResult.classroomResults?.map((row, i) => (
                             <TableRow key={i} className={
-                              row.status === 'NO_TARGET'  ? 'bg-red-50' :
-                              row.status === 'GRADUATED'  ? 'bg-violet-50/40' :
-                              row.status === 'EMPTY'      ? 'bg-slate-50/50' : ''
+                              row.status === 'NO_TARGET' ? 'bg-red-50' :
+                                row.status === 'GRADUATED' ? 'bg-violet-50/40' :
+                                  row.status === 'EMPTY' ? 'bg-slate-50/50' : ''
                             }>
                               <TableCell className="pl-4 font-semibold text-slate-800 text-sm">{row.fromClassroom}</TableCell>
                               <TableCell className="text-sm text-slate-600">{row.toClassroom}</TableCell>
@@ -637,9 +632,9 @@ export default function AcademicYearPage() {
                               <TableCell className="text-center font-bold text-amber-700">{row.detained || '—'}</TableCell>
                               <TableCell className="text-center text-slate-500">{row.skipped || '—'}</TableCell>
                               <TableCell className="pr-4">
-                                {row.status === 'SUCCESS'   && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Done</span>}
+                                {row.status === 'SUCCESS' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Done</span>}
                                 {row.status === 'GRADUATED' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">Graduated</span>}
-                                {row.status === 'EMPTY'     && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Empty</span>}
+                                {row.status === 'EMPTY' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Empty</span>}
                                 {row.status === 'NO_TARGET' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">⚠ No Target</span>}
                               </TableCell>
                             </TableRow>

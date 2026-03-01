@@ -28,7 +28,7 @@ export default function TeachersPage() {
   const getActiveParam = (tab) => {
     if (tab === 'active') return true;
     if (tab === 'inactive') return false;
-    return null; 
+    return null;
   };
 
   const fetchTeachers = useCallback(async () => {
@@ -50,7 +50,7 @@ export default function TeachersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, currentTab, debouncedSearch]); 
+  }, [page, currentTab, debouncedSearch]);
 
   useEffect(() => {
     fetchTeachers();
@@ -114,7 +114,7 @@ export default function TeachersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2 tracking-tight">
             <span className="p-2 rounded-xl bg-blue-100 text-blue-600"><Users className="h-6 w-6" /></span>
@@ -122,25 +122,45 @@ export default function TeachersPage() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">Manage faculty members, status, and assignments</p>
         </div>
-        <Button 
+        <Button
           onClick={() => { setEditingTeacher(null); setIsDialogOpen(true); }}
-          className="bg-primary hover:bg-primary/90 shadow-sm font-semibold h-10 px-5 rounded-xl"
+          className="bg-primary hover:bg-primary/90 gap-2 h-9 text-sm shrink-0 shadow-sm"
         >
-          <UserPlus className="mr-2 h-5 w-5" />
+          <UserPlus className="h-4 w-4" />
           Add Teacher
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-sm">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      {/* Search + Filters */}
+      <div className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search teachers by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-10 text-sm border-slate-200 rounded-xl"
+            className="pl-9 h-10 text-sm border-slate-200 rounded-xl"
           />
+        </div>
+
+        {/* Status filter pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+          {[
+            { label: 'All', val: 'all' },
+            { label: 'Active', val: 'active' },
+            { label: 'Inactive', val: 'inactive' },
+          ].map(({ label, val }) => {
+            const isActive = currentTab === val;
+            return (
+              <button key={val} onClick={() => setCurrentTab(val)}
+                className={`shrink-0 h-8 px-4 rounded-xl text-xs font-semibold border transition-all duration-200 touch-manipulation ${isActive
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-primary/40 hover:text-primary hover:bg-primary/5'
+                  }`}>
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -201,7 +221,7 @@ export default function TeachersPage() {
               <h3 className="text-xl font-extrabold text-emerald-900">Account Created</h3>
               <p className="text-sm font-medium text-emerald-700 mt-1">Please securely share these credentials with the teacher.</p>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                 <div className="flex justify-between items-center text-sm">

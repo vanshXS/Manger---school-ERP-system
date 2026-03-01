@@ -108,6 +108,7 @@ export default function StudentsPage() {
   const [isDeleteOpen,            setIsDeleteOpen]            = useState(false);
   const [studentToDelete,         setStudentToDelete]         = useState(null);
   const [isDeleting,              setIsDeleting]              = useState(false);
+  const [newStudentCredentials,   setNewStudentCredentials]   = useState(null);
 
   /* URL helper */
   const updateFilters = useCallback((updates) => {
@@ -329,6 +330,8 @@ export default function StudentsPage() {
         editingStudent={editingStudent}
         setEditingStudent={setEditingStudent}
         fetchStudents={fetchStudents}
+        newStudentCredentials={newStudentCredentials}
+        setNewStudentCredentials={setNewStudentCredentials}
         classrooms={classrooms}
       />
 

@@ -145,9 +145,11 @@ export default function TeacherDialog({
           email: res.data.email,
           password: res.data.password
         });
+        toast.success('Temporary password generated! Please save it.', { id: toastId });
+      } else {
+        toast.success(isEditing ? 'Teacher updated successfully' : 'Teacher created successfully', { id: toastId });
       }
 
-      toast.success(isEditing ? 'Teacher updated successfully' : 'Teacher created successfully', { id: toastId });
       fetchTeachers();
       onOpenChange(false);
     } catch (e) {

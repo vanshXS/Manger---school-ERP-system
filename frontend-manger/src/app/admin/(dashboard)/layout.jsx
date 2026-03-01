@@ -23,7 +23,7 @@ import { showSuccess } from '@/lib/toastHelper';
 import {
   ArrowRightCircle, BookCopy, Building, CalendarClock, ChevronDown,
   GitPullRequest, GraduationCap, History, LayoutDashboard, Loader2,
-  LogOut, MoreHorizontal, Settings, Users
+  LogOut, MoreHorizontal, Settings, Users,ClipboardList
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -81,6 +81,7 @@ const Sidebar = ({ isCollapsed, school, handleLogout }) => {
           <NavLink href="/admin/subjects" icon={BookCopy} isCollapsed={isCollapsed}>Subjects</NavLink>
           <NavLink href="/admin/assignments" icon={GitPullRequest} isCollapsed={isCollapsed}>Assignments</NavLink>
           <NavLink href="/admin/timetable" icon={CalendarClock} isCollapsed={isCollapsed}>Timetable</NavLink>
+          <NavLink href="/admin/exams"  icon={ClipboardList} isCollapsed={isCollapsed}>Exams</NavLink>
           <NavLink href="/admin/academics" icon={ArrowRightCircle} isCollapsed={isCollapsed}>Academic Year</NavLink>
 
           {!isCollapsed && <p className="text-[10px] uppercase text-slate-500 font-bold mt-6 mb-2 px-3 tracking-wider">People</p>}
@@ -249,6 +250,7 @@ export default function AdminLayout({ children }) {
               <SheetNavItem href="/admin/classrooms" icon={Building} label="Classrooms" onClose={() => setIsMoreOpen(false)} />
               <SheetNavItem href="/admin/subjects" icon={BookCopy} label="Subjects" onClose={() => setIsMoreOpen(false)} />
               <SheetNavItem href="/admin/assignments" icon={GitPullRequest} label="Assignments" onClose={() => setIsMoreOpen(false)} />
+              <SheetNavItem href="/admin/exams" icon={ClipboardList} label="Exams" onClose={() => setIsMoreOpen(false)} />
               <SheetNavItem href="/admin/academics" icon={ArrowRightCircle} label="Academic Year" onClose={() => setIsMoreOpen(false)} />
 
               <p className="text-[10px] uppercase text-slate-400 font-bold px-4 mt-6 mb-2 tracking-wider">System</p>

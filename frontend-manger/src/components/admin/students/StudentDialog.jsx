@@ -173,20 +173,30 @@ export default function StudentDialog({
     if (data.hostelRequired != null) formData.append('hostelRequired', String(data.hostelRequired));
 
     const toastId = toast.loading(isEditing ? 'Updating student...' : 'Creating student...');
-
     try {
+      let res;
       if (isEditing) {
-        await apiClient.put(`/api/admin/students/${editingStudent.id}`, formData);
+        res = await apiClient.put(`/api/admin/students/${editingStudent.id}`, formData);
         const oldClassroomId = editingStudent.classroomResponseDTO?.id?.toString() || '';
         const newClassroomId = data.classroomId || '';
         if (newClassroomId && newClassroomId !== 'none' && oldClassroomId !== newClassroomId) {
           await apiClient.post(`/api/admin/students/${editingStudent.id}/assign-classroom/${newClassroomId}`);
         }
       } else {
-        await apiClient.post('/api/admin/students', formData);
+        res = await apiClient.post('/api/admin/students', formData);
       }
 
-      toast.success(isEditing ? 'Student updated!' : 'Student created!', { id: toastId });
+      if (!isEditing && res.data?.password) {
+        setNewStudentCredentials({
+          name: `${res.data.firstName} ${res.data.lastName}`,
+          email: res.data.email,
+          password: res.data.password
+        });
+        toast.success('Temporary password generated! Please save it.', { id: toastId });
+      } else {
+        toast.success(isEditing ? 'Student updated!' : 'Student created!', { id: toastId });
+      }
+
       onOpenChange(false);
       fetchStudents();
     } catch (error) {
