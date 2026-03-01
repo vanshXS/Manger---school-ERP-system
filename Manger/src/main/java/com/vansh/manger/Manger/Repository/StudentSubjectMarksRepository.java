@@ -34,4 +34,6 @@ public interface StudentSubjectMarksRepository extends JpaRepository<StudentSubj
      * Used in the Student Profile.
      */
     List<StudentSubjectMarks> findByStudentId(Long studentId);
+
+    List<StudentSubjectMarks>findByExamName(String examName);
 }

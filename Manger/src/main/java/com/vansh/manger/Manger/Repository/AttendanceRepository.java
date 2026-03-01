@@ -1,7 +1,6 @@
 package com.vansh.manger.Manger.Repository;
 
-import com.vansh.manger.Manger.Entity.Attendance;
-import com.vansh.manger.Manger.Entity.StudentSubjectMarks;
+import com.vansh.manger.Manger.Entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +10,11 @@ import java.util.List;
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
+    boolean existsByStudentAndClassroomAndLocalDate(Student student, Classroom classroom, LocalDate date);
 
-    boolean existsByStudentSubjectAndLocalDate(StudentSubjectMarks ss, LocalDate date);
+    List<Attendance> findByClassroomAndLocalDate(Classroom classroom, LocalDate date);
 
-    List<Attendance> findByStudentSubjectId(Long studentSubjectId);
+    long countByStudentAndClassroomAndAcademicYearAndPresent(Student student, Classroom classroom, AcademicYear academicYear, boolean present);
+
+    long countByClassroomAndAcademicYear(Classroom classroom, AcademicYear academicYear);
 }

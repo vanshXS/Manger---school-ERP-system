@@ -1,64 +1,63 @@
 package com.vansh.manger.Manger.Repository;
 
-import com.vansh.manger.Manger.DTO.AssignmentResponseDTO;
-import com.vansh.manger.Manger.Entity.Classroom;
-import com.vansh.manger.Manger.Entity.Subject;
-import com.vansh.manger.Manger.Entity.Teacher;
-import com.vansh.manger.Manger.Entity.TeacherAssignment;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
-import java.util.List;
-import java.util.Optional;
+import com.vansh.manger.Manger.Entity.Classroom;
+import com.vansh.manger.Manger.Entity.Subject;
+import com.vansh.manger.Manger.Entity.Teacher;
+import com.vansh.manger.Manger.Entity.TeacherAssignment;
 
 @Repository
 public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssignment, Long> {
 
-    Optional<TeacherAssignment>findByTeacherAndClassroom(Teacher teacher, Classroom classroom);
-    boolean existsByTeacherAndClassroom(Teacher teacher, Classroom classroom);
+        Optional<TeacherAssignment> findByTeacherAndClassroom(Teacher teacher, Classroom classroom);
 
-    boolean existsByClassroomAndSubject(Classroom classroom, Subject subject);
-    boolean existsByTeacher(Teacher teacher);
+        boolean existsByTeacherAndClassroom(Teacher teacher, Classroom classroom);
 
-    void deleteByTeacher(Teacher teacher);
+        boolean existsByClassroomAndSubject(Classroom classroom, Subject subject);
 
-   Optional<TeacherAssignment>findByClassroomAndSubject(Classroom classroom, Subject subject);
+        boolean existsByTeacher(Teacher teacher);
 
-   @Query(
-           value = "SELECT s.* FROM subjects s " +
-                   "JOIN teacher_assignment ta ON s.id = ta.subject_id " +
-                    "WHERE ta.classroom_id = :classroom_id",
-           nativeQuery = true
-   )
-   List<Subject> findSubjectByClassroom(@Param("classroom_id") Long classroom_id);
+        void deleteByTeacher(Teacher teacher);
 
-    List<TeacherAssignment> findByTeacher(Teacher teacher);
+        Optional<TeacherAssignment> findByClassroomAndSubject(Classroom classroom, Subject subject);
 
-    Optional<TeacherAssignment> findByTeacher_IdAndSubject_IdAndClassroom_Id(Long teacherId, Long subjectId, Long classroomId);
+        @Query(value = "SELECT s.* FROM subjects s " +
+                        "JOIN teacher_assignments ta ON s.id = ta.subject_id " +
+                        "WHERE ta.classroom_id = :classroom_id", nativeQuery = true)
+        List<Subject> findSubjectByClassroom(@Param("classroom_id") Long classroom_id);
 
-    long countByTeacher(Teacher teacher);
+        List<TeacherAssignment> findByTeacher(Teacher teacher);
 
-    boolean existsBySubject(Subject subject);
+        Optional<TeacherAssignment> findByTeacher_IdAndSubject_IdAndClassroom_Id(Long teacherId, Long subjectId,
+                        Long classroomId);
 
-    long countBySubject(Subject subject);
+        long countByTeacher(Teacher teacher);
 
-    boolean existsByClassroomAndSubjectAndTeacherIsNull(Classroom classroom, Subject subject);
+        boolean existsBySubject(Subject subject);
 
-    List<TeacherAssignment> findByClassroomId(Long classroomId);
-    List<TeacherAssignment> findBySubject(Subject subject);
+        long countBySubject(Subject subject);
 
-    boolean existsByClassroom(Classroom classroom);
+        boolean existsByClassroomAndSubjectAndTeacherIsNull(Classroom classroom, Subject subject);
 
-    List<TeacherAssignment> findByClassroomAndMandatoryTrue(Classroom classroom);
+        List<TeacherAssignment> findByClassroomId(Long classroomId);
 
-    boolean existsByClassroomAndSubjectAndMandatoryTrue(
-            Classroom classroom,
-            Subject subject
-    );
+        List<TeacherAssignment> findBySubject(Subject subject);
 
-    @Query("SELECT s FROM Subject s JOIN TeacherAssignment ta ON s.id = ta.subject.id WHERE ta.classroom = :classroom AND ta.mandatory = true")
-    List<Subject> findMandatorySubjectsByClassroom(@Param("classroom") Classroom classroom);
+        boolean existsByClassroom(Classroom classroom);
+
+        List<TeacherAssignment> findByClassroomAndMandatoryTrue(Classroom classroom);
+
+        boolean existsByClassroomAndSubjectAndMandatoryTrue(
+                        Classroom classroom,
+                        Subject subject);
+
+        @Query("SELECT s FROM Subject s JOIN TeacherAssignment ta ON s.id = ta.subject.id WHERE ta.classroom = :classroom AND ta.mandatory = true")
+        List<Subject> findMandatorySubjectsByClassroom(@Param("classroom") Classroom classroom);
 }

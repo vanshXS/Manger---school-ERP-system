@@ -29,7 +29,6 @@ import com.vansh.manger.Manger.Entity.TeacherAssignment;
 import com.vansh.manger.Manger.Entity.User;
 import com.vansh.manger.Manger.Repository.AcademicYearRepository;
 import com.vansh.manger.Manger.Repository.ClassroomRespository;
-import com.vansh.manger.Manger.Repository.ClassroomSubjectRepository;
 import com.vansh.manger.Manger.Repository.EnrollmentRepository;
 import com.vansh.manger.Manger.Repository.StudentRepository;
 import com.vansh.manger.Manger.Repository.StudentSubjectEnrollmentRepository;
@@ -68,7 +67,6 @@ public class AdminStudentService {
         private final RandomPasswordGenerator randomPasswordGenerator = new RandomPasswordGenerator();
 
         private static final String UPLOAD_DIR = System.getProperty("user.home") + "/manger/uploads/students/";
-        private final ClassroomSubjectRepository classroomSubjectRepository;
         private final TeacherAssignmentRepository teacherAssignmentRepository;
 
         /**
@@ -129,7 +127,6 @@ public class AdminStudentService {
                                 .password(encodedPassword)
                                 .phoneNumber(studentRequestDTO.getPhoneNumber())
                                 .profilePictureUrl(imageUrl)
-
                                 .fatherName(studentRequestDTO.getFatherName())
                                 .motherName(studentRequestDTO.getMotherName())
                                 .guardianName(studentRequestDTO.getGuardianName())

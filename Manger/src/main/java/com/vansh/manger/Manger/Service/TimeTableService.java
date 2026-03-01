@@ -65,6 +65,10 @@ public class TimeTableService {
 
         }
 
+        if(requestDTO.getStartTime().isAfter(requestDTO.getEndTime())) {
+            throw new RuntimeException("Start time cannot be after end time.");
+        }
+
         TimeTable timeTable = TimeTable.builder()
                 .teacherAssignment(teacherAssignment)
                 .day(day)
@@ -107,6 +111,10 @@ public class TimeTableService {
             throw new RuntimeException("Classroom is already booked at this time. ");
         }
 
+        if(update.getStartTime().isAfter(update.getEndTime())) {
+            throw new RuntimeException("Start time cannot be after end time.");
+        }
+
         existedTimeTable.setTeacherAssignment(teacherAssignment);
         existedTimeTable.setStartTime(update.getStartTime());
         existedTimeTable.setEndTime(update.getEndTime());
@@ -137,6 +145,7 @@ public class TimeTableService {
         School school = adminSchoolConfig.requireCurrentSchool();
         Teacher teacher = teacherRespository.findByIdAndSchool_Id(teacherId, school.getId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found or does not belong to your school."));
+            
         return timeTableRepository.findByTeacherAssignment_Teacher_Id(teacher.getId())
                 .stream()
                 .map(this::mapToResponse)

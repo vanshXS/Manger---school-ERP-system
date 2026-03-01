@@ -39,6 +39,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> , 
 
     boolean existsByClassroom(Classroom classroom);
     boolean existsByAcademicYearAndStudent(AcademicYear academicYear, Student student);
+    boolean existsByStudentAndClassroomAndAcademicYear(Student student, Classroom classroom,AcademicYear academicYear);
 
     List<Enrollment> findByClassroomId(Long classroomId);
 

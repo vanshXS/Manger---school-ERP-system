@@ -24,11 +24,7 @@ public class Classroom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Changed from int to GradeLevel enum.
-     * Stored as STRING in DB — covers Nursery, LKG, UKG, Grade 1–12.
-     * Use gradeLevel.next() in promotion logic instead of gradeLevel + 1.
-     */
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "grade_level")
     private GradeLevel gradeLevel;
@@ -56,11 +52,7 @@ public class Classroom {
     @JsonIgnore
     private School school;
 
-    /**
-     * Optional explicit promotion target.
-     * If set, promotion uses this instead of auto-matching by section.
-     * Mirrors how real schools work — principal decides which section students move to.
-     */
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotes_to_classroom_id")
     @JsonIgnore

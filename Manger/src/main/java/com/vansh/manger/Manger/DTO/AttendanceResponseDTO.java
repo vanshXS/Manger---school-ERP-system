@@ -1,15 +1,19 @@
 package com.vansh.manger.Manger.DTO;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDate;
+import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
+@AllArgsConstructor @NoArgsConstructor
+@Builder
 public class AttendanceResponseDTO {
-    private Long attendanceId;
-    private Long studentSubjectId;
-    private LocalDate date;
-    private boolean present;
+
+        private Long id;
+        private String studentName;
+        private String teacherName;
+        private String classroomName;
+        private Boolean present;
+
 }

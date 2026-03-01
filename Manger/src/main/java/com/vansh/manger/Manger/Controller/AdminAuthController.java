@@ -184,7 +184,7 @@ public class AdminAuthController {
             }
 
             // Verify token expiration
-            RefreshToken verifiedToken = refreshTokenService.verifyExpiration(tokenOpt.get());
+             RefreshToken verifiedToken = refreshTokenService.verifyExpiration(tokenOpt.get());
             User user = verifiedToken.getUser();
 
             // Verify user is still an admin

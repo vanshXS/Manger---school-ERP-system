@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import com.vansh.manger.Manger.DTO.ClassroomRequestDTO;
 import com.vansh.manger.Manger.DTO.ClassroomResponseDTO;
 import com.vansh.manger.Manger.Entity.ClassroomStatus;
-import com.vansh.manger.Manger.Entity.Subject;
 import com.vansh.manger.Manger.Service.AdminClassroomService;
 import com.vansh.manger.Manger.util.AdminSchoolConfig;
 
@@ -95,11 +94,8 @@ public class AdminClassroomController {
     }
 
     // --- GET SUBJECTS ---
-    // Ensure path variable name consistency (using classroomId here is fine as it's
-    // descriptive)
     @GetMapping("/{classroomId}/subjects")
-    public ResponseEntity<List<Subject>> getSubjectsByClassroom(@PathVariable Long classroomId) {
-        // Exceptions like EntityNotFoundException handled globally
+    public ResponseEntity<?> getSubjectsByClassroom(@PathVariable Long classroomId) {
         return ResponseEntity.ok(adminClassroomService.getSubjectsByClassroom(classroomId));
     }
 }

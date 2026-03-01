@@ -3,8 +3,14 @@ package com.vansh.manger.Manger.Controller;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 import com.vansh.manger.Manger.Config.JwtUtil;
+import com.vansh.manger.Manger.DTO.*;
+import com.vansh.manger.Manger.Entity.RefreshToken;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -21,11 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.vansh.manger.Manger.DTO.AdminLoginDTO;
-import com.vansh.manger.Manger.DTO.AuthResponseDTO;
-import com.vansh.manger.Manger.DTO.ForgetPasswordRequest;
-import com.vansh.manger.Manger.DTO.ForgetResetPassword;
-import com.vansh.manger.Manger.DTO.ResetPasswordRequest;
 import com.vansh.manger.Manger.Entity.Roles;
 import com.vansh.manger.Manger.Entity.User;
 import com.vansh.manger.Manger.Repository.UserRepo;
@@ -90,6 +91,92 @@ public class TeacherAuthController {
         }catch(BadCredentialsException e){
             return ResponseEntity.status(403).build();
         }
+    }
+
+
+   @PostMapping(value = "/refresh", produces = "application/json")
+   public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+
+        String refreshToken = null;
+        if(request.getCookies() != null) {
+            for(Cookie cookie : request.getCookies()) {
+                if("refreshToken".equals(cookie.getName())){
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if(refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid refresh token"));
+        }
+
+        Optional<RefreshToken> tokenOpt = refreshTokenService.findByToken(refreshToken);
+
+        if(tokenOpt.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        RefreshToken verifiedToken = refreshTokenService.verifyExpiration(tokenOpt.get());
+
+        User user = verifiedToken.getUser();
+
+        if(!user.getRoles().equals(Roles.TEACHER)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Invalid refresh token"));
+        }
+
+        String accessToken =  jwtUtil.generateAccessToken(user, user.getRoles().name());
+
+       TokenRefreshResponseDTO tokenRefreshResponseDTO = new TokenRefreshResponseDTO(accessToken, user.getRoles().name());
+
+       ResponseCookie responseCookie = ResponseCookie.from("refreshToken", refreshToken)
+               .httpOnly(true)
+               .secure(false)
+               .maxAge(7*24*60*60)
+               .path("/")
+               .sameSite("Strict")
+               .build();
+
+       response.addHeader("Set-Cookie", responseCookie.toString());
+
+       return ResponseEntity.status(HttpStatus.CREATED).body(tokenRefreshResponseDTO);
+
+   }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+
+        String refreshToken = null;
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
+
+        }
+        //delete the refreshToken from the database
+
+        refreshTokenService.deleteByToken(refreshToken);
+
+        //Clear the refresh token from the cookie
+        ResponseCookie clearCookie = ResponseCookie.from("refreshToken")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader("Set-Cookie", clearCookie.toString());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("refreshToken", refreshToken));
+
     }
 
 

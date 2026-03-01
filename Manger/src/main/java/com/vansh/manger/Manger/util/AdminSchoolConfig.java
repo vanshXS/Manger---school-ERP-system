@@ -57,18 +57,5 @@ public class AdminSchoolConfig {
                 .orElse(null);
     }
 
-    /**
-     * Gets the current authenticated user
-     */
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("No authenticated user found");
-        }
-
-        String email = authentication.getName();
-        return userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
 }

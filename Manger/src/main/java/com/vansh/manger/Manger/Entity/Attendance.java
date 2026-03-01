@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "attendances" ,
-uniqueConstraints = @UniqueConstraint(columnNames = {"student_subject_id, date"}))
+@Table(name = "attendance",
+ uniqueConstraints = {@UniqueConstraint(columnNames = {"student_id","date","classroom_id"})}
+)
 @Data
 @AllArgsConstructor @NoArgsConstructor
 @Builder
@@ -21,8 +22,17 @@ public class Attendance {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_subject_id", nullable = false)
-    private StudentSubjectMarks studentSubject;
+   private Student student;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+   private Teacher markedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+   private Classroom classroom;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private AcademicYear academicYear;
 
     @Column(name = "date", nullable = false)
     private LocalDate localDate;
