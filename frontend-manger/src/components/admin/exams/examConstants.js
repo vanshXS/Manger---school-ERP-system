@@ -16,12 +16,12 @@ export const STATUS_CONFIG = {
 };
 
 export const NEXT_STATUS = {
-    Upcoming: { label: 'Start Exam', next: 'ONGOING', color: 'text-emerald-700' },
+    Upcoming: null,
     Ongoing: { label: 'Complete Exam', next: 'COMPLETED', color: 'text-slate-700' },
     Completed: null,
 };
 
 export const EMPTY_FORM = {
     name: '', examType: '', startDate: '', endDate: '',
-    totalMarks: '100', description: '', academicYearId: '',
+    totalMarks: '100', description: '',
 };

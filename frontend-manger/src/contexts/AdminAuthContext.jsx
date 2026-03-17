@@ -1,0 +1,126 @@
+'use client';
+
+import apiClient from '@/lib/axios';
+import { createContext, useContext, useEffect, useState } from 'react';
+
+const AdminAuthContext = createContext(undefined);
+
+export function AuthProvider({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState(null);
+
+  const baseURL = apiClient.defaults.baseURL || 'http://localhost:8080';
+
+  // ================= INIT AUTH =================
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const success = await refreshAccessToken();
+
+        if (!success) {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  // ================= REFRESH TOKEN =================
+  const refreshAccessToken = async () => {
+    try {
+      const response = await fetch(`${baseURL}/api/auth/admin/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      const newAccessToken = data.accessToken;
+
+      if (!newAccessToken) {
+        return false;
+      }
+
+      setAccessToken(newAccessToken);
+      setIsAuthenticated(true);
+
+      if (typeof window !== 'undefined') {
+        window.__AUTH_ACCESS_TOKEN__ = newAccessToken;
+      }
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // ================= LOGIN =================
+  const login = (newAccessToken) => {
+    setAccessToken(newAccessToken);
+    setIsAuthenticated(true);
+
+    if (typeof window !== 'undefined') {
+      window.__AUTH_ACCESS_TOKEN__ = newAccessToken;
+    }
+  };
+
+  // ================= LOGOUT =================
+  const logout = async (shouldRedirect = true) => {
+    setAccessToken(null);
+    setIsAuthenticated(false);
+
+    if (typeof window !== 'undefined') {
+      delete window.__AUTH_ACCESS_TOKEN__;
+    }
+
+    try {
+      await fetch(`${baseURL}/api/auth/admin/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      // Logout request failed, but local state is already cleared
+    }
+
+    if (shouldRedirect && typeof window !== 'undefined') {
+      window.location.href = '/admin/auth/admin-login';
+    }
+  };
+
+  const getAccessToken = () => accessToken;
+
+  return (
+    <AdminAuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+        getAccessToken,
+        refreshAccessToken,
+      }}
+    >
+      {children}
+    </AdminAuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AdminAuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}

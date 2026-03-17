@@ -14,17 +14,18 @@ import {
   Power,
   UserX
 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function StudentProfilePage() {
   const { studentId } = useParams();
-  const router = useRouter();
 
   const [student, setStudent] = useState(null);
   const [classrooms, setClassrooms] = useState([]);
+  const [examResults, setExamResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingResults, setLoadingResults] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -48,7 +49,6 @@ export default function StudentProfilePage() {
     }
   };
 
-  // ✅ Multi-Status Logic
   const handleStatusChange = async (newStatus) => {
     if (!student) return;
     setUpdatingStatus(true);
@@ -57,7 +57,7 @@ export default function StudentProfilePage() {
         params: { status: newStatus }
       });
       toast.success(`Student marked as ${newStatus}`);
-      fetchStudent(); 
+      fetchStudent();
     } catch {
       toast.error('Status update failed');
     } finally {
@@ -68,7 +68,20 @@ export default function StudentProfilePage() {
   useEffect(() => {
     fetchStudent();
     fetchClassrooms();
+    fetchExamResults();
   }, [studentId]);
+
+  const fetchExamResults = async () => {
+    try {
+      setLoadingResults(true);
+      const res = await apiClient.get(`/api/admin/students/${studentId}/exam-results?size=100`);
+      setExamResults(res.data.content || []);
+    } catch {
+      toast.error('Failed to load exam results');
+    } finally {
+      setLoadingResults(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -88,8 +101,6 @@ export default function StudentProfilePage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-6 min-h-screen">
-
-      {/* === TOP ACTIONS (Aligned Right) === */}
       <div className="flex justify-end mb-2 relative z-50">
         <div className="flex items-center gap-3">
           <Button
@@ -100,14 +111,13 @@ export default function StudentProfilePage() {
             <Edit className="h-4 w-4 mr-2 text-slate-400" /> Edit Profile
           </Button>
 
-          {/* CUSTOM HOVER STATUS MENU */}
           <div className="relative group">
             <button
               disabled={updatingStatus}
               className={`flex items-center gap-2.5 h-10 px-4 rounded-lg shadow-sm text-white font-medium transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
                 ${student.status === 'ACTIVE' ? 'bg-emerald-600 hover:bg-emerald-700' :
                   student.status === 'SUSPENDED' ? 'bg-amber-500 hover:bg-amber-600' :
-                  'bg-slate-600 hover:bg-slate-700'
+                    'bg-slate-600 hover:bg-slate-700'
                 }`}
             >
               {student.status === 'ACTIVE' && <Power className="h-4 w-4" />}
@@ -117,13 +127,12 @@ export default function StudentProfilePage() {
               <ChevronRight className="h-4 w-4 opacity-70 group-hover:rotate-90 transition-transform duration-300 ml-1" />
             </button>
 
-            {/* Sliding Hover Panel */}
             <div className="absolute right-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-[-10px] group-hover:translate-y-0 transition-all duration-300 ease-out origin-top-right">
               <div className="bg-white rounded-xl shadow-xl border border-slate-100 p-1.5 overflow-hidden ring-1 ring-black/5">
                 <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
                   Change Status
                 </div>
-                
+
                 <button
                   onClick={() => handleStatusChange('ACTIVE')}
                   disabled={student.status === 'ACTIVE'}
@@ -131,7 +140,7 @@ export default function StudentProfilePage() {
                 >
                   <CheckCircle2 className="mr-3 h-4 w-4 text-emerald-500" /> Activate
                 </button>
-                
+
                 <button
                   onClick={() => handleStatusChange('SUSPENDED')}
                   disabled={student.status === 'SUSPENDED'}
@@ -139,7 +148,7 @@ export default function StudentProfilePage() {
                 >
                   <PauseCircle className="mr-3 h-4 w-4 text-amber-500" /> Suspend
                 </button>
-                
+
                 <button
                   onClick={() => handleStatusChange('INACTIVE')}
                   disabled={student.status === 'INACTIVE'}
@@ -153,15 +162,16 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
-      {/* === MAIN PROFILE CONTENT === */}
       <div className="relative z-10">
         <StudentProfile
           student={student}
+          examResults={examResults}
+          showAttendance={false}
+          loadingResults={loadingResults}
           onEdit={() => setIsEditOpen(true)}
         />
       </div>
 
-      {/* === EDIT DIALOG === */}
       <StudentDialog
         open={isEditOpen}
         onOpenChange={setIsEditOpen}

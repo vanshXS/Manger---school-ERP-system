@@ -171,6 +171,11 @@ export default function ExamTable({
                                                                 <CheckCircle2 className="h-3.5 w-3.5 mr-2" /> Record Locked
                                                             </DropdownMenuItem>
                                                         )}
+                                                        {exam.status === 'Upcoming' && (
+                                                            <DropdownMenuItem disabled className="text-xs text-slate-400">
+                                                                <Clock className="h-3.5 w-3.5 mr-2" /> Starts automatically on exam date
+                                                            </DropdownMenuItem>
+                                                        )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>

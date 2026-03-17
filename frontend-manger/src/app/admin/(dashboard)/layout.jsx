@@ -17,7 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AdminAuthContext';
 import apiClient from '@/lib/axios';
 import { showSuccess } from '@/lib/toastHelper';
 import {

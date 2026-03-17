@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { School, LogIn, Mail, KeyRound, AlertTriangle } from 'lucide-react';
 import apiClient from '@/lib/axios';
 import { showSuccess, showError } from '@/lib/toastHelper';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AdminAuthContext';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');

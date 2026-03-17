@@ -96,7 +96,7 @@ apiClient.interceptors.response.use(
       originalRequest.url.includes('/api/auth/admin/reset-password');
 
     if (
-      error.response?.status === 401 &&
+      (error.response?.status === 401 || error.response?.status === 403) &&
       !originalRequest._retry &&
       !isPublicAuthRoute
     ) {

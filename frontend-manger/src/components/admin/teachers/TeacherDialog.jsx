@@ -52,6 +52,13 @@ const EMPTY = {
   gender: '',
 };
 
+/* ── TAB FIELD MAP ── */
+const TAB_FIELDS = {
+  personal:     ['firstName', 'lastName', 'email', 'phoneNumber'],
+  professional: ['qualification', 'specialization', 'yearsOfExperience', 'salary'],
+  address:      ['fullAddress', 'city', 'state', 'pincode', 'emergencyContactName', 'emergencyContactNumber'],
+};
+
 /* ═════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═════════════════════════════════════════════════════════ */
@@ -110,6 +117,14 @@ export default function TeacherDialog({
     }
   }, [open, editingTeacher, reset]);
 
+  /* ── AUTO-NAVIGATE TO FIRST TAB WITH ERRORS ── */
+  const onInvalid = (formErrors) => {
+    const firstTabWithError = ['personal', 'professional', 'address'].find((tab) =>
+      TAB_FIELDS[tab].some((field) => formErrors[field])
+    );
+    if (firstTabWithError) setActiveTab(firstTabWithError);
+  };
+
   /* ── SUBMIT ── */
   const onSubmit = async (data) => {
     const isEditing = !!editingTeacher;
@@ -159,20 +174,17 @@ export default function TeacherDialog({
 
   /* ── TAB CONFIG ── */
   const tabs = [
-    { id: 'personal', label: 'Personal', icon: User },
+    { id: 'personal',     label: 'Personal',     icon: User },
     { id: 'professional', label: 'Professional', icon: Briefcase },
-    { id: 'address', label: 'Address', icon: MapPin },
+    { id: 'address',      label: 'Address',      icon: MapPin },
   ];
 
-  const personalFields = ['firstName', 'lastName', 'email', 'phoneNumber'];
-  const professionalFields = ['qualification', 'specialization', 'yearsOfExperience', 'salary'];
-  const addressFields = ['fullAddress', 'city', 'state', 'pincode', 'emergencyContactName', 'emergencyContactNumber'];
-
-  const tabErrors = {
-    personal: personalFields.some((f) => errors[f]),
-    professional: professionalFields.some((f) => errors[f]),
-    address: addressFields.some((f) => errors[f]),
-  };
+  const tabErrors = Object.fromEntries(
+    Object.entries(TAB_FIELDS).map(([tab, fields]) => [
+      tab,
+      fields.some((f) => errors[f]),
+    ])
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -191,7 +203,7 @@ export default function TeacherDialog({
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex flex-col flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 overflow-hidden">
 
             {/* TABS */}
@@ -216,24 +228,46 @@ export default function TeacherDialog({
             {/* SCROLLABLE CONTENT */}
             <div className="flex-1 overflow-y-auto p-6">
               <TabsContent value="personal" className="mt-0 focus-visible:ring-0">
-                <PersonalTab register={register} errors={errors} watch={watch} setValue={setValue} />
+                <PersonalTab
+                  register={register}
+                  errors={errors}
+                  watch={watch}
+                  setValue={setValue}
+                />
               </TabsContent>
 
               <TabsContent value="professional" className="mt-0 focus-visible:ring-0">
-                <ProfessionalTab register={register} watch={watch} setValue={setValue} />
+                <ProfessionalTab
+                  register={register}
+                  errors={errors}
+                  watch={watch}
+                  setValue={setValue}
+                />
               </TabsContent>
 
               <TabsContent value="address" className="mt-0 focus-visible:ring-0">
-                <AddressTab register={register} errors={errors} />
+                <AddressTab
+                  register={register}
+                  errors={errors}
+                />
               </TabsContent>
             </div>
 
             {/* FOOTER */}
             <DialogFooter className="border-t border-slate-200 bg-white px-6 py-4 rounded-b-xl shrink-0">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="mr-2 text-slate-600 hover:text-slate-900">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                className="mr-2 text-slate-600 hover:text-slate-900"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm min-w-[120px]">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm min-w-[120px]"
+              >
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isSubmitting ? 'Saving...' : (editingTeacher ? 'Save Changes' : 'Create Teacher')}
               </Button>

@@ -32,7 +32,7 @@ function FormField({ label, id, error, children }) {
    - Create: supports multi-classroom selection (bulk)
    - Edit:   single classroom (locked)
 ═══════════════════════════════════════════════════════════════════ */
-export default function ExamFormDialog({ open, onClose, onSaved, editingExam, classrooms, academicYears }) {
+export default function ExamFormDialog({ open, onClose, onSaved, editingExam, classrooms }) {
     const [form, setForm] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -56,7 +56,6 @@ export default function ExamFormDialog({ open, onClose, onSaved, editingExam, cl
                 endDate: editingExam.endDate || '',
                 totalMarks: String(editingExam.totalMarks ?? 100),
                 description: editingExam.description || '',
-                academicYearId: String(editingExam.academicYearId || ''),
             });
             setEditClassroomId(String(editingExam.classroomId || ''));
             setSelectedClassroomIds([]);
@@ -173,7 +172,6 @@ export default function ExamFormDialog({ open, onClose, onSaved, editingExam, cl
             e.endDate = 'End date must be after start date.';
         if (!form.totalMarks || isNaN(Number(form.totalMarks)) || Number(form.totalMarks) < 1)
             e.totalMarks = 'Total marks must be at least 1.';
-        if (!form.academicYearId) e.academicYearId = 'Please select an academic year.';
 
         if (editingExam) {
             if (!editClassroomId) e.classroomId = 'Please select a classroom.';
@@ -210,7 +208,6 @@ export default function ExamFormDialog({ open, onClose, onSaved, editingExam, cl
                     totalMarks: Number(form.totalMarks),
                     description: form.description.trim() || null,
                     classroomId: Number(editClassroomId),
-                    academicYearId: Number(form.academicYearId),
                 });
                 toast.success('Exam updated!', { id: tid });
             } else if (selectedClassroomIds.length === 1) {
@@ -225,7 +222,6 @@ export default function ExamFormDialog({ open, onClose, onSaved, editingExam, cl
                     totalMarks: Number(form.totalMarks),
                     description: form.description.trim() || null,
                     classroomId: cid,
-                    academicYearId: Number(form.academicYearId),
                     subjectIds: entry?.selected || [],
                 });
                 toast.success('Exam created!', { id: tid });
@@ -239,7 +235,6 @@ export default function ExamFormDialog({ open, onClose, onSaved, editingExam, cl
                     totalMarks: Number(form.totalMarks),
                     description: form.description.trim() || null,
                     classroomIds: selectedClassroomIds,
-                    academicYearId: Number(form.academicYearId),
                 });
                 toast.success(`${selectedClassroomIds.length} exams created!`, { id: tid });
             }
@@ -311,24 +306,6 @@ export default function ExamFormDialog({ open, onClose, onSaved, editingExam, cl
                                 className={errors.endDate ? 'border-red-400' : ''} />
                         </FormField>
                     </div>
-
-                    {/* Academic Year */}
-                    <FormField label="Academic Year" id="academicYearId" error={errors.academicYearId}>
-                        <Select
-                            value={form.academicYearId || 'none'}
-                            onValueChange={v => setForm(p => ({ ...p, academicYearId: v === 'none' ? '' : v }))}
-                            disabled={!!editingExam}
-                        >
-                            <SelectTrigger className={errors.academicYearId ? 'border-red-400' : ''}>
-                                <SelectValue placeholder="Select academic year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {academicYears.map(y => (
-                                    <SelectItem key={y.id} value={String(y.id)}>{y.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </FormField>
 
                     {/* ── CLASSROOMS ─────────────────────────────────────────────── */}
                     {editingExam ? (
