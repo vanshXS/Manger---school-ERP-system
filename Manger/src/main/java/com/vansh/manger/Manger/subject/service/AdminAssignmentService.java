@@ -14,6 +14,10 @@ import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.subject.repository.SubjectRepository;
 import com.vansh.manger.Manger.classroom.repository.ClassroomRespository;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
+import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
+import com.vansh.manger.Manger.academicyear.repository.AcademicYearRepository;
 import com.vansh.manger.Manger.student.repository.EnrollmentRepository;
 import com.vansh.manger.Manger.student.repository.StudentSubjectEnrollmentRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,13 +39,15 @@ public class AdminAssignmentService {
     private final ActivityLogService activityLogService;
     private final EnrollmentRepository enrollmentRepository;
     private final StudentSubjectEnrollmentRepository studentSubjectEnrollmentRepository;
+    private final AdminSchoolConfig adminSchoolConfig;
+    private final AcademicYearRepository academicYearRepository;
 
     //Fetch all assignments for a specific class
        @Transactional
     public List<AssignmentResponseDTO> getAssignmentsByClassroom(Long classroomId) {
-            if(!classroomRespository.existsById(classroomId)) {
-                throw new IllegalStateException("Classroom not found with this id: " + classroomId);
-            }
+            School school = adminSchoolConfig.requireCurrentSchool();
+            classroomRespository.findByIdAndSchool(classroomId, school)
+                    .orElseThrow(() -> new IllegalStateException("Classroom not found with this id: " + classroomId));
             return teacherAssignmentRepository.findByClassroomId(classroomId)
                     .stream()
                     .map(this::mapToResponse)
@@ -50,11 +56,12 @@ public class AdminAssignmentService {
 
     @Transactional
     public AssignmentResponseDTO createAssignment(AssignmentRequestDTO requestDTO) {
+        School school = adminSchoolConfig.requireCurrentSchool();
 
-        Classroom classroom = classroomRespository.findById(requestDTO.getClassroomId())
+        Classroom classroom = classroomRespository.findByIdAndSchool(requestDTO.getClassroomId(), school)
                 .orElseThrow(() -> new RuntimeException("Classroom not found with this ID: " + requestDTO.getClassroomId()));
 
-        Subject subject = subjectRepository.findById(requestDTO.getSubjectId())
+        Subject subject = subjectRepository.findByIdAndSchool_Id(requestDTO.getSubjectId(), school.getId())
                 .orElseThrow(() -> new RuntimeException("Subject not found with this ID: " + requestDTO.getSubjectId()));
 
            if(teacherAssignmentRepository.existsByClassroomAndSubject(classroom, subject)) {
@@ -70,8 +77,9 @@ public class AdminAssignmentService {
          TeacherAssignment savedAssignment = teacherAssignmentRepository.save(assignment);
 
          if(savedAssignment.isMandatory()) {
-
-             List<Enrollment> enrollments = enrollmentRepository.findByClassroomId(classroom.getId());
+             AcademicYear currentYear = academicYearRepository.findByIsCurrentAndSchool_Id(true, school.getId())
+                     .orElseThrow(() -> new IllegalStateException("No active academic year found."));
+             List<Enrollment> enrollments = enrollmentRepository.findByClassroomAndAcademicYear(classroom, currentYear);
 
              for(Enrollment e : enrollments) {
                  Student student = e.getStudent();
@@ -97,11 +105,15 @@ public class AdminAssignmentService {
 
     @Transactional
     public AssignmentResponseDTO updateAssignmentTeacher(Long assignmentId, Long teacherId) {
+           School school = adminSchoolConfig.requireCurrentSchool();
 
            TeacherAssignment assignment = teacherAssignmentRepository.findById(assignmentId)
                    .orElseThrow(() -> new EntityNotFoundException("Assignment not found with this ID: " + assignmentId));
+           if (!assignment.getClassroom().getSchool().getId().equals(school.getId())) {
+               throw new EntityNotFoundException("Assignment not found with this ID: " + assignmentId);
+           }
 
-           Teacher teacher = teacherRespository.findById(teacherId)
+           Teacher teacher = teacherRespository.findByIdAndSchool_Id(teacherId, school.getId())
                    .orElseThrow(() -> new EntityNotFoundException("Teacher not found with this ID: " + teacherId));
 
            if(!teacher.isActive()) {
@@ -118,9 +130,12 @@ public class AdminAssignmentService {
     public AssignmentResponseDTO unassignedTeacher(Long assignmentId) {
 
            TeacherAssignment existedAssignment = teacherAssignmentRepository.findById(assignmentId).orElseThrow(() -> new EntityNotFoundException("assingment not found with this id."));
+           if (!existedAssignment.getClassroom().getSchool().getId().equals(adminSchoolConfig.requireCurrentSchool().getId())) {
+               throw new EntityNotFoundException("assingment not found with this id.");
+           }
 
            existedAssignment.setTeacher(null);
-           return mapToResponse(existedAssignment);
+           return mapToResponse(teacherAssignmentRepository.save(existedAssignment));
     }
 
     @Transactional
@@ -128,6 +143,9 @@ public class AdminAssignmentService {
 
         TeacherAssignment teacherAssignment = teacherAssignmentRepository.findById(assignmentId)
                         .orElseThrow(() -> new IllegalStateException("Assignment not found with this ID: " + assignmentId));
+        if (!teacherAssignment.getClassroom().getSchool().getId().equals(adminSchoolConfig.requireCurrentSchool().getId())) {
+            throw new IllegalStateException("Assignment not found with this ID: " + assignmentId);
+        }
         teacherAssignmentRepository.deleteById(assignmentId);
         activityLogService.logActivity("Delete the assignment with this ID: " + assignmentId, "Assignment Management");
     }
@@ -160,12 +178,18 @@ public class AdminAssignmentService {
     public AssignmentResponseDTO updateMandatorySubject(Long assignmentId, boolean mandatory) {
                TeacherAssignment assignment = teacherAssignmentRepository.findById(assignmentId)
                        .orElseThrow(() -> new EntityNotFoundException("Assignment not found with this id"));
+               School school = adminSchoolConfig.requireCurrentSchool();
+               if (!assignment.getClassroom().getSchool().getId().equals(school.getId())) {
+                   throw new EntityNotFoundException("Assignment not found with this id");
+               }
 
                assignment.setMandatory(mandatory);
                teacherAssignmentRepository.save(assignment);
 
                if(mandatory) {
-                   List<Enrollment> enrollments = enrollmentRepository.findByClassroomId(assignment.getClassroom().getId());
+                   AcademicYear currentYear = academicYearRepository.findByIsCurrentAndSchool_Id(true, school.getId())
+                           .orElseThrow(() -> new IllegalStateException("No active academic year found."));
+                   List<Enrollment> enrollments = enrollmentRepository.findByClassroomAndAcademicYear(assignment.getClassroom(), currentYear);
 
                    for(Enrollment e : enrollments) {
                        if(!studentSubjectEnrollmentRepository.existsByStudentAndSubject(
@@ -193,7 +217,8 @@ public class AdminAssignmentService {
 
     @Transactional
     public List<AssignmentResponseDTO> getAllAssignments() {
-           return teacherAssignmentRepository.findAll()
+           Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
+           return teacherAssignmentRepository.findAllBySchoolIdWithDetails(schoolId)
                    .stream()
                    .map(this :: mapToResponse)
                    .toList();

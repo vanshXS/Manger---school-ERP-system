@@ -26,7 +26,7 @@ public class JwtUtil {
     private String SECRET_KEY;
 
     // ✅ 24 hours validity for access token
-    private final long accessTokenValidity = TimeUnit.MINUTES.toMillis(15);// 24 hrs
+    private final long accessTokenValidity = TimeUnit.MINUTES.toMillis(15);// 15 minutes
     // ✅ 7 days validity for refresh token
     private final long refreshTokenValidity = TimeUnit.DAYS.toMillis(7); // 7 days
 

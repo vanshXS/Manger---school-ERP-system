@@ -20,13 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.vansh.manger.Manger.teacher.entity.Teacher;
 
-/**
- * Request DTO for create/update Teacher.
- * Required: firstName, lastName, email. All other fields are optional with
- * validation when provided.
- */
 @Data
 @Builder
 @NoArgsConstructor

@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.vansh.manger.Manger.auth.dto.AdminLoginDTO;
-import com.vansh.manger.Manger.auth.dto.AdminRegisterationDTO;
+import com.vansh.manger.Manger.auth.dto.AuthLoginDTO;
+import com.vansh.manger.Manger.auth.dto.AuthRegisterationDTO;
 import com.vansh.manger.Manger.common.dto.AuthResponseDTO;
 import com.vansh.manger.Manger.auth.dto.ForgetPasswordRequest;
 import com.vansh.manger.Manger.auth.dto.ForgetResetPassword;
@@ -57,19 +57,19 @@ public class AdminAuthController {
     private final JavaMailSender mailsender;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid AdminRegisterationDTO adminRegisterationDTO) {
+    public ResponseEntity<?> register(@RequestBody @Valid AuthRegisterationDTO authRegisterationDTO) {
         try {
-            if (userRepo.findByEmail(adminRegisterationDTO.getEmail()).isPresent()) {
+            if (userRepo.findByEmailAndRoles(authRegisterationDTO.getEmail(), Roles.ADMIN).isPresent()) {
                 return ResponseEntity
                         .status(HttpStatus.CONFLICT)
                         .body(Map.of("error", "Admin with this email already exists"));
             }
 
             User admin = User.builder()
-                    .email(adminRegisterationDTO.getEmail())
+                    .email(authRegisterationDTO.getEmail())
                     .roles(Roles.ADMIN)
-                    .password(passwordEncoder.encode(adminRegisterationDTO.getPassword()))
-                    .fullName(adminRegisterationDTO.getFullName())
+                    .password(passwordEncoder.encode(authRegisterationDTO.getPassword()))
+                    .fullName(authRegisterationDTO.getFullName())
                     .build();
 
             userRepo.save(admin);
@@ -78,7 +78,7 @@ public class AdminAuthController {
                     .status(HttpStatus.CREATED)
                     .body(Map.of("message", "Admin registered successfully"));
         } catch (Exception e) {
-            log.error("Registration failed for email: {}", adminRegisterationDTO.getEmail(), e);
+            log.error("Registration failed for email: {}", authRegisterationDTO.getEmail(), e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Registration failed. Please try again."));
@@ -86,13 +86,13 @@ public class AdminAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid AdminLoginDTO adminLoginDTO, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody @Valid AuthLoginDTO authLoginDTO, HttpServletResponse response) {
         try {
             // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            adminLoginDTO.getEmail(),
-                            adminLoginDTO.getPassword()));
+                            authLoginDTO.getEmail() + ":ROLE_W_SPLIT:" + Roles.ADMIN.name(),
+                            authLoginDTO.getPassword()));
 
             User user = (User) authentication.getPrincipal();
 
@@ -136,17 +136,17 @@ public class AdminAuthController {
             return ResponseEntity.ok(responseDTO);
 
         } catch (BadCredentialsException e) {
-            log.warn("Failed login attempt for email: {}", adminLoginDTO.getEmail());
+            log.warn("Failed login attempt for email: {}", authLoginDTO.getEmail());
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid email or password"));
         } catch (AuthenticationException e) {
-            log.error("Authentication error for email: {}", adminLoginDTO.getEmail(), e);
+            log.error("Authentication error for email: {}", authLoginDTO.getEmail(), e);
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Authentication failed"));
         } catch (Exception e) {
-            log.error("Login failed for user: {}", adminLoginDTO.getEmail(), e);
+            log.error("Login failed for user: {}", authLoginDTO.getEmail(), e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Login failed. Please try again."));
@@ -285,7 +285,7 @@ public class AdminAuthController {
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody @Valid ResetPasswordRequest request) {
         try {
-            User user = userRepo.findByEmail(request.getEmail())
+            User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.ADMIN)
                     .orElseThrow(() -> new RuntimeException("User with this email not registered"));
 
             if (!Roles.ADMIN.equals(user.getRoles())) {
@@ -330,7 +330,7 @@ public class AdminAuthController {
     @PostMapping("/forget-password")
     public ResponseEntity<?> forgetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
         try {
-            User user = userRepo.findByEmail(request.getEmail())
+            User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.ADMIN)
                     .orElseThrow(() -> new RuntimeException("This email is not registered"));
 
             if (!Roles.ADMIN.equals(user.getRoles())) {
@@ -387,7 +387,7 @@ public class AdminAuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody @Valid ForgetResetPassword request) {
         try {
-            User user = userRepo.findByEmail(request.getEmail())
+            User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.ADMIN)
                     .orElseThrow(() -> new RuntimeException("Admin not found"));
 
             if (!Roles.ADMIN.equals(user.getRoles())) {

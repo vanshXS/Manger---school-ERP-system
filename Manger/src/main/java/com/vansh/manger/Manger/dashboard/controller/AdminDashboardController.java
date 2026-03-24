@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,14 +39,17 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/recent-activity")
-    public ResponseEntity<List<ActivityLogDTO>> getRecentActivity() {
-        return ResponseEntity.ok(adminDashboardService.getRecentActivity());
+    public ResponseEntity<List<ActivityLogDTO>> getRecentActivity(
+            @RequestParam(required = false) String role) {
+        return ResponseEntity.ok(adminDashboardService.getRecentActivity(role));
     }
 
     @GetMapping("/activity-logs")
-    public ResponseEntity<?> getAllActivityLog(Pageable pageable) {
+    public ResponseEntity<?> getAllActivityLog(
+            @RequestParam(required = false) String role,
+            Pageable pageable) {
 
-        return ResponseEntity.ok(adminDashboardService.getAllActivityLogs(pageable));
+        return ResponseEntity.ok(adminDashboardService.getAllActivityLogs(role, pageable));
     }
 
 }

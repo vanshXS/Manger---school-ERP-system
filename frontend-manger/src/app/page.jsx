@@ -581,8 +581,8 @@ export default function LandingPage() {
                     <p className="mt-3 text-slate-500 leading-relaxed">
                       The brain behind Manger — Vansh designed and developed the entire backend
                       architecture including REST APIs, secure authentication, database modeling,
-                      and business logic. The frontend interface was crafted with the help of AI
-                      to deliver a modern and polished user experience.
+                      and business logic. The frontend interface was designed to deliver
+                      a modern and polished user experience.
                     </p>
                   </div>
                 </div>
@@ -668,7 +668,7 @@ export default function LandingPage() {
               <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">About</h4>
               <p className="text-sm leading-relaxed">
                 Built by <span className="text-white font-medium">Vansh Salgotra</span>. Backend
-                architecture & APIs developed from scratch. Frontend UI crafted with AI assistance
+                architecture & APIs developed from scratch. Frontend UI crafted
                 for a modern experience.
               </p>
             </div>

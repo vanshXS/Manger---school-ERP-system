@@ -2,6 +2,7 @@ package com.vansh.manger.Manger.timetable.repository;
 
 import com.vansh.manger.Manger.timetable.entity.TimeTable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
@@ -18,8 +19,11 @@ public interface TimeTableRepository extends JpaRepository<TimeTable, Long> {
     /** Get one timetable by id only if it belongs to the school (secure update/delete). */
     Optional<TimeTable> findByIdAndSchool_Id(Long id, Long schoolId);
 
+    @EntityGraph(attributePaths = {"teacherAssignment", "teacherAssignment.subject", "teacherAssignment.teacher", "teacherAssignment.classroom"})
     List<TimeTable> findByTeacherAssignment_Teacher_Id(Long teacherId);
+    @EntityGraph(attributePaths = {"teacherAssignment", "teacherAssignment.subject", "teacherAssignment.teacher", "teacherAssignment.classroom"})
     List<TimeTable> findByTeacherAssignment_Teacher_IdAndDay(Long teacherId, DayOfWeek day);
+    @EntityGraph(attributePaths = {"teacherAssignment", "teacherAssignment.subject", "teacherAssignment.teacher", "teacherAssignment.classroom"})
     List<TimeTable> findByTeacherAssignment_Classroom_Id(Long classroomId);
 
     boolean existsByTeacherAssignment_Teacher_IdAndDayAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Long teacherId, DayOfWeek day, LocalTime endTime, LocalTime startTime);

@@ -2,6 +2,8 @@ package com.vansh.manger.Manger.student.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,8 +93,12 @@ public class AdminStudentService {
         public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) throws IOException {
 
                 School school = getCurrentSchool.requireCurrentSchool();
+                if (studentRequestDTO.getClassroomId() == null) {
+                        throw new IllegalArgumentException("Classroom is required for student admission");
+                }
+                String normalizedEmail = normalizeRequiredEmail(studentRequestDTO.getEmail());
                 // 1. Validation
-                if (studentRepository.existsByEmailAndSchool_Id(studentRequestDTO.getEmail(), school.getId())) {
+                if (studentRepository.existsByEmailAndSchool_Id(normalizedEmail, school.getId())) {
                         throw new IllegalArgumentException("Student with this email already registered");
                 }
 
@@ -112,7 +118,7 @@ public class AdminStudentService {
                         // Use email prefix for a unique filename, as rollNo isn't generated yet
                         pictureUrl = fileStorageService.saveStudentProfile(
                                         studentRequestDTO.getProfilePicture(),
-                                        studentRequestDTO.getEmail().split("@")[0]);
+                                        normalizedEmail.split("@")[0]);
 
                 }
 
@@ -122,7 +128,7 @@ public class AdminStudentService {
 
                 User studentUser = User.builder()
                                 .fullName(studentRequestDTO.getFirstName() + " " + studentRequestDTO.getLastName())
-                                .email(studentRequestDTO.getEmail())
+                                .email(normalizedEmail)
                                 .password(encodedPassword)
                                 .roles(Roles.STUDENT)
                                 .school(school)
@@ -137,7 +143,7 @@ public class AdminStudentService {
                                 .lastName(studentRequestDTO.getLastName())
                                 .user(studentUser)
                                 .school(school)
-                                .email(studentRequestDTO.getEmail())
+                                .email(normalizedEmail)
                                 .password(encodedPassword)
                                 .phoneNumber(studentRequestDTO.getPhoneNumber())
                                 .admissionNo(studentRequestDTO.getAdmissionNo())
@@ -222,14 +228,42 @@ public class AdminStudentService {
                 Specification<Student> spec = StudentSpecification.build(status, search, school.getId());
 
                 Page<Student> page = studentRepository.findAll(spec, pageable);
+                List<Student> students = page.getContent();
+                if (students.isEmpty()) {
+                        return new PageImpl<>(List.of(), pageable, page.getTotalElements());
+                }
 
-                return page.map(student -> {
-                        Enrollment currentEnrollment = enrollmentRepository
-                                        .findByStudentAndSchool_IdAndAcademicYearIsCurrent(student,
-                                                        getCurrentSchool.requireCurrentSchool().getId(), true)
-                                        .orElse(null);
-                        return mapToStudentResponseDTO(student, currentEnrollment);
-                });
+                List<Enrollment> currentEnrollments = enrollmentRepository
+                                .findByStudentInAndSchool_IdAndAcademicYearIsCurrent(students, school.getId(), true);
+                Map<Long, Enrollment> enrollmentByStudentId = currentEnrollments.stream()
+                                .collect(Collectors.toMap(enrollment -> enrollment.getStudent().getId(), enrollment -> enrollment));
+
+                Map<Long, List<StudentSubjectEnrollment>> subjectEnrollmentsByStudentId = studentSubjectEnrollmentRepository
+                                .findByStudentIdIn(students.stream().map(Student::getId).toList())
+                                .stream()
+                                .collect(Collectors.groupingBy(enrollment -> enrollment.getStudent().getId()));
+
+                List<Long> classroomIds = currentEnrollments.stream()
+                                .map(enrollment -> enrollment.getClassroom().getId())
+                                .distinct()
+                                .toList();
+                Map<Long, Long> currentStudentCounts = classroomIds.isEmpty()
+                                ? Collections.emptyMap()
+                                : enrollmentRepository.countCurrentEnrollmentsByClassroomIds(school.getId(), classroomIds)
+                                                .stream()
+                                                .collect(Collectors.toMap(
+                                                                row -> (Long) row[0],
+                                                                row -> (Long) row[1]));
+
+                List<StudentResponseDTO> content = students.stream()
+                                .map(student -> mapToStudentResponseDTO(
+                                                student,
+                                                enrollmentByStudentId.get(student.getId()),
+                                                subjectEnrollmentsByStudentId.getOrDefault(student.getId(), List.of()),
+                                                currentStudentCounts))
+                                .toList();
+
+                return new PageImpl<>(content, pageable, page.getTotalElements());
         }
 
         /**
@@ -249,7 +283,18 @@ public class AdminStudentService {
                                                 getCurrentSchool.requireCurrentSchool().getId(), true)
                                 .orElse(null);
 
-                return mapToStudentResponseDTO(student, currentEnrollment);
+                List<StudentSubjectEnrollment> subjectEnrollments = studentSubjectEnrollmentRepository
+                                .findByStudentId(student.getId());
+                Map<Long, Long> currentStudentCounts = currentEnrollment == null
+                                ? Collections.emptyMap()
+                                : Map.of(
+                                                currentEnrollment.getClassroom().getId(),
+                                                enrollmentRepository.countByClassroomAndAcademicYearAndSchool_Id(
+                                                                currentEnrollment.getClassroom(),
+                                                                currentEnrollment.getAcademicYear(),
+                                                                school.getId()));
+
+                return mapToStudentResponseDTO(student, currentEnrollment, subjectEnrollments, currentStudentCounts);
         }
 
         @Transactional
@@ -328,17 +373,18 @@ public class AdminStudentService {
                 Student existedStudent = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException(
                                                 "Student not present in the existed school."));
+                String normalizedEmail = normalizeRequiredEmail(studentRequestDTO.getEmail());
 
                 String newPic = existedStudent.getProfilePictureUrl();
                 if (studentRequestDTO.getProfilePicture() != null && !studentRequestDTO.getProfilePicture().isEmpty()) {
                         // Use a unique, stable identifier like email prefix or ID
                         newPic = fileStorageService.saveStudentProfile(
-                                        studentRequestDTO.getProfilePicture(), existedStudent.getEmail().split("@")[0]);
+                                        studentRequestDTO.getProfilePicture(), normalizedEmail.split("@")[0]);
 
                 }
 
                 // Check for email conflict
-                studentRepository.findByEmailAndSchool_Id(studentRequestDTO.getEmail(), school.getId()).ifPresent(s -> {
+                studentRepository.findByEmailAndSchool_Id(normalizedEmail, school.getId()).ifPresent(s -> {
                         if (!s.getId().equals(studentId))
                                 throw new IllegalArgumentException("This email is already taken.");
                 });
@@ -348,7 +394,7 @@ public class AdminStudentService {
 
                 existedStudent.setFirstName(studentRequestDTO.getFirstName());
                 existedStudent.setLastName(studentRequestDTO.getLastName());
-                existedStudent.setEmail(studentRequestDTO.getEmail());
+                existedStudent.setEmail(normalizedEmail);
                 existedStudent.setPhoneNumber(studentRequestDTO.getPhoneNumber());
                 existedStudent.setAdmissionNo(studentRequestDTO.getAdmissionNo());
                 existedStudent.setProfilePictureUrl(newPic);
@@ -382,7 +428,7 @@ public class AdminStudentService {
                 // keep associated User entity in sync
                 existedStudent.getUser()
                                 .setFullName(studentRequestDTO.getFirstName() + " " + existedStudent.getLastName());
-                existedStudent.getUser().setEmail(studentRequestDTO.getEmail());
+                existedStudent.getUser().setEmail(normalizedEmail);
 
                 Student updated = studentRepository.save(existedStudent);
 
@@ -432,6 +478,9 @@ public class AdminStudentService {
                 if (existingEnrollmentOpt.isPresent()) {
                         // --- This is a TRANSFER ---
                         Enrollment existingEnrollment = existingEnrollmentOpt.get();
+                        if (existingEnrollment.getClassroom().getId().equals(newClassroom.getId())) {
+                                throw new IllegalArgumentException("Student is already assigned to this classroom.");
+                        }
                         String oldClassroomName = existingEnrollment.getClassroom().getSection();
 
                         // new rollNO
@@ -473,7 +522,8 @@ public class AdminStudentService {
          */
         @Transactional
         public void removeStudentFromClassroom(Long studentId) {
-                Student student = studentRepository.findById(studentId)
+                School school = getCurrentSchool.requireCurrentSchool();
+                Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
 
                 Enrollment currentEnrollment = enrollmentRepository
@@ -584,11 +634,12 @@ public class AdminStudentService {
          */
         @Transactional
         public StudentResponseDTO assignStudentToSubject(Long studentId, Long subjectId) {
+                School school = getCurrentSchool.requireCurrentSchool();
 
-                Student student = studentRepository.findById(studentId)
+                Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
 
-                Subject subject = subjectRepository.findById(subjectId)
+                Subject subject = subjectRepository.findByIdAndSchool_Id(subjectId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Subject not found"));
 
                 Enrollment enrollment = enrollmentRepository
@@ -639,16 +690,17 @@ public class AdminStudentService {
          */
         @Transactional
         public void removeSubjectFromStudent(Long studentId, Long subjectId) {
+                School school = getCurrentSchool.requireCurrentSchool();
 
-                Student student = studentRepository.findById(studentId)
+                Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
 
-                Subject subject = subjectRepository.findById(subjectId)
+                Subject subject = subjectRepository.findByIdAndSchool_Id(subjectId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Subject not found"));
 
                 // 1️⃣ Get student's active classroom via enrollment
                 Enrollment enrollment = enrollmentRepository
-                                .findActiveByStudent(student)
+                                .findByStudentAndSchool_IdAndAcademicYearIsCurrent(student, school.getId(), true)
                                 .orElseThrow(() -> new IllegalStateException("Student is not enrolled in any class"));
 
                 Classroom classroom = enrollment.getClassroom();
@@ -685,9 +737,8 @@ public class AdminStudentService {
         public List<SubjectResponseDTO> getSubjectsOfStudent(Long studentId) {
                 School school = getCurrentSchool.requireCurrentSchool();
 
-                if (!studentRepository.existsById(studentId)) {
-                        throw new EntityNotFoundException("Student not found");
-                }
+                studentRepository.findByIdAndSchool_Id(studentId, school.getId())
+                                .orElseThrow(() -> new EntityNotFoundException("Student not found"));
 
                 List<StudentSubjectEnrollment> enrollments = studentSubjectEnrollmentRepository
                                 .findByStudentId(studentId);
@@ -716,7 +767,8 @@ public class AdminStudentService {
          */
         @Transactional
         public void sendPasswordReset(Long studentId) {
-                Student student = studentRepository.findById(studentId)
+                School school = getCurrentSchool.requireCurrentSchool();
+                Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
 
                 User user = student.getUser();
@@ -778,6 +830,26 @@ public class AdminStudentService {
         }
 
         private StudentResponseDTO mapToStudentResponseDTO(Student student, Enrollment currentEnrollment) {
+                List<StudentSubjectEnrollment> subjectEnrollments = studentSubjectEnrollmentRepository
+                                .findByStudentId(student.getId());
+                Map<Long, Long> currentStudentCounts = new HashMap<>();
+                if (currentEnrollment != null) {
+                        currentStudentCounts.put(
+                                        currentEnrollment.getClassroom().getId(),
+                                        enrollmentRepository.countByClassroomAndAcademicYearAndSchool_Id(
+                                                        currentEnrollment.getClassroom(),
+                                                        currentEnrollment.getAcademicYear(),
+                                                        getCurrentSchool.requireCurrentSchool().getId()));
+                }
+
+                return mapToStudentResponseDTO(student, currentEnrollment, subjectEnrollments, currentStudentCounts);
+        }
+
+        private StudentResponseDTO mapToStudentResponseDTO(
+                        Student student,
+                        Enrollment currentEnrollment,
+                        List<StudentSubjectEnrollment> subjectEnrollments,
+                        Map<Long, Long> currentStudentCounts) {
 
                 StudentResponseDTO.StudentResponseDTOBuilder dtoBuilder = StudentResponseDTO.builder()
                                 .id(student.getId())
@@ -826,25 +898,17 @@ public class AdminStudentService {
                                                         .status(currentEnrollment.getClassroom().getStatus())
                                                         .gradeLevel(currentEnrollment.getClassroom().getGradeLevel())
                                                         .studentCount(
-                                                                        enrollmentRepository
-                                                                                        .countByClassroomAndAcademicYearAndSchool_Id(
-                                                                                                        currentEnrollment
-                                                                                                                        .getClassroom(),
-                                                                                                        currentEnrollment
-                                                                                                                        .getAcademicYear(),
-                                                                                                        getCurrentSchool.requireCurrentSchool()
-                                                                                                                        .getId()))
+                                                                        currentStudentCounts.getOrDefault(
+                                                                                        currentEnrollment.getClassroom()
+                                                                                                        .getId(),
+                                                                                        0L))
                                                         .build());
                 } else {
                         // optional fallback
                         dtoBuilder.status(StudentStatus.INACTIVE); // or null if you prefer
                 }
 
-                // subjects (this part is fine)
-                List<StudentSubjectEnrollment> enrollments = studentSubjectEnrollmentRepository
-                                .findByStudentId(student.getId());
-
-                List<SubjectResponseDTO> subjectsDTOs = enrollments.stream()
+                List<SubjectResponseDTO> subjectsDTOs = subjectEnrollments.stream()
                                 .map(ss -> SubjectResponseDTO.builder()
                                                 .id(ss.getSubject().getId())
                                                 .name(ss.getSubject().getName())
@@ -924,6 +988,13 @@ public class AdminStudentService {
                                 studentSubjectEnrollmentRepository.save(enrollment);
                         }
                 }
+        }
+
+        private String normalizeRequiredEmail(String email) {
+                if (email == null || email.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Student email is required.");
+                }
+                return email.trim().toLowerCase();
         }
 
 }

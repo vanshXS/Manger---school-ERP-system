@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.vansh.manger.Manger.student.entity.Enrollment;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -45,10 +46,12 @@ public interface StudentSubjectMarksRepository extends JpaRepository<StudentSubj
 
     // New methods added for analytics and improved data integrity
     List<StudentSubjectMarks> findByExam_Id(Long examId);
+    @EntityGraph(attributePaths = {"subject", "exam", "enrollment"})
     List<StudentSubjectMarks> findByEnrollmentIn(List<Enrollment> enrollments);
 
     Optional<StudentSubjectMarks> findByEnrollment_StudentAndSubjectAndExam_Id(Student student, Subject subject, Long examId);
 
+    @EntityGraph(attributePaths = {"subject", "exam", "enrollment"})
     List<StudentSubjectMarks> findByEnrollment_StudentAndExam_Id(Student student, Long examId);
 
     List<StudentSubjectMarks> findBySubjectAndExam_Id(Subject subject, Long examId);

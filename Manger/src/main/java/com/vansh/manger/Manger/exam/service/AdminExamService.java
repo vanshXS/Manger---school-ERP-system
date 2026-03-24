@@ -1,7 +1,9 @@
 package com.vansh.manger.Manger.exam.service;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -93,13 +95,13 @@ public class AdminExamService {
                         return dto;
                 }
 
-                List<StudentSubjectMarks> allMarks = marksRepository.findByExamName(exam.getName());
-                List<Long> enrolledStudentIds = enrollments.stream()
-                                .map(e -> e.getStudent().getId())
+                List<StudentSubjectMarks> allMarks = marksRepository.findByExam_Id(exam.getId());
+                List<Long> enrolledEnrollmentIds = enrollments.stream()
+                                .map(Enrollment::getId)
                                 .toList();
 
                 List<StudentSubjectMarks> relevantMarks = allMarks.stream()
-                                .filter(m -> enrolledStudentIds.contains(m.getEnrollment().getStudent().getId()))
+                                .filter(m -> enrolledEnrollmentIds.contains(m.getEnrollment().getId()))
                                 .toList();
 
                 long studentsWithMarks = relevantMarks.stream()
@@ -134,6 +136,7 @@ public class AdminExamService {
         @Transactional
         public ExamResponseDTO createExam(ExamRequestDTO dto) {
                 School school = adminSchoolConfig.requireCurrentSchool();
+                validateExamRequest(dto);
 
                 if (dto.getStartDate().isAfter(dto.getEndDate())) {
                         throw new IllegalArgumentException("Start date must be before end date.");
@@ -141,6 +144,10 @@ public class AdminExamService {
 
                 AcademicYear academicYear = academicYearRepository.findByIsCurrentAndSchool_Id(true, school.getId())
                                 .orElseThrow(() -> new EntityNotFoundException("Academic year not found in this school."));
+
+                if (dto.getAcademicYearId() != null && !academicYear.getId().equals(dto.getAcademicYearId())) {
+                        throw new IllegalArgumentException("Exams can only be created in the current academic year.");
+                }
 
                 if (dto.getStartDate().isBefore(academicYear.getStartDate())
                                 || dto.getEndDate().isAfter(academicYear.getEndDate())) {
@@ -152,7 +159,7 @@ public class AdminExamService {
                                 .orElseThrow(() -> new EntityNotFoundException("Classroom not found in this school."));
 
                 if (examRepository.existsByNameIgnoreCaseAndClassroom_IdAndAcademicYear_IdAndSchool_Id(
-                                dto.getName().trim(), dto.getClassroomId(), dto.getAcademicYearId(), school.getId())) {
+                                dto.getName().trim(), dto.getClassroomId(), academicYear.getId(), school.getId())) {
                         throw new IllegalArgumentException(
                                         "An exam named \"" + dto.getName()
                                                         + "\" already exists for this classroom and academic year.");
@@ -180,11 +187,27 @@ public class AdminExamService {
                 List<TeacherAssignment> subjectsToAdd;
 
                 if (selectedIds != null && !selectedIds.isEmpty()) {
+                        Set<Long> assignedSubjectIds = assignments.stream()
+                                        .map(ta -> ta.getSubject().getId())
+                                        .collect(Collectors.toSet());
+                        List<Long> invalidSubjectIds = selectedIds.stream()
+                                        .filter(subjectId -> !assignedSubjectIds.contains(subjectId))
+                                        .distinct()
+                                        .toList();
+                        if (!invalidSubjectIds.isEmpty()) {
+                                throw new IllegalArgumentException(
+                                                "Selected subjects are not assigned to this classroom: " + invalidSubjectIds);
+                        }
+
                         subjectsToAdd = assignments.stream()
                                         .filter(ta -> selectedIds.contains(ta.getSubject().getId()))
                                         .toList();
                 } else {
                         subjectsToAdd = assignments;
+                }
+
+                if (subjectsToAdd.isEmpty()) {
+                        throw new IllegalStateException("No subjects are assigned to this classroom for the exam.");
                 }
 
                 for (TeacherAssignment ta : subjectsToAdd) {
@@ -211,6 +234,9 @@ public class AdminExamService {
                 List<Long> classroomIds = dto.getClassroomIds();
                 if (classroomIds == null || classroomIds.isEmpty()) {
                         throw new IllegalArgumentException("At least one classroom must be selected.");
+                }
+                if (new HashSet<>(classroomIds).size() != classroomIds.size()) {
+                        throw new IllegalArgumentException("Duplicate classrooms are not allowed in bulk exam creation.");
                 }
 
                 List<ExamResponseDTO> results = new java.util.ArrayList<>();
@@ -251,6 +277,7 @@ public class AdminExamService {
         @Transactional
         public ExamResponseDTO updateExam(Long examId, ExamRequestDTO dto) {
                 Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
+                validateExamRequest(dto);
 
                 Exam exam = examRepository.findByIdAndSchool_Id(examId, schoolId)
                                 .orElseThrow(() -> new EntityNotFoundException("Exam not found with ID: " + examId));
@@ -262,6 +289,12 @@ public class AdminExamService {
 
                 if (dto.getStartDate().isAfter(dto.getEndDate())) {
                         throw new IllegalArgumentException("Start date must be before end date.");
+                }
+
+                AcademicYear academicYear = exam.getAcademicYear();
+                if (dto.getStartDate().isBefore(academicYear.getStartDate())
+                                || dto.getEndDate().isAfter(academicYear.getEndDate())) {
+                        throw new IllegalArgumentException("Exam date must be within academic year.");
                 }
 
                 String newName = dto.getName().trim();
@@ -365,5 +398,20 @@ public class AdminExamService {
                         return ExamStatus.COMPLETED;
                 }
                 return ExamStatus.ONGOING;
+        }
+
+        private void validateExamRequest(ExamRequestDTO dto) {
+                if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Exam name is required.");
+                }
+                if (dto.getClassroomId() == null) {
+                        throw new IllegalArgumentException("Classroom is required.");
+                }
+                if (dto.getStartDate() == null || dto.getEndDate() == null) {
+                        throw new IllegalArgumentException("Exam start date and end date are required.");
+                }
+                if (dto.getTotalMarks() == null || dto.getTotalMarks() <= 0) {
+                        throw new IllegalArgumentException("Total marks must be greater than zero.");
+                }
         }
 }

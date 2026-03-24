@@ -3,6 +3,7 @@ package com.vansh.manger.Manger.teacher.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.time.DayOfWeek;
@@ -102,14 +103,14 @@ class TeacherDashboardServiceTest {
                 .mandatory(true)
                 .build();
 
-        when(schoolConfig.requireCurrentSchool()).thenReturn(school);
-        when(schoolConfig.getTeacher()).thenReturn(teacher);
-        when(teacherRepository.findByEmailAndSchool_Id(teacher.getEmail(), school.getId())).thenReturn(Optional.of(teacher));
-        when(academicYearRepository.findByIsCurrentAndSchool_Id(true, school.getId())).thenReturn(Optional.of(currentYear));
-        when(teacherAssignmentRepository.findByTeacherAndAcademicYear(teacher, currentYear)).thenReturn(List.of(assignment));
-        when(attendanceService.getAssignedClassrooms()).thenReturn(List.of(
+        lenient().when(schoolConfig.requireCurrentSchool()).thenReturn(school);
+        lenient().when(schoolConfig.getTeacher()).thenReturn(teacher);
+        lenient().when(teacherRepository.findByEmailAndSchool_Id(teacher.getEmail(), school.getId())).thenReturn(Optional.of(teacher));
+        lenient().when(academicYearRepository.findByIsCurrentAndSchool_Id(true, school.getId())).thenReturn(Optional.of(currentYear));
+        lenient().when(teacherAssignmentRepository.findByTeacher(teacher)).thenReturn(List.of(assignment));
+        lenient().when(attendanceService.getAssignedClassrooms()).thenReturn(List.of(
                 ClassroomAttendanceStatsDTO.builder().id(classroom.getId()).activeStudents(2).build()));
-        when(activityLogService.getActivityLogsByRole(eq("TEACHER"), eq(school.getId()), any(Pageable.class)))
+        lenient().when(activityLogService.getActivityLogsByRole(eq("TEACHER"), eq(school.getId()), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(
                         ActivityLogDTO.builder().description("Marked attendance").category("Attendance").build())));
     }
@@ -119,7 +120,7 @@ class TeacherDashboardServiceTest {
         Enrollment weakEnrollment = buildEnrollment(101L, "Rahul", "Sharma", "12");
         Enrollment healthyEnrollment = buildEnrollment(102L, "Anaya", "Singh", "14");
 
-        when(enrollmentRepository.findByClassroomAndAcademicYear(classroom, currentYear))
+        when(enrollmentRepository.findByClassroomInAndAcademicYear(List.of(classroom), currentYear))
                 .thenReturn(List.of(weakEnrollment, healthyEnrollment));
 
         when(attendanceRepository.findByEnrollmentInAndAcademicYear(List.of(weakEnrollment, healthyEnrollment), currentYear))
@@ -136,7 +137,7 @@ class TeacherDashboardServiceTest {
                         mark(weakEnrollment, "Science", 28, 100),
                         mark(healthyEnrollment, "Mathematics", 82, 100)));
 
-        when(attendanceRepository.findByEnrollment_ClassroomAndLocalDate(classroom, LocalDate.now()))
+        when(attendanceRepository.countByClassroomIdsAndLocalDate(List.of(classroom.getId()), LocalDate.now()))
                 .thenReturn(List.of());
         when(examRepository.findBySchool_IdOrderByStartDateDesc(school.getId()))
                 .thenReturn(List.of(ongoingExam()));
@@ -165,7 +166,7 @@ class TeacherDashboardServiceTest {
     void getDashboardSummary_skipsHealthyStudentsFromInterventionQueue() {
         Enrollment healthyEnrollment = buildEnrollment(103L, "Isha", "Verma", "8");
 
-        when(enrollmentRepository.findByClassroomAndAcademicYear(classroom, currentYear))
+        when(enrollmentRepository.findByClassroomInAndAcademicYear(List.of(classroom), currentYear))
                 .thenReturn(List.of(healthyEnrollment));
         when(attendanceRepository.findByEnrollmentInAndAcademicYear(List.of(healthyEnrollment), currentYear))
                 .thenReturn(List.of(
@@ -173,8 +174,8 @@ class TeacherDashboardServiceTest {
                         attendance(healthyEnrollment, AttendanceStatus.PRESENT)));
         when(marksRepository.findByEnrollmentIn(List.of(healthyEnrollment)))
                 .thenReturn(List.of(mark(healthyEnrollment, "Mathematics", 88, 100)));
-        when(attendanceRepository.findByEnrollment_ClassroomAndLocalDate(classroom, LocalDate.now()))
-                .thenReturn(List.of(attendance(healthyEnrollment, AttendanceStatus.PRESENT)));
+        when(attendanceRepository.countByClassroomIdsAndLocalDate(List.of(classroom.getId()), LocalDate.now()))
+                .thenReturn(List.<Object[]>of(new Object[] { classroom.getId(), 1L }));
         when(examRepository.findBySchool_IdOrderByStartDateDesc(school.getId())).thenReturn(List.of());
         when(timeTableRepository.findByTeacherAssignment_Teacher_Id(teacher.getId())).thenReturn(List.of());
         when(timeTableRepository.findByTeacherAssignment_Teacher_IdAndDay(teacher.getId(), DayOfWeek.from(LocalDate.now())))

@@ -3,10 +3,7 @@ package com.vansh.manger.Manger.teacher.service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,10 +19,12 @@ import com.vansh.manger.Manger.attendance.entity.AttendanceStatus;
 import com.vansh.manger.Manger.attendance.repository.AttendanceRepository;
 import com.vansh.manger.Manger.attendance.service.AttendanceService;
 import com.vansh.manger.Manger.classroom.dto.ClassroomAttendanceStatsDTO;
+import com.vansh.manger.Manger.classroom.entity.Classroom;
 import com.vansh.manger.Manger.common.dto.ActivityLogDTO;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
+import com.vansh.manger.Manger.common.util.RiskScoreCalculator;
 import com.vansh.manger.Manger.exam.entity.ExamStatus;
 import com.vansh.manger.Manger.exam.repository.ExamRepository;
 import com.vansh.manger.Manger.exam.entity.StudentSubjectMarks;
@@ -62,15 +61,12 @@ public class TeacherDashboardService {
     @Transactional(readOnly = true)
     public TeacherDashboardResponseDTO getDashboardSummary() {
         School currentSchool = schoolConfig.requireCurrentSchool();
-        String userEmail = schoolConfig.getTeacher().getEmail();
-
-        Teacher teacher = teacherRepository.findByEmailAndSchool_Id(userEmail, currentSchool.getId())
-                .orElseThrow(() -> new RuntimeException("Teacher not found with this id"));
+        Teacher teacher = schoolConfig.getTeacher();
 
         AcademicYear currentYear = academicYearRepository.findByIsCurrentAndSchool_Id(true, currentSchool.getId())
                 .orElseThrow(() -> new RuntimeException("No active Year found"));
 
-        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacherAndAcademicYear(teacher, currentYear);
+        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacher(teacher);
 
         int classesAssigned = (int) assignments.stream()
                 .map(a -> a.getClassroom().getId())
@@ -122,9 +118,8 @@ public class TeacherDashboardService {
         List<TeacherDashboardResponseDTO.WeakStudentDTO> weakStudents = buildWeakStudentQueue(assignments, currentYear);
         List<TeacherDashboardResponseDTO.PendingTaskDTO> pendingTasks = buildPendingTasks(assignments, currentYear);
 
-        Page<ActivityLogDTO> recentActivityPage = activityLogService.getActivityLogsByRole(
-                "TEACHER", currentSchool.getId(), Pageable.ofSize(5));
-        List<ActivityLogDTO> recentActivities = new ArrayList<>(recentActivityPage.getContent());
+        List<ActivityLogDTO> recentActivities = new ArrayList<>(
+                activityLogService.getRecentTeacherActivity(currentSchool.getId(), teacher.getId()));
 
         return TeacherDashboardResponseDTO.builder()
                 .quickStats(quickStats)
@@ -138,17 +133,20 @@ public class TeacherDashboardService {
     @Transactional(readOnly = true)
     public Page<ActivityLogDTO> getAllActivityLogs(Pageable pageable) {
         School currentSchool = schoolConfig.requireCurrentSchool();
-        return activityLogService.getActivityLogsByRole("TEACHER", currentSchool.getId(), pageable);
+        Teacher teacher = schoolConfig.getTeacher();
+        return activityLogService.getTeacherActivityLogs(currentSchool.getId(), teacher.getId(), pageable);
     }
 
     private List<TeacherDashboardResponseDTO.WeakStudentDTO> buildWeakStudentQueue(
             List<TeacherAssignment> assignments,
             AcademicYear currentYear) {
 
-        List<Enrollment> enrollments = assignments.stream()
+        List<Classroom> classrooms = assignments.stream()
                 .map(TeacherAssignment::getClassroom)
                 .distinct()
-                .flatMap(classroom -> enrollmentRepository.findByClassroomAndAcademicYear(classroom, currentYear).stream())
+                .toList();
+
+        List<Enrollment> enrollments = enrollmentRepository.findByClassroomInAndAcademicYear(classrooms, currentYear).stream()
                 .filter(enrollment -> enrollment.getStatus() == StudentStatus.ACTIVE)
                 .toList();
 
@@ -186,21 +184,33 @@ public class TeacherDashboardService {
 
         List<TeacherDashboardResponseDTO.PendingTaskDTO> tasks = new ArrayList<>();
         LocalDate today = LocalDate.now();
-
-        assignments.stream()
+        List<Classroom> classrooms = assignments.stream()
                 .map(TeacherAssignment::getClassroom)
                 .distinct()
-                .forEach(classroom -> {
-                    List<Enrollment> classroomEnrollments = enrollmentRepository
-                            .findByClassroomAndAcademicYear(classroom, currentYear)
-                            .stream()
-                            .filter(enrollment -> enrollment.getStatus() == StudentStatus.ACTIVE)
-                            .toList();
+                .toList();
+
+        Map<Long, List<Enrollment>> enrollmentsByClassroomId = enrollmentRepository
+                .findByClassroomInAndAcademicYear(classrooms, currentYear)
+                .stream()
+                .filter(enrollment -> enrollment.getStatus() == StudentStatus.ACTIVE)
+                .collect(Collectors.groupingBy(enrollment -> enrollment.getClassroom().getId()));
+
+        Map<Long, Long> attendanceCountByClassroomId = classrooms.isEmpty()
+                ? Map.of()
+                : attendanceRepository.countByClassroomIdsAndLocalDate(
+                                classrooms.stream().map(Classroom::getId).toList(),
+                                today)
+                        .stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+
+        classrooms.forEach(classroom -> {
+                    List<Enrollment> classroomEnrollments = enrollmentsByClassroomId
+                            .getOrDefault(classroom.getId(), List.of());
 
                     boolean attendanceMarked = !classroomEnrollments.isEmpty()
-                            && attendanceRepository.findByEnrollment_ClassroomAndLocalDate(classroom, today).size() >= classroomEnrollments.size();
+                            && attendanceCountByClassroomId.getOrDefault(classroom.getId(), 0L) >= classroomEnrollments.size();
 
-                    if (!attendanceMarked) {
+                    if (!attendanceMarked && !today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
                         tasks.add(TeacherDashboardResponseDTO.PendingTaskDTO.builder()
                                 .title("Mark attendance for " + formatClassName(
                                         classroom.getGradeLevel().getDisplayName(),
@@ -237,53 +247,10 @@ public class TeacherDashboardService {
             List<Attendance> attendanceRecords,
             List<StudentSubjectMarks> marks) {
 
-        double attendancePercentage = calculateAttendancePercentage(attendanceRecords);
-        double averagePercentage = calculateAveragePercentage(marks);
-        String weakestSubject = findWeakestSubject(marks);
-        long failedSubjects = marks.stream()
-                .filter(mark -> toPercentage(mark) < 40.0)
-                .count();
-        long absences = attendanceRecords.stream()
-                .filter(record -> record.getAttendanceStatus() == AttendanceStatus.ABSENT)
-                .count();
+        // delegate to shared utility (SRP — risk algorithm lives in one place)
+        RiskScoreCalculator.RiskResult result = RiskScoreCalculator.computeRisk(attendanceRecords, marks);
 
-        int riskScore = 0;
-        List<String> reasons = new ArrayList<>();
-
-        if (!attendanceRecords.isEmpty()) {
-            if (attendancePercentage < 75) {
-                riskScore += 40;
-                reasons.add("critical attendance drop");
-            } else if (attendancePercentage < 85) {
-                riskScore += 20;
-                reasons.add("attendance below target");
-            }
-        }
-
-        if (!marks.isEmpty()) {
-            if (averagePercentage < 40) {
-                riskScore += 40;
-                reasons.add("average below passing");
-            } else if (averagePercentage < 55) {
-                riskScore += 25;
-                reasons.add("low exam average");
-            }
-
-            if (failedSubjects >= 2) {
-                riskScore += 20;
-                reasons.add("multiple weak subjects");
-            } else if (failedSubjects == 1 && weakestSubject != null) {
-                riskScore += 10;
-                reasons.add("needs support in " + weakestSubject);
-            }
-        }
-
-        if (absences >= 3) {
-            riskScore += 10;
-            reasons.add("frequent absence pattern");
-        }
-
-        if (riskScore < 25) {
+        if (result.riskScore() < 25) {
             return null;
         }
 
@@ -296,78 +263,14 @@ public class TeacherDashboardService {
                 .classroomId(enrollment.getClassroom().getId())
                 .studentName(enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName())
                 .className(className)
-                .riskLevel(resolveRiskLevel(riskScore))
-                .riskScore(riskScore)
-                .attendancePercentage(attendanceRecords.isEmpty() ? null : roundTwoDecimals(attendancePercentage))
-                .averagePercentage(marks.isEmpty() ? null : roundTwoDecimals(averagePercentage))
-                .weakestSubject(weakestSubject)
-                .reason(String.join(", ", reasons))
-                .recommendedAction(buildRecommendedAction(attendancePercentage, averagePercentage, weakestSubject))
+                .riskLevel(result.riskLevel())
+                .riskScore(result.riskScore())
+                .attendancePercentage(result.attendancePercentage())
+                .averagePercentage(result.averagePercentage())
+                .weakestSubject(result.weakestSubject())
+                .reason(String.join(", ", result.reasons()))
+                .recommendedAction(result.recommendedAction())
                 .build();
-    }
-
-    private double calculateAttendancePercentage(List<Attendance> records) {
-        if (records.isEmpty()) {
-            return 100.0;
-        }
-
-        long presentCount = records.stream()
-                .filter(record -> record.getAttendanceStatus() == AttendanceStatus.PRESENT)
-                .count();
-
-        return (presentCount * 100.0) / records.size();
-    }
-
-    private double calculateAveragePercentage(List<StudentSubjectMarks> marks) {
-        if (marks.isEmpty()) {
-            return 100.0;
-        }
-
-        return marks.stream()
-                .mapToDouble(this::toPercentage)
-                .average()
-                .orElse(100.0);
-    }
-
-    private double toPercentage(StudentSubjectMarks mark) {
-        if (mark.getMarksObtained() == null || mark.getTotalMarks() == null || mark.getTotalMarks() == 0) {
-            return 0.0;
-        }
-        return (mark.getMarksObtained() / mark.getTotalMarks()) * 100.0;
-    }
-
-    private String findWeakestSubject(List<StudentSubjectMarks> marks) {
-        return marks.stream()
-                .min(Comparator.comparingDouble(this::toPercentage))
-                .map(mark -> mark.getSubject().getName())
-                .orElse(null);
-    }
-
-    private String resolveRiskLevel(int riskScore) {
-        if (riskScore >= 60) {
-            return "High";
-        }
-        if (riskScore >= 35) {
-            return "Medium";
-        }
-        return "Watch";
-    }
-
-    private String buildRecommendedAction(double attendancePercentage, double averagePercentage, String weakestSubject) {
-        if (attendancePercentage < 75 && averagePercentage < 40) {
-            return "Call guardian this week and start a remedial follow-up plan.";
-        }
-        if (attendancePercentage < 75) {
-            return "Check attendance barriers and contact home before the pattern deepens.";
-        }
-        if (weakestSubject != null && averagePercentage < 55) {
-            return "Plan a short remedial revision in " + weakestSubject + " and recheck next assessment.";
-        }
-        return "Keep this student on a watchlist and review progress in the next class test.";
-    }
-
-    private double roundTwoDecimals(double value) {
-        return Math.round(value * 100.0) / 100.0;
     }
 
     private ExamStatus resolveExamStatus(LocalDate startDate, LocalDate endDate, ExamStatus currentStatus) {

@@ -200,9 +200,9 @@ export default function TeacherDashboardLayout({ children }) {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild className="cursor-pointer">
-                                    <a href="/teacher/profile" className="flex items-center">
+                                    <Link href="/teacher/profile" className="flex items-center">
                                         <UserCircle size={16} className="mr-2" /> My Profile
-                                    </a>
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
                                     <LogOut size={16} className="mr-2" /> Logout

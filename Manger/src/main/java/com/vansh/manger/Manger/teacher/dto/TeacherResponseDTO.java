@@ -21,8 +21,6 @@ public class TeacherResponseDTO {
     private String firstName;
     private String lastName;
     private String email;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String password;
     private String phoneNumber;
 
     private String joinDate;

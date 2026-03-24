@@ -30,7 +30,7 @@ public class Teacher {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  Long id;
+  private Long id;
 
   @NotBlank(message = "First name is required")
   private String firstName;

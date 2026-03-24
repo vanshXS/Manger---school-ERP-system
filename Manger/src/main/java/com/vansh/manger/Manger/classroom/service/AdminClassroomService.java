@@ -56,16 +56,18 @@ public class AdminClassroomService {
         @Transactional
         public ClassroomResponseDTO createClassroom(ClassroomRequestDTO dto) {
                 School adminSchool = getCurrentSchool.requireCurrentSchool();
+                String normalizedSection = normalizeSection(dto.getSection());
+                validateCapacity(dto.getCapacity());
 
                 if (classroomRespository.existsByGradeLevelAndSectionAndSchool(
-                                dto.getGradeLevel(), dto.getSection().toUpperCase(), adminSchool)) {
+                                dto.getGradeLevel(), normalizedSection, adminSchool)) {
                         throw new IllegalStateException(
                                         "Classroom already exists for " + dto.getGradeLevel().getDisplayName()
-                                                        + " - " + dto.getSection().toUpperCase());
+                                                        + " - " + normalizedSection);
                 }
 
                 Classroom classroom = Classroom.builder()
-                                .section(dto.getSection().toUpperCase())
+                                .section(normalizedSection)
                                 .status(ClassroomStatus.ACTIVE)
                                 .gradeLevel(dto.getGradeLevel())
                                 .capacity(dto.getCapacity())
@@ -78,24 +80,26 @@ public class AdminClassroomService {
         @Transactional
         public ClassroomResponseDTO updateClassroom(Long id, ClassroomRequestDTO dto) {
                 School adminSchool = getCurrentSchool.requireCurrentSchool();
+                String normalizedSection = normalizeSection(dto.getSection());
+                validateCapacity(dto.getCapacity());
 
-                Classroom classroom = classroomRespository.findById(id)
+                Classroom classroom = classroomRespository.findByIdAndSchool(id, adminSchool)
                                 .orElseThrow(() -> new EntityNotFoundException("Classroom not found"));
 
                 // Only check duplicate if section is actually changing
-                boolean sectionChanged = !classroom.getSection().equalsIgnoreCase(dto.getSection());
+                boolean sectionChanged = !classroom.getSection().equalsIgnoreCase(normalizedSection);
                 boolean gradeChanged = classroom.getGradeLevel() != dto.getGradeLevel();
 
                 if ((sectionChanged || gradeChanged) &&
                                 classroomRespository.existsByGradeLevelAndSectionAndSchool(
-                                                dto.getGradeLevel(), dto.getSection().toUpperCase(), adminSchool)) {
+                                                dto.getGradeLevel(), normalizedSection, adminSchool)) {
                         throw new IllegalStateException(
                                         "A classroom already exists for " + dto.getGradeLevel().getDisplayName()
-                                                        + " - " + dto.getSection().toUpperCase());
+                                                        + " - " + normalizedSection);
                 }
 
                 classroom.setGradeLevel(dto.getGradeLevel());
-                classroom.setSection(dto.getSection().toUpperCase());
+                classroom.setSection(normalizedSection);
                 classroom.setCapacity(dto.getCapacity());
 
                 return mapToResponse(classroomRespository.save(classroom));
@@ -103,7 +107,7 @@ public class AdminClassroomService {
 
         @Transactional
         public void deleteClassroom(Long id) {
-                Classroom classroom = classroomRespository.findById(id)
+                Classroom classroom = classroomRespository.findByIdAndSchool(id, getCurrentSchool.requireCurrentSchool())
                                 .orElseThrow(() -> new EntityNotFoundException("Classroom not found"));
 
                 if (enrollmentRepository.existsByClassroom(classroom)) {
@@ -137,8 +141,11 @@ public class AdminClassroomService {
         @Transactional
         public ClassroomResponseDTO updateClassroomStatus(Long id, ClassroomStatus newStatus) {
                 School adminSchool = getCurrentSchool.requireCurrentSchool();
+                if (newStatus == null) {
+                        throw new IllegalArgumentException("Classroom status is required.");
+                }
 
-                Classroom classroom = classroomRespository.findById(id)
+                Classroom classroom = classroomRespository.findByIdAndSchool(id, adminSchool)
                                 .orElseThrow(() -> new EntityNotFoundException("Classroom not found with id: " + id));
 
                 if (newStatus == ClassroomStatus.ARCHIVED) {
@@ -167,7 +174,7 @@ public class AdminClassroomService {
         }
 
         public List<java.util.Map<String, Object>> getSubjectsByClassroom(Long classroomId) {
-                classroomRespository.findById(classroomId)
+                classroomRespository.findByIdAndSchool(classroomId, getCurrentSchool.requireCurrentSchool())
                                 .orElseThrow(() -> new EntityNotFoundException(
                                                 "Classroom not found with id: " + classroomId));
 
@@ -181,5 +188,18 @@ public class AdminClassroomService {
                                         return map;
                                 })
                                 .toList();
+        }
+
+        private String normalizeSection(String section) {
+                if (section == null || section.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Classroom section is required.");
+                }
+                return section.trim().toUpperCase();
+        }
+
+        private void validateCapacity(Integer capacity) {
+                if (capacity == null || capacity <= 0) {
+                        throw new IllegalArgumentException("Classroom capacity must be greater than zero.");
+                }
         }
 }

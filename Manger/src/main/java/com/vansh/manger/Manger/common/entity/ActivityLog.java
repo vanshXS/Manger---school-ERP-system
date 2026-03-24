@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import com.vansh.manger.Manger.teacher.entity.Teacher;
 
 import java.time.LocalDateTime;
 
@@ -38,8 +39,8 @@ public class ActivityLog {
     @Column(nullable = false)
     private Roles role;
 
-
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
 
 }

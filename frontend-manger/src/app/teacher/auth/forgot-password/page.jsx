@@ -1,6 +1,6 @@
 'use client';
 
-import apiClient from '@/lib/axios';
+import teacherApiClient from '@/lib/teacherAxios';
 import { showSuccess } from '@/lib/toastHelper';
 import { AlertTriangle, Mail, School, Send } from 'lucide-react';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ export default function TeacherForgotPasswordPage() {
         setIsLoading(true);
 
         try {
-            await apiClient.post('/api/auth/teacher/forget-password', { email });
+            await teacherApiClient.post('/api/auth/teacher/forget-password', { email });
             showSuccess('OTP has been sent to your email. Check your inbox.');
             router.push(`/teacher/auth/reset-password?email=${encodeURIComponent(email)}`);
         } catch (error) {

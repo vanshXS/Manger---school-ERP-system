@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -35,19 +36,22 @@ export default function ActivityLogsPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [roleFilter, setRoleFilter] = useState('ALL');
 
   const pageSize = 10;
+  const filterOptions = ['ALL', 'ADMIN', 'TEACHER', 'STUDENT'];
 
   const fetchLogs = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await apiClient.get('/api/admin/dashboard/activity-logs', {
-        params: { page, size: pageSize },
+        params: {
+          page,
+          size: pageSize,
+          ...(roleFilter !== 'ALL' ? { role: roleFilter } : {}),
+        },
       });
-
-      // Debug: Check what the API actually returns in the console
-      console.log('API Response:', res.data);
 
       setLogs(res.data.content || []);
       setTotalPages(res.data.totalPages || 0);
@@ -63,7 +67,7 @@ export default function ActivityLogsPage() {
   useEffect(() => {
     fetchLogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, roleFilter]);
 
   // Helper: Safely parse and format date from multiple possible field names
   const formatDate = (log) => {
@@ -94,28 +98,55 @@ export default function ActivityLogsPage() {
     return 'bg-slate-100 text-slate-800 border-slate-200';
   };
 
+  const getRoleBadgeClass = (role) => {
+    if (role === 'ADMIN') return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+    if (role === 'TEACHER') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    if (role === 'STUDENT') return 'bg-amber-100 text-amber-800 border-amber-200';
+    return 'bg-slate-100 text-slate-700 border-slate-200';
+  };
+
+  const handleFilterChange = (nextRole) => {
+    setPage(0);
+    setRoleFilter(nextRole);
+  };
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-4 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <span className="p-2 rounded-xl bg-blue-100 text-blue-600"><History className="h-6 w-6" /></span>
-            System Activity
+            School Activity Log
           </h1>
           <p className="text-slate-500 mt-1">
-            View and track all system events and user actions.
+            Audit admin and teacher actions across the school with role-based filtering.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
-          <RefreshCcw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {filterOptions.map((option) => (
+            <Button
+              key={option}
+              variant={roleFilter === option ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange(option)}
+              className={roleFilter === option ? 'shadow-sm' : ''}
+            >
+              {option === 'ALL' ? 'All Roles' : option.charAt(0) + option.slice(1).toLowerCase()}
+            </Button>
+          ))}
+          <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+            <RefreshCcw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card className="shadow-sm border-slate-200">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-semibold text-slate-700">Audit Log</CardTitle>
+            <CardTitle className="text-lg font-semibold text-slate-700">
+              {roleFilter === 'ALL' ? 'Audit Log' : `${roleFilter.charAt(0)}${roleFilter.slice(1).toLowerCase()} Activity`}
+            </CardTitle>
             {!loading && totalElements > 0 && (
               <span className="text-sm text-slate-500">
                 Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, totalElements)} of {totalElements}
@@ -140,16 +171,18 @@ export default function ActivityLogsPage() {
           ) : logs.length === 0 ? (
             <div className="text-center py-16 text-slate-500">
               <History className="h-12 w-12 mx-auto mb-3 text-slate-300 opacity-50" />
-              <p>No activity logs found.</p>
+              <p>No activity logs found for this filter.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead className="w-[50%]">Description</TableHead>
-                    <TableHead className="w-[20%] hidden sm:table-cell">Category</TableHead>
-                    <TableHead className="w-[30%] text-right">Timestamp</TableHead>
+                    <TableHead className="w-[36%]">Description</TableHead>
+                    <TableHead className="w-[16%] hidden md:table-cell">Actor</TableHead>
+                    <TableHead className="w-[14%] hidden sm:table-cell">Role</TableHead>
+                    <TableHead className="w-[16%] hidden sm:table-cell">Category</TableHead>
+                    <TableHead className="w-[18%] text-right">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -157,6 +190,14 @@ export default function ActivityLogsPage() {
                     <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-medium text-slate-700 py-4">
                         {log.description}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-slate-600">
+                        {log.actorName || 'System'}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge className={getRoleBadgeClass(log.role)} variant="outline">
+                          {log.role || 'SYSTEM'}
+                        </Badge>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getCategoryColor(log.category)}`}>

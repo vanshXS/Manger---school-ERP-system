@@ -42,7 +42,6 @@ public class ExamRequestDTO {
     @NotNull(message = "Classroom ID is required")
     private Long classroomId;
 
-    @NotNull(message = "Academic year ID is required")
     private Long academicYearId;
 
     /**

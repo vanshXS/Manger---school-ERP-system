@@ -17,13 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.vansh.manger.Manger.common.config.RandomPasswordGenerator;
-import com.vansh.manger.Manger.classroom.dto.ClassroomResponseDTO;
+
 import com.vansh.manger.Manger.teacher.dto.TeacherAssignmentDTO;
 import com.vansh.manger.Manger.teacher.dto.TeacherRequestDTO;
 import com.vansh.manger.Manger.teacher.dto.TeacherResponseDTO;
 import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
+import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.teacher.specification.TeacherSpecification;
@@ -85,27 +86,28 @@ public class AdminTeacherService {
     // ---------------- CREATE TEACHER ----------------
     @Transactional
     public TeacherResponseDTO createTeacher(TeacherRequestDTO dto) {
+        School currentSchool = adminSchoolConfig.requireCurrentSchool();
+        String normalizedEmail = dto.getEmail().trim().toLowerCase();
 
-        if (teacherRespository.existsByEmailAndSchool_Id(dto.getEmail(),
-                adminSchoolConfig.getOptionalCurrentSchool().getId()))
+        if (teacherRespository.existsByEmailAndSchool_Id(normalizedEmail, currentSchool.getId()))
             throw new IllegalArgumentException("Teacher already exists with this email");
 
-        String pictureUrl = saveProfilePicture(dto.getProfilePicture(), dto.getEmail());
+        String pictureUrl = saveProfilePicture(dto.getProfilePicture(), normalizedEmail);
         String rawPassword = generator.generateRandomPassword();
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
         String employeeId = dto.getEmployeeId();
         if (employeeId == null || employeeId.isBlank()) {
-            long count = teacherRespository.countBySchool_Id(adminSchoolConfig.requireCurrentSchool().getId());
-            employeeId = "EMP-" + adminSchoolConfig.requireCurrentSchool().getId() + "-" + (count + 1);
+            long count = teacherRespository.countBySchool_Id(currentSchool.getId());
+            employeeId = "EMP-" + currentSchool.getId() + "-" + (count + 1);
         }
 
         User teacherUser = User.builder()
                 .fullName(dto.getFirstName() + " " + dto.getLastName())
-                .email(dto.getEmail())
+                .email(normalizedEmail)
                 .password(encodedPassword)
                 .roles(Roles.TEACHER)
-                .school(adminSchoolConfig.requireCurrentSchool())
+                .school(currentSchool)
                 .build();
 
         Teacher teacher = Teacher.builder()
@@ -114,9 +116,9 @@ public class AdminTeacherService {
                 .phoneNumber(
                         dto.getPhoneNumber() != null && !dto.getPhoneNumber().isBlank() ? dto.getPhoneNumber() : null)
                 .password(encodedPassword)
-                .email(dto.getEmail())
+                .email(normalizedEmail)
                 .role(Roles.TEACHER)
-                .school(adminSchoolConfig.requireCurrentSchool())
+                .school(currentSchool)
                 .profilePictureUrl(pictureUrl)
                 .user(teacherUser)
                 .employeeId(employeeId)
@@ -156,46 +158,57 @@ public class AdminTeacherService {
         return mapToResponseWithAssignments(savedTeacher);
     }
 
+    
+
     // ---------------- UPDATE TEACHER ----------------
     @Transactional
     public TeacherResponseDTO updateTeacher(Long teacherId, TeacherRequestDTO dto) {
+        School currentSchool = adminSchoolConfig.requireCurrentSchool();
+        String normalizedEmail = normalizeRequiredEmail(dto.getEmail());
 
-        Teacher teacher = teacherRespository.findById(teacherId)
+        Teacher teacher = teacherRespository.findByIdAndSchool_Id(teacherId, currentSchool.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Teacher not found"));
 
-        String newPic = saveProfilePicture(dto.getProfilePicture(), dto.getEmail());
+        teacherRespository.findByEmailAndSchool_Id(normalizedEmail, currentSchool.getId()).ifPresent(existing -> {
+            if (!existing.getId().equals(teacherId)) {
+                throw new IllegalArgumentException("This email is already taken by another teacher");
+            }
+        });
+
+        String newPic = saveProfilePicture(dto.getProfilePicture(), normalizedEmail);
 
         teacher.setFirstName(dto.getFirstName());
         teacher.setLastName(dto.getLastName());
-        teacher.setEmail(dto.getEmail());
-        teacher.setPhoneNumber(dto.getPhoneNumber() != null && !dto.getPhoneNumber().isBlank() ? dto.getPhoneNumber()
-                : teacher.getPhoneNumber());
+        teacher.setEmail(normalizedEmail);
+
+
+        teacher.setPhoneNumber(normalizeOptional(dto.getPhoneNumber()));
 
         if (newPic != null) {
             teacher.setProfilePictureUrl(newPic);
         }
 
         if (dto.getEmployeeId() != null && !dto.getEmployeeId().isBlank()) {
-            teacher.setEmployeeId(dto.getEmployeeId());
+            teacher.setEmployeeId(dto.getEmployeeId().trim());
         }
-        teacher.setQualification(dto.getQualification());
-        teacher.setSpecialization(dto.getSpecialization());
+        teacher.setQualification(normalizeOptional(dto.getQualification()));
+        teacher.setSpecialization(normalizeOptional(dto.getSpecialization()));
         teacher.setYearsOfExperience(dto.getYearsOfExperience());
         if (dto.getEmploymentType() != null)
             teacher.setEmploymentType(dto.getEmploymentType());
         teacher.setSalary(dto.getSalary());
         if (dto.getJoiningDate() != null)
             teacher.setJoiningDate(dto.getJoiningDate());
-        teacher.setFullAddress(dto.getFullAddress());
-        teacher.setCity(dto.getCity());
-        teacher.setState(dto.getState());
-        teacher.setPincode(dto.getPincode());
-        teacher.setEmergencyContactName(dto.getEmergencyContactName());
-        teacher.setEmergencyContactNumber(dto.getEmergencyContactNumber());
+        teacher.setFullAddress(normalizeOptional(dto.getFullAddress()));
+        teacher.setCity(normalizeOptional(dto.getCity()));
+        teacher.setState(normalizeOptional(dto.getState()));
+        teacher.setPincode(normalizeOptional(dto.getPincode()));
+        teacher.setEmergencyContactName(normalizeOptional(dto.getEmergencyContactName()));
+        teacher.setEmergencyContactNumber(normalizeOptional(dto.getEmergencyContactNumber()));
         teacher.setGender(dto.getGender());
 
         teacher.getUser().setFullName(dto.getFirstName() + " " + dto.getLastName());
-        teacher.getUser().setEmail(dto.getEmail());
+        teacher.getUser().setEmail(normalizedEmail);
 
         teacherRespository.save(teacher);
 
@@ -207,6 +220,21 @@ public class AdminTeacherService {
         return mapToResponseWithAssignments(teacher);
     }
 
+    private String normalizeRequiredEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Teacher email is required.");
+        }
+        return email.trim().toLowerCase();
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
     // ----------------TOGGLE STATUS-----------------
 
     public void toggleStatus(Long teacherId, boolean active) {
@@ -214,8 +242,8 @@ public class AdminTeacherService {
                 .findByIdAndSchool_Id(teacherId, adminSchoolConfig.requireCurrentSchool().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Teacher not found in the current admin school."));
 
-        if (teacherAssignmentRepository.existsByTeacher(teacher)) {
-            throw new IllegalStateException("Assigned Teacher cannot be deactive");
+        if (!active && teacherAssignmentRepository.existsByTeacher(teacher)) {
+            throw new IllegalStateException("Assigned Teacher cannot be deactivated");
         }
 
         teacher.setActive(active);
@@ -237,13 +265,12 @@ public class AdminTeacherService {
                 .orElseThrow(() -> new EntityNotFoundException("Teacher not found"));
 
         if (teacher.isActive()) {
-            throw new IllegalStateException("Teacher status is active. Cannot deleted..");
+            throw new IllegalStateException("Teacher status is active. Cannot delete.");
         } else {
             teacherRespository.delete(teacher);
+            activityLogService.logActivity(
+                    "Teacher deleted: " + teacher.getFirstName() + " " + teacher.getLastName(), "Teacher Management");
         }
-
-        activityLogService.logActivity(
-                "Teacher deleted: " + teacher.getFirstName() + " " + teacher.getLastName(), "Teacher Management");
     }
 
     // ---------------- FETCH ----------------
@@ -256,8 +283,22 @@ public class AdminTeacherService {
 
         Specification<Teacher> specification = TeacherSpecification.build(active, search, school.getId());
 
-        return teacherRespository.findAll(specification, pageable)
-                .map(this::mapToResponseWithAssignments);
+        Page<Teacher> teacherPage = teacherRespository.findAll(specification, pageable);
+        List<Teacher> teachers = teacherPage.getContent();
+        if (teachers.isEmpty()) {
+            return teacherPage.map(this::mapToResponseWithAssignments);
+        }
+
+        var assignmentsByTeacherId = teacherAssignmentRepository.findByTeacherIn(teachers).stream()
+                .collect(Collectors.groupingBy(assignment -> assignment.getTeacher().getId()));
+
+        List<TeacherResponseDTO> content = teachers.stream()
+                .map(teacher -> mapToResponseWithAssignments(
+                        teacher,
+                        assignmentsByTeacherId.getOrDefault(teacher.getId(), List.of())))
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, teacherPage.getTotalElements());
     }
 
     public TeacherResponseDTO getTeacherById(Long teacherId) {
@@ -269,13 +310,16 @@ public class AdminTeacherService {
 
     // ---------------- MAPPER ----------------
     private TeacherResponseDTO mapToResponseWithAssignments(Teacher teacher) {
+        return mapToResponseWithAssignments(teacher, teacherAssignmentRepository.findByTeacher(teacher));
+    }
 
-        List<TeacherAssignmentDTO> assignments = teacherAssignmentRepository.findByTeacher(teacher)
+    private TeacherResponseDTO mapToResponseWithAssignments(Teacher teacher, List<TeacherAssignment> teacherAssignments) {
+        List<TeacherAssignmentDTO> assignments = teacherAssignments
                 .stream()
                 .map(a -> TeacherAssignmentDTO.builder()
                         .assignmentId(a.getId())
                         .classroomId(a.getClassroom().getId())
-                        .className(new ClassroomResponseDTO().getDisplayName(a.getClassroom()))
+                        .className(a.getClassroom().getGradeLevel().getDisplayName() + " - " + a.getClassroom().getSection().toUpperCase())
                         .subjectId(a.getSubject().getId())
                         .subjectName(a.getSubject().getName())
                         .mandatory(a.isMandatory())
@@ -283,7 +327,6 @@ public class AdminTeacherService {
                 .collect(Collectors.toList());
 
         return getTeacherResponseDTO(teacher, assignments);
-
     }
 
 }

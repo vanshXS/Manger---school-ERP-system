@@ -1,17 +1,16 @@
 'use client';
 
-import apiClient from '@/lib/axios';
+import teacherApiClient from '@/lib/teacherAxios';
 import { showError, showSuccess } from '@/lib/toastHelper';
 import { AlertTriangle, Hash, KeyRound, School } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function TeacherResetPasswordPage() {
+function TeacherResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
-
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [errors, setErrors] = useState({});
@@ -34,7 +33,7 @@ export default function TeacherResetPasswordPage() {
             newErrors.otp = 'Please enter the 6-digit OTP.';
         }
         if (!newPassword || newPassword.length < 5 || newPassword.length > 15) {
-            newErrors.password = 'Password must be 5–15 characters.';
+            newErrors.password = 'Password must be 5-15 characters.';
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -48,11 +47,10 @@ export default function TeacherResetPasswordPage() {
         setIsLoading(true);
 
         try {
-            await apiClient.post('/api/auth/teacher/reset-password', { email, otp, newPassword });
-            showSuccess('Password has been reset. Redirecting to sign in…');
+            await teacherApiClient.post('/api/auth/teacher/reset-password', { email, otp, newPassword });
+            showSuccess('Password has been reset. Redirecting to sign in...');
             router.push('/teacher/auth/login');
         } catch (error) {
-            console.error('Reset password failed:', error);
             setServerError(error?.customMessage || 'Reset failed. Please check the OTP and try again.');
         } finally {
             setIsLoading(false);
@@ -84,7 +82,6 @@ export default function TeacherResetPasswordPage() {
                 <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 transition-all duration-200 hover:shadow-2xl">
                     <form onSubmit={handleResetPassword} noValidate>
                         <div className="space-y-5">
-                            {/* OTP Field */}
                             <div>
                                 <label htmlFor="otp" className="block text-sm font-medium text-slate-700 mb-1">
                                     One-Time Password (OTP)
@@ -112,7 +109,6 @@ export default function TeacherResetPasswordPage() {
                                 )}
                             </div>
 
-                            {/* New Password Field */}
                             <div>
                                 <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">
                                     New Password
@@ -131,7 +127,7 @@ export default function TeacherResetPasswordPage() {
                                             ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                                             : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
                                             }`}
-                                        placeholder="5–15 characters"
+                                        placeholder="5-15 characters"
                                     />
                                 </div>
                                 {errors.password && (
@@ -139,7 +135,6 @@ export default function TeacherResetPasswordPage() {
                                 )}
                             </div>
 
-                            {/* Server Error */}
                             {serverError && (
                                 <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg" role="alert">
                                     <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -147,7 +142,6 @@ export default function TeacherResetPasswordPage() {
                                 </div>
                             )}
 
-                            {/* Submit Button */}
                             <div>
                                 <button
                                     type="submit"
@@ -172,5 +166,13 @@ export default function TeacherResetPasswordPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function TeacherResetPasswordPage() {
+    return (
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-slate-100">Loading...</div>}>
+            <TeacherResetPasswordContent />
+        </Suspense>
     );
 }

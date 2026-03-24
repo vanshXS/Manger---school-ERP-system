@@ -108,13 +108,14 @@ export default function TimeTablePage() {
             <Skeleton className="w-[200px] h-10 rounded-lg" />
           ) : (
             <Select
-              value={selectedClassroom?.id?.toString()}
+              value={selectedClassroom?.id?.toString() || undefined}
               onValueChange={(val) => setSelectedClassroom(classrooms.find(c => c.id.toString() === val))}
+              disabled={classrooms.length === 0}
             >
               <SelectTrigger className="w-[240px] border-0 focus:ring-0 bg-transparent font-medium">
                 <div className="flex items-center gap-2 text-slate-700">
                   <School className="h-4 w-4 text-slate-400" />
-                  <SelectValue placeholder="Select a classroom..." />
+                  <SelectValue placeholder={classrooms.length === 0 ? "No active classrooms" : "Select a classroom..."} />
                 </div>
               </SelectTrigger>
               <SelectContent>

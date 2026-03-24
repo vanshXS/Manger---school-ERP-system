@@ -3,6 +3,7 @@ package com.vansh.manger.Manger.exam.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
 import com.vansh.manger.Manger.academicyear.repository.AcademicYearRepository;
 import com.vansh.manger.Manger.classroom.entity.Classroom;
 import com.vansh.manger.Manger.common.entity.GradeLevel;
@@ -71,25 +73,34 @@ class TeacherMarkServiceTest {
     private Student student;
     private Enrollment enrollment;
     private Subject subject;
+    private AcademicYear academicYear;
 
     @BeforeEach
     void setUp() {
         school = School.builder().id(1L).name("Alpha").address("City").build();
         teacher = Teacher.builder().id(2L).email("teacher@alpha.test").school(school).build();
         classroom = Classroom.builder().id(3L).gradeLevel(GradeLevel.GRADE_10).section("A").capacity(40).school(school).build();
+        academicYear = AcademicYear.builder()
+                .id(8L)
+                .name("2025-26")
+                .startDate(LocalDate.of(2025, 4, 1))
+                .endDate(LocalDate.of(2026, 3, 31))
+                .school(school)
+                .build();
         student = Student.builder().id(4L).firstName("Rahul").lastName("Sharma").email("rahul@test.com").school(school).build();
         enrollment = Enrollment.builder()
                 .id(5L)
                 .rollNo("12")
                 .student(student)
                 .classroom(classroom)
+                .academicYear(academicYear)
                 .school(school)
                 .status(StudentStatus.ACTIVE)
                 .build();
         subject = Subject.builder().id(6L).name("Mathematics").code("MTH").school(school).build();
 
-        when(schoolConfig.getTeacher()).thenReturn(teacher);
-        when(schoolConfig.requireCurrentSchool()).thenReturn(school);
+        lenient().when(schoolConfig.getTeacher()).thenReturn(teacher);
+        lenient().when(schoolConfig.requireCurrentSchool()).thenReturn(school);
     }
 
     @Test
@@ -156,6 +167,7 @@ class TeacherMarkServiceTest {
                 .name("Mid Term")
                 .examType(ExamType.MID_TERM)
                 .classroom(classroom)
+                .academicYear(academicYear)
                 .school(school)
                 .status(status)
                 .startDate(startDate)

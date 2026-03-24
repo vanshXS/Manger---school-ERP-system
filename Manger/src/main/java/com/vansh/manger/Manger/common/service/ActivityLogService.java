@@ -6,6 +6,8 @@ import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.repository.ActivityLogRepository;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
+import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
+import com.vansh.manger.Manger.teacher.entity.Teacher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,7 @@ public class ActivityLogService {
 
     private final ActivityLogRepository activityLogRepository;
     private final AdminSchoolConfig schoolConfig;
+    private final TeacherSchoolConfig teacherSchoolConfig;
 
     @Transactional
     public void logActivity(String description, String category) {
@@ -52,12 +55,14 @@ public class ActivityLogService {
     }
 
     @Transactional
-    public void logTeacherActivity(School school, String description, String category) {
+    public void logTeacherActivity( School school, String description, String category) {
+        Teacher teacher = teacherSchoolConfig.getTeacher();
         ActivityLog log = ActivityLog.builder()
                 .school(school)
                 .category(category)
                 .description(description)
                 .role(Roles.TEACHER)
+                .teacher(teacher)
                 .build();
 
         activityLogRepository.save(log);
@@ -86,8 +91,39 @@ public class ActivityLogService {
     }
 
     @Transactional
+    public List<ActivityLogDTO> getRecentActivityByRole(String role, Long schoolId) {
+        Roles parsedRole;
+        try {
+            parsedRole = Roles.valueOf(role.toUpperCase());
+        } catch (Exception ex) {
+            return getRecentActivity(schoolId);
+        }
+
+        return activityLogRepository.findTop10BySchool_IdAndRoleOrderByCreatedAtDesc(schoolId, parsedRole)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional
     public Page<ActivityLogDTO> getAllActivityLogs(Long schoolId, Pageable pageable) {
         return activityLogRepository.findBySchool_IdOrderByCreatedAtDesc(schoolId, pageable)
+                .map(this::toDto);
+    }
+
+    @Transactional
+    public List<ActivityLogDTO> getRecentTeacherActivity(Long schoolId, Long teacherId) {
+        return activityLogRepository
+                .findTop10BySchool_IdAndRoleAndTeacher_IdOrderByCreatedAtDesc(schoolId, Roles.TEACHER, teacherId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public Page<ActivityLogDTO> getTeacherActivityLogs(Long schoolId, Long teacherId, Pageable pageable) {
+        return activityLogRepository
+                .findBySchool_IdAndRoleAndTeacher_IdOrderByCreatedAtDesc(schoolId, Roles.TEACHER, teacherId, pageable)
                 .map(this::toDto);
     }
 
@@ -96,6 +132,21 @@ public class ActivityLogService {
                 .description(log.getDescription())
                 .category(log.getCategory())
                 .date(log.getCreatedAt())
+                .role(log.getRole() != null ? log.getRole().name() : null)
+                .actorName(resolveActorName(log))
                 .build();
+    }
+
+    private String resolveActorName(ActivityLog log) {
+        if (log.getRole() == Roles.TEACHER && log.getTeacher() != null) {
+            return log.getTeacher().getFirstName() + " " + log.getTeacher().getLastName();
+        }
+        if (log.getRole() == Roles.ADMIN) {
+            return "Admin";
+        }
+        if (log.getRole() == Roles.STUDENT) {
+            return "Student";
+        }
+        return "System";
     }
 }

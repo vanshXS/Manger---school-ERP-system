@@ -16,7 +16,6 @@ public class SubjectRequestDTO {
 
     @NotBlank(message = "Subject code is required")
     @Size(min = 3, max = 15, message = "Code must be between 3 and 15 characters")
-    @Pattern(regexp = "^[A-Z0-9]+$", message = "Code must contain only uppercase letters and numbers")
     private String code;
 
 }

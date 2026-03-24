@@ -58,7 +58,8 @@ export default function TeacherTable({
   onEdit,
   onDelete,
   onDownloadSlip,
-  onToggleStatus
+  onToggleStatus,
+  onSendReset
 }) {
   const router = useRouter();
   const [teacherToDelete, setTeacherToDelete] = useState(null);
@@ -285,6 +286,10 @@ export default function TeacherTable({
 
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDownloadSlip(t.id); }} className="cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
                               <Download className="mr-2 h-4 w-4 text-slate-400" /> Download Slip
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSendReset(t.id); }} className="cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
+                              <Mail className="mr-2 h-4 w-4 text-slate-400" /> Send Reset Link
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator className="bg-slate-100" />

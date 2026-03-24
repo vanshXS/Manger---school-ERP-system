@@ -2,6 +2,7 @@ package com.vansh.manger.Manger.exam.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
 import com.vansh.manger.Manger.academicyear.repository.AcademicYearRepository;
 import com.vansh.manger.Manger.classroom.entity.Classroom;
 import com.vansh.manger.Manger.classroom.repository.ClassroomRespository;
@@ -48,13 +50,21 @@ class AdminExamServiceTest {
 
     private School school;
     private Classroom classroom;
+    private AcademicYear academicYear;
 
     @BeforeEach
     void setUp() {
         school = School.builder().id(1L).name("Alpha").address("City").build();
         classroom = Classroom.builder().id(2L).gradeLevel(GradeLevel.GRADE_10).section("A").capacity(40).school(school).build();
+        academicYear = AcademicYear.builder()
+                .id(7L)
+                .name("2025-26")
+                .startDate(LocalDate.of(2025, 4, 1))
+                .endDate(LocalDate.of(2026, 3, 31))
+                .school(school)
+                .build();
         when(adminSchoolConfig.requireCurrentSchool()).thenReturn(school);
-        when(examSubjectRepository.countByExam_Id(99L)).thenReturn(0L);
+        lenient().when(examSubjectRepository.countByExam_Id(99L)).thenReturn(0L);
     }
 
     @Test
@@ -85,6 +95,7 @@ class AdminExamServiceTest {
                 .name("Mid Term")
                 .examType(ExamType.MID_TERM)
                 .classroom(classroom)
+                .academicYear(academicYear)
                 .school(school)
                 .status(status)
                 .startDate(startDate)

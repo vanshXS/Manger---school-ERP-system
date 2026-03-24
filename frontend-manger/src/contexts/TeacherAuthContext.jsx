@@ -10,7 +10,7 @@ export function TeacherAuthProvider({ children }) {
     const [isLoading, setIsLoading] = useState(true);
     const [accessToken, setAccessToken] = useState(null);
 
-    const baseURL = apiClient.defaults.baseURL || 'http://localhost:8080';
+    const baseURL = apiClient.defaults.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
     // ================= INIT AUTH =================
     useEffect(() => {

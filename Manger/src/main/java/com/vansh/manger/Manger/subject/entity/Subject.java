@@ -20,7 +20,10 @@ import com.vansh.manger.Manger.exam.entity.StudentSubjectMarks;
 @Data
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "subjects")
+@Table(
+        name = "subjects",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"school_id", "code"})
+)
 public class Subject {
 
     @Id
@@ -28,12 +31,12 @@ public class Subject {
     private Long id;
 
     @NotBlank(message = "Subject name is required")
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String name;
 
     @NotBlank(message = "Subject code is required")
     @Size(min = 3, max = 15)
-    @Column(unique = true, nullable = false, length = 15)
+    @Column(nullable = false, length = 15)
     private String code;
 
    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -163,6 +163,10 @@ export default function TeacherMarksPage() {
 
     /* ── Save marks ── */
     const handleSaveMarks = async () => {
+        if (!gradingSheet?.marksEditable) {
+            showError('Marks can only be saved while the exam is ongoing.');
+            return;
+        }
         try {
             setSaving(true);
             const payload = {
@@ -185,6 +189,10 @@ export default function TeacherMarksPage() {
 
     /* ── Send marksheets ── */
     const handleSendMarksheet = async (enrollmentId) => {
+        if (!gradingSheet?.marksheetAllowed) {
+            showError('Marksheets can only be sent after the exam is completed.');
+            return;
+        }
         try {
             setSendingId(enrollmentId);
             await teacherApiClient.post(`/api/teacher/marks/send-marksheet/${selectedExamId}/${enrollmentId}`);
@@ -197,6 +205,10 @@ export default function TeacherMarksPage() {
     };
 
     const handleSendAllMarksheets = async () => {
+        if (!gradingSheet?.marksheetAllowed) {
+            showError('Marksheets can only be sent after the exam is completed.');
+            return;
+        }
         try {
             setSendingId('all');
             const res = await teacherApiClient.post(`/api/teacher/marks/send-all-marksheets/${selectedExamId}`);
@@ -349,6 +361,8 @@ export default function TeacherMarksPage() {
                         handleMarkChange={handleMarkChange}
                         onSendMarksheet={handleSendMarksheet}
                         sendingId={sendingId}
+                        marksEditable={Boolean(gradingSheet?.marksEditable)}
+                        marksheetAllowed={Boolean(gradingSheet?.marksheetAllowed)}
                     />
 
                     {/* Action Footer */}
@@ -356,7 +370,7 @@ export default function TeacherMarksPage() {
                         <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between gap-3">
                             <button
                                 onClick={handleSendAllMarksheets}
-                                disabled={sendingId === 'all' || gradingSheet.gradedCount === 0}
+                                disabled={sendingId === 'all' || gradingSheet.gradedCount === 0 || !gradingSheet.marksheetAllowed}
                                 className="bg-violet-600 hover:bg-violet-700 text-white font-medium px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                             >
                                 {sendingId === 'all' ? (
@@ -368,7 +382,7 @@ export default function TeacherMarksPage() {
                             </button>
                             <button
                                 onClick={handleSaveMarks}
-                                disabled={saving}
+                                disabled={saving || !gradingSheet.marksEditable}
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                             >
                                 {saving ? (

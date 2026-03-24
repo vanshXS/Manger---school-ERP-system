@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,7 @@ import com.vansh.manger.Manger.exam.entity.ExamStatus;
 public interface ExamRepository extends JpaRepository<Exam, Long> {
 
         // All exams for a school
+        @EntityGraph(attributePaths = {"classroom", "academicYear"})
         List<Exam> findBySchool_IdOrderByStartDateDesc(Long schoolId);
 
         // Exams for a specific classroom

@@ -111,6 +111,16 @@ export default function TeachersPage() {
     }
   };
 
+  const handleSendReset = async (teacherId) => {
+    if (!teacherId) return toast.error('Invalid teacher');
+    try {
+      await apiClient.post(`/api/admin/teachers/${teacherId}/send-password-reset`);
+      toast.success('Password reset email sent');
+    } catch (err) {
+      toast.error(err.customMessage || 'Failed to send reset email');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -174,6 +184,7 @@ export default function TeachersPage() {
         onEdit={(t) => { setEditingTeacher(t); setIsDialogOpen(true); }}
         onDelete={handleDelete}
         onDownloadSlip={handleDownloadSlip}
+        onSendReset={handleSendReset}
       />
 
       {/* Pagination */}

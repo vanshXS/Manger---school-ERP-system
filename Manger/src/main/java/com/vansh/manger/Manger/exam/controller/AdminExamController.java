@@ -13,7 +13,7 @@ import com.vansh.manger.Manger.exam.service.AdminExamService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import com.vansh.manger.Manger.exam.entity.Exam;
+
 
 @RestController
 @RequestMapping("/api/admin/exams")

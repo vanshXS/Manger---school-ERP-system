@@ -12,6 +12,7 @@ import com.vansh.manger.Manger.teacher.entity.*;
 import com.vansh.manger.Manger.timetable.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> , 
     /**
      * Finds the specific enrollment for a student in the current year.
      */
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
     Optional<Enrollment> findByStudentAndSchool_IdAndAcademicYearIsCurrent(Student student, Long school_Id, boolean isCurrent);
 
     /**
@@ -53,8 +55,46 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> , 
     List<Enrollment> findByClassroomId(Long classroomId);
 
     Optional<Enrollment> findActiveByStudent(Student student);
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
     List<Enrollment> findByClassroomAndAcademicYear(Classroom classroom, AcademicYear academicYear);
     int countByClassroomAndAcademicYearAndStatus(Classroom classroom, AcademicYear academicYear, StudentStatus status);
+
+    /** All enrollments for a student within a school (academic year history). */
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
+    List<Enrollment> findByStudentAndSchool_IdOrderByAcademicYear_StartDateDesc(Student student, Long schoolId);
+
+    /** Find specific enrollment for a student in a given academic year. */
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
+    Optional<Enrollment> findByStudentAndAcademicYear(Student student, AcademicYear academicYear);
+
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
+    List<Enrollment> findByStudentInAndSchool_IdAndAcademicYearIsCurrent(List<Student> students, Long schoolId, boolean isCurrent);
+
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
+    List<Enrollment> findByClassroomInAndAcademicYear(List<Classroom> classrooms, AcademicYear academicYear);
+
+    @Query("""
+            select e.classroom.id, count(e)
+            from Enrollment e
+            where e.school.id = :schoolId
+              and e.academicYear.isCurrent = true
+              and e.classroom.id in :classroomIds
+            group by e.classroom.id
+            """)
+    List<Object[]> countCurrentEnrollmentsByClassroomIds(@Param("schoolId") Long schoolId,
+                                                         @Param("classroomIds") List<Long> classroomIds);
+
+    @Query("""
+            select e.classroom.id, count(e)
+            from Enrollment e
+            where e.academicYear = :academicYear
+              and e.status = :status
+              and e.classroom.id in :classroomIds
+            group by e.classroom.id
+            """)
+    List<Object[]> countByClassroomIdsAndAcademicYearAndStatus(@Param("classroomIds") List<Long> classroomIds,
+                                                               @Param("academicYear") AcademicYear academicYear,
+                                                               @Param("status") StudentStatus status);
 
 }
 

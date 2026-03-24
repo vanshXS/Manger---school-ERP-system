@@ -25,3 +25,4 @@ export const EMPTY_FORM = {
     name: '', examType: '', startDate: '', endDate: '',
     totalMarks: '100', description: '',
 };
+

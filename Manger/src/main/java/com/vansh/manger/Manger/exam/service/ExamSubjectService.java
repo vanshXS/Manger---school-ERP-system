@@ -70,6 +70,7 @@ public class ExamSubjectService {
     @Transactional
     public ExamSubjectResponseDTO addSubjectToExam(Long examId, ExamSubjectRequestDTO dto) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
+        validateExamSubjectRequest(dto);
 
         Exam exam = examRepository.findByIdAndSchool_Id(examId, schoolId)
                 .orElseThrow(() -> new EntityNotFoundException("Exam not found with ID: " + examId));
@@ -101,8 +102,12 @@ public class ExamSubjectService {
 
         // Validate start time < end time if both provided
         if (dto.getStartTime() != null && dto.getEndTime() != null
-                && dto.getStartTime().isAfter(dto.getEndTime())) {
+                && !dto.getStartTime().isBefore(dto.getEndTime())) {
             throw new IllegalArgumentException("Start time must be before end time.");
+        }
+
+        if (dto.getMaxMarks() > exam.getTotalMarks()) {
+            throw new IllegalArgumentException("Subject max marks cannot exceed exam total marks.");
         }
 
         ExamSubject examSubject = ExamSubject.builder()
@@ -127,6 +132,7 @@ public class ExamSubjectService {
     @Transactional
     public ExamSubjectResponseDTO updateSubjectPaper(Long examId, Long examSubjectId, ExamSubjectRequestDTO dto) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
+        validateExamSubjectRequest(dto);
 
         Exam exam = examRepository.findByIdAndSchool_Id(examId, schoolId)
                 .orElseThrow(() -> new EntityNotFoundException("Exam not found with ID: " + examId));
@@ -146,8 +152,12 @@ public class ExamSubjectService {
 
         // Validate start time < end time if both provided
         if (dto.getStartTime() != null && dto.getEndTime() != null
-                && dto.getStartTime().isAfter(dto.getEndTime())) {
+                && !dto.getStartTime().isBefore(dto.getEndTime())) {
             throw new IllegalArgumentException("Start time must be before end time.");
+        }
+
+        if (dto.getMaxMarks() > exam.getTotalMarks()) {
+            throw new IllegalArgumentException("Subject max marks cannot exceed exam total marks.");
         }
 
         examSubject.setExamDate(dto.getExamDate());
@@ -204,11 +214,32 @@ public class ExamSubjectService {
         // Return classroom subjects NOT yet added
         return assignments.stream()
                 .filter(ta -> !addedSubjectIds.contains(ta.getSubject().getId()))
+                .collect(Collectors.toMap(
+                        ta -> ta.getSubject().getId(),
+                        ta -> ta,
+                        (existing, ignored) -> existing))
+                .values()
+                .stream()
                 .map(ta -> ExamSubjectResponseDTO.builder()
                         .subjectId(ta.getSubject().getId())
                         .subjectName(ta.getSubject().getName())
                         .subjectCode(ta.getSubject().getCode())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private void validateExamSubjectRequest(ExamSubjectRequestDTO dto) {
+        if (dto.getSubjectId() == null) {
+            throw new IllegalArgumentException("Subject is required.");
+        }
+        if (dto.getExamDate() == null) {
+            throw new IllegalArgumentException("Exam date is required.");
+        }
+        if (dto.getMaxMarks() == null || dto.getMaxMarks() <= 0) {
+            throw new IllegalArgumentException("Max marks must be greater than zero.");
+        }
+        if ((dto.getStartTime() == null) != (dto.getEndTime() == null)) {
+            throw new IllegalArgumentException("Both start time and end time are required when setting paper timing.");
+        }
     }
 }

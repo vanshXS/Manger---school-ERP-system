@@ -32,6 +32,7 @@ import com.vansh.manger.Manger.student.repository.*;
 import com.vansh.manger.Manger.subject.repository.*;
 import com.vansh.manger.Manger.teacher.repository.*;
 import com.vansh.manger.Manger.timetable.repository.*;
+import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 
 import jakarta.transaction.Transactional;
@@ -54,6 +55,7 @@ public class AdminDashboardService {
     private final ClassroomRespository classroomRespository;
     private final TeacherAssignmentRepository teacherAssignmentRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final ActivityLogService activityLogService;
     private final EnrollmentRepository enrollmentRepository;
     private final AcademicYearRepository academicYearRepository;
     private final AdminSchoolConfig getCurrentSchool;
@@ -150,20 +152,20 @@ public class AdminDashboardService {
        Recent activity — last 10 logs for this school
        Returns ActivityLogDTO: { description, category, date }
     ────────────────────────────────────────────────────────────────────── */
-    public List<ActivityLogDTO> getRecentActivity() {
-        return activityLogRepository
-                .findTop10BySchool_IdOrderByCreatedAtDesc(
-                        getCurrentSchool.requireCurrentSchool().getId())
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+    public List<ActivityLogDTO> getRecentActivity(String role) {
+        long schoolId = getCurrentSchool.requireCurrentSchool().getId();
+        if (role == null || role.isBlank() || role.equalsIgnoreCase("ALL")) {
+            return activityLogService.getRecentActivity(schoolId);
+        }
+        return activityLogService.getRecentActivityByRole(role, schoolId);
     }
 
-    public Page<ActivityLogDTO> getAllActivityLogs(Pageable pageable) {
-        return activityLogRepository
-                .findBySchool_IdOrderByCreatedAtDesc(
-                        getCurrentSchool.requireCurrentSchool().getId(), pageable)
-                .map(this::mapToDTO);
+    public Page<ActivityLogDTO> getAllActivityLogs(String role, Pageable pageable) {
+        long schoolId = getCurrentSchool.requireCurrentSchool().getId();
+        if (role == null || role.isBlank() || role.equalsIgnoreCase("ALL")) {
+            return activityLogService.getAllActivityLogs(schoolId, pageable);
+        }
+        return activityLogService.getActivityLogsByRole(role, schoolId, pageable);
     }
 
     /* ────────────────── helper ────────────────── */

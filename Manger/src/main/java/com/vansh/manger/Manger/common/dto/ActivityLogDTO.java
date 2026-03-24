@@ -12,4 +12,6 @@ public class ActivityLogDTO {
     private String description;
     private String category;
     private LocalDateTime date;
+    private String role;
+    private String actorName;
 }

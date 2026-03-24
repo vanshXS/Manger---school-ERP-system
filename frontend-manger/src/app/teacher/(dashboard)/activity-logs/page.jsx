@@ -50,7 +50,6 @@ export default function TeacherActivityLogsPage() {
             setTotalPages(res.data.totalPages || 0);
             setTotalElements(res.data.totalElements || 0);
         } catch (err) {
-            console.error('Failed to fetch teacher logs:', err);
             setError('Failed to load activity logs.');
         } finally {
             setLoading(false);
@@ -149,8 +148,8 @@ export default function TeacherActivityLogsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody className="divide-y divide-slate-50">
-                                    {logs.map((log, i) => (
-                                        <TableRow key={i} className="hover:bg-slate-50/50 transition-colors border-slate-100 group">
+                                    {logs.map((log) => (
+                                        <TableRow key={log.id || log.timestamp} className="hover:bg-slate-50/50 transition-colors border-slate-100 group">
                                             <TableCell className="font-medium text-slate-700 py-4">
                                                 {log.description}
                                             </TableCell>

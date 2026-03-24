@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,7 +43,8 @@ public class AdminSubjectService {
                             ? a.getTeacher().getFirstName() + " " + a.getTeacher().getLastName()
                             : "Unassigned";
                     String classroomName = (a.getClassroom() != null)
-                            ? a.getClassroom().getSection()
+                            ? a.getClassroom().getGradeLevel().getDisplayName() + " - "
+                                    + a.getClassroom().getSection().toUpperCase()
                             : "N/A";
                     return new SubjectAssignmentDetailDTO(classroomName, teacherName);
                 }).toList();
@@ -60,19 +60,16 @@ public class AdminSubjectService {
 
     @Transactional
       public SubjectResponseDTO createSubject(SubjectRequestDTO dto) {
-
-
-
-        if(subjectRepository.existsByNameIgnoreCaseAndSchool_Id(dto.getName(), adminSchoolConfig.requireCurrentSchool().getId())) {
-            throw new IllegalArgumentException("Subject name already exists: " + dto.getName());
-        }
-        if(subjectRepository.existsByCodeIgnoreCaseAndSchool_Id(dto.getCode(), adminSchoolConfig.requireCurrentSchool().getId())) {
-            throw new IllegalArgumentException("Subject code already exists: " + dto.getCode());
+        String normalizedName = normalizeSubjectName(dto.getName());
+        String normalizedCode = normalizeSubjectCode(dto.getCode());
+        
+        if(subjectRepository.existsByCodeIgnoreCaseAndSchool_Id(normalizedCode, adminSchoolConfig.requireCurrentSchool().getId())) {
+            throw new IllegalArgumentException("Subject code already exists: " + normalizedCode);
         }
 
         Subject subject = Subject.builder()
-                .name(dto.getName())
-                .code(dto.getCode())
+                .name(normalizedName)
+                .code(normalizedCode)
                 .school(adminSchoolConfig.requireCurrentSchool())
                 .build();
 
@@ -94,7 +91,6 @@ public class AdminSubjectService {
     @Transactional
     public void deleteSubject(Long subjectId) {
 
-
         Subject subject = subjectRepository.findByIdAndSchool_Id(subjectId, adminSchoolConfig.requireCurrentSchool().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Subject not found with id in the school: " + subjectId));
 
@@ -110,23 +106,20 @@ public class AdminSubjectService {
 
     @Transactional
     public SubjectResponseDTO updateSubject(Long subjectId, SubjectRequestDTO dto) {
-
+        String normalizedName = normalizeSubjectName(dto.getName());
+        String normalizedCode = normalizeSubjectCode(dto.getCode());
 
 
         Subject existingSubject = subjectRepository.findByIdAndSchool_Id(subjectId, adminSchoolConfig.requireCurrentSchool().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Subject not found with id: " + subjectId));
 
-        // Validate potential name/code conflicts ONLY if they have changed
-        if (!existingSubject.getName().equalsIgnoreCase(dto.getName()) && subjectRepository.existsByNameIgnoreCaseAndSchool_Id(dto.getName(), adminSchoolConfig.requireCurrentSchool().getId())) {
-            throw new IllegalArgumentException("Another subject with this name already exists: " + dto.getName());
-        }
-        if (!existingSubject.getCode().equalsIgnoreCase(dto.getCode()) && subjectRepository.existsByCodeIgnoreCaseAndSchool_Id(dto.getCode(), adminSchoolConfig.requireCurrentSchool().getId())) {
-            throw new IllegalArgumentException("Another subject with this code already exists: " + dto.getCode());
+        if (!existingSubject.getCode().equalsIgnoreCase(normalizedCode) && subjectRepository.existsByCodeIgnoreCaseAndSchool_Id(normalizedCode, adminSchoolConfig.requireCurrentSchool().getId())) {
+            throw new IllegalArgumentException("Another subject with this code already exists: " + normalizedCode);
         }
 
         // Update only the allowed fields
-        existingSubject.setName(dto.getName());
-        existingSubject.setCode(dto.getCode().toUpperCase());
+        existingSubject.setName(normalizedName);
+        existingSubject.setCode(normalizedCode);
 
 
         Subject updatedSubject = subjectRepository.save(existingSubject);
@@ -136,6 +129,8 @@ public class AdminSubjectService {
 
   @Transactional
     public List<SubjectResponseDTO> subjectsByClassroomId(Long classroomId) {
+        classroomRespository.findByIdAndSchool(classroomId, adminSchoolConfig.requireCurrentSchool())
+                .orElseThrow(() -> new EntityNotFoundException("Classroom not found"));
 
         return teacherAssignmentRepository.findByClassroomId(classroomId)
                 .stream()
@@ -146,5 +141,18 @@ public class AdminSubjectService {
                 }).toList();
   }
 
+    private String normalizeSubjectName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Subject name is required.");
+        }
+        return name.trim();
+    }
+
+    private String normalizeSubjectCode(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Subject code is required.");
+        }
+        return code.trim().toUpperCase();
+    }
 
 }

@@ -1,5 +1,6 @@
 package com.vansh.manger.Manger.common.util;
 
+import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.UserRepo;
@@ -31,7 +32,7 @@ public class AdminSchoolConfig {
 
         String email = authentication.getName();
 
-        User user = userRepo.findByEmail(email)
+        User user = userRepo.findByEmailAndRoles(email, Roles.ADMIN)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getSchool() == null) {
@@ -41,21 +42,6 @@ public class AdminSchoolConfig {
         return user.getSchool();
     }
 
-    /**
-     * ✅ Safe method — returns null instead of crashing
-     */
-    public School getOptionalCurrentSchool() {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-
-        return userRepo.findByEmail(authentication.getName())
-                .map(User::getSchool)
-                .orElse(null);
-    }
 
 
 }

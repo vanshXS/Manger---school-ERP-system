@@ -54,13 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //Authentication if username is valid and no authentication exists yet
 
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailService.loadUserByUsername(username);
+            String role = jwtUtil.extractRole(jwtToken);
+            UserDetails userDetails = userDetailService.loadUserByUsername(username + ":ROLE_W_SPLIT:" + role);
 
 
 
             if(jwtUtil.validateToken(jwtToken, userDetails)) {
-
-                String role = jwtUtil.extractRole(jwtToken);
 
                 List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_"+ role));
                 UsernamePasswordAuthenticationToken authToken =

@@ -1,12 +1,13 @@
 package com.vansh.manger.Manger.common.util;
 
+import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.common.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -19,41 +20,20 @@ public class TeacherSchoolConfig {
 
     public School requireCurrentSchool() {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if(auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException(
-                    "No authenticated user found."
-            );
-        }
+        User user = userRepo.findByEmailAndRoles(email, Roles.TEACHER)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-       String email = auth.getName();
-
-        User currentUser = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
-
-        School school = currentUser.getSchool();
-
-        if(school == null) throw new IllegalStateException("User not associated with any school.");
-
-        return school;
+        return user.getSchool();
     }
 
     public Teacher getTeacher() {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if(auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("No autenticated userFound");
-        }
-
-       User user = userRepo.findByEmail(auth.getName())
-               .orElseThrow(() -> new RuntimeException("User not found."));
-
-        return teacherRespository.findByEmailAndSchool_Id(user.getEmail(), requireCurrentSchool().getId())
-                .orElseThrow(() -> new RuntimeException("Teacher not found."));
-
-
+        return teacherRespository.findByEmailAndSchool_Id(email, requireCurrentSchool().getId())
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
     }
 

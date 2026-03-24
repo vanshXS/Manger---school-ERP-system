@@ -97,8 +97,7 @@ public class TeacherMarkService {
                         .orElseThrow(() -> new RuntimeException("Year not found"))
                 : getCurrentAcademicYear(currentSchool);
 
-        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacherAndAcademicYear(teacher,
-                academicYear);
+        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacher(teacher);
         List<Long> classroomIds = assignments.stream()
                 .map(a -> a.getClassroom().getId())
                 .distinct()

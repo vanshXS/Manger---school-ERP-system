@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,6 @@ import com.vansh.manger.Manger.classroom.entity.Classroom;
 import com.vansh.manger.Manger.subject.entity.Subject;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
 import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
-import com.vansh.manger.Manger.student.entity.Enrollment;
 
 @Repository
 public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssignment, Long> {
@@ -35,7 +35,11 @@ public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssign
                         "WHERE ta.classroom_id = :classroom_id", nativeQuery = true)
         List<Subject> findSubjectByClassroom(@Param("classroom_id") Long classroom_id);
 
+        @EntityGraph(attributePaths = {"classroom", "subject", "teacher"})
         List<TeacherAssignment> findByTeacher(Teacher teacher);
+
+        @EntityGraph(attributePaths = {"classroom", "subject", "teacher"})
+        List<TeacherAssignment> findByTeacherIn(List<Teacher> teachers);
         
         @Query("""
                         SELECT ta
@@ -62,12 +66,14 @@ public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssign
 
         boolean existsByClassroomAndSubjectAndTeacherIsNull(Classroom classroom, Subject subject);
 
+        @EntityGraph(attributePaths = {"classroom", "subject", "teacher"})
         List<TeacherAssignment> findByClassroomId(Long classroomId);
 
         List<TeacherAssignment> findBySubject(Subject subject);
 
         boolean existsByClassroom(Classroom classroom);
 
+        @EntityGraph(attributePaths = {"classroom", "subject", "teacher"})
         List<TeacherAssignment> findByClassroomAndMandatoryTrue(Classroom classroom);
 
         boolean existsByClassroomAndSubjectAndMandatoryTrue(
@@ -76,4 +82,8 @@ public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssign
 
         @Query("SELECT s FROM Subject s JOIN TeacherAssignment ta ON s.id = ta.subject.id WHERE ta.classroom = :classroom AND ta.mandatory = true")
         List<Subject> findMandatorySubjectsByClassroom(@Param("classroom") Classroom classroom);
+
+        @EntityGraph(attributePaths = {"classroom", "subject", "teacher"})
+        @Query("select ta from TeacherAssignment ta where ta.classroom.school.id = :schoolId")
+        List<TeacherAssignment> findAllBySchoolIdWithDetails(@Param("schoolId") Long schoolId);
 }

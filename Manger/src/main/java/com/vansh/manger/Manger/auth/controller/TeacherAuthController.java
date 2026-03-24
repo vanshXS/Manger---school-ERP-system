@@ -7,18 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.vansh.manger.Manger.common.config.JwtUtil;
-import com.vansh.manger.Manger.academicyear.dto.*;
-import com.vansh.manger.Manger.attendance.dto.*;
 import com.vansh.manger.Manger.auth.dto.*;
-import com.vansh.manger.Manger.classroom.dto.*;
 import com.vansh.manger.Manger.common.dto.*;
-import com.vansh.manger.Manger.dashboard.dto.*;
-import com.vansh.manger.Manger.exam.dto.*;
-import com.vansh.manger.Manger.school.dto.*;
-import com.vansh.manger.Manger.student.dto.*;
-import com.vansh.manger.Manger.subject.dto.*;
-import com.vansh.manger.Manger.teacher.dto.*;
-import com.vansh.manger.Manger.timetable.dto.*;
 import com.vansh.manger.Manger.auth.entity.RefreshToken;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,7 +36,6 @@ import com.vansh.manger.Manger.auth.service.RefreshTokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.vansh.manger.Manger.teacher.entity.Teacher;
 
 @Slf4j
 @RestController
@@ -62,11 +51,11 @@ public class TeacherAuthController {
     private final JavaMailSender mailsender;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AdminLoginDTO teacherLogin, HttpServletResponse response) {
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthLoginDTO teacherLogin, HttpServletResponse response) {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(teacherLogin.getEmail(), teacherLogin.getPassword()));
+                    new UsernamePasswordAuthenticationToken(teacherLogin.getEmail() + ":ROLE_W_SPLIT:" + Roles.TEACHER.name(), teacherLogin.getPassword()));
 
             User user = (User) authentication.getPrincipal();
 
@@ -169,24 +158,8 @@ public class TeacherAuthController {
             }
         }
 
-        if (refreshToken == null || refreshToken.isEmpty()) {
+        if (StudentAuthController.refreshTokenValidator(response, refreshToken, refreshTokenService))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
-
-        }
-        //delete the refreshToken from the database
-
-        refreshTokenService.deleteByToken(refreshToken);
-
-        //Clear the refresh token from the cookie
-        ResponseCookie clearCookie = ResponseCookie.from("refreshToken")
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        response.addHeader("Set-Cookie", clearCookie.toString());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("refreshToken", refreshToken));
 
     }
@@ -197,7 +170,7 @@ public class TeacherAuthController {
     @PostMapping("/change-password")
     public ResponseEntity<String> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
 
-        User user = userRepo.findByEmail(request.getEmail())
+        User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.TEACHER)
                 .orElseThrow(() -> new RuntimeException("User with this email not registered"));
 
         if (!user.getRoles().equals(Roles.TEACHER)) {
@@ -218,7 +191,7 @@ public class TeacherAuthController {
     @PostMapping("/forget-password")
     public ResponseEntity<String> forgetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
 
-        User user = userRepo.findByEmail(request.getEmail())
+        User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.TEACHER)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!user.getRoles().equals(Roles.TEACHER)) {
@@ -243,7 +216,7 @@ public class TeacherAuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPasswordWithOtp(@RequestBody @Valid ForgetResetPassword request) {
 
-        User user = userRepo.findByEmail(request.getEmail())
+        User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.TEACHER)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
         if (!user.getRoles().equals(Roles.TEACHER)) {

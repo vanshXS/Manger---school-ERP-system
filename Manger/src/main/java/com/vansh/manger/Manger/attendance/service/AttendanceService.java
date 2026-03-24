@@ -3,8 +3,10 @@ package com.vansh.manger.Manger.attendance.service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.vansh.manger.Manger.attendance.dto.BulkAttendanceRequestDTO;
@@ -62,6 +64,10 @@ public class AttendanceService {
 
         Teacher teacher = schoolConfig.getTeacher();
 
+        if (requestDTO.getRecords() == null || requestDTO.getRecords().isEmpty()) {
+            throw new IllegalArgumentException("At least one attendance record is required.");
+        }
+
         AcademicYear currentYear = academicYearRepository.findByIsCurrentAndSchool_Id(true, teacher.getSchool().getId())
                 .orElseThrow(() -> new RuntimeException("No active Year found"));
 
@@ -85,8 +91,18 @@ public class AttendanceService {
             throw new IllegalArgumentException("Cannot mark attendance on Sunday.");
         }
 
+        Set<Long> processedStudentIds = new HashSet<>();
         List<AttendanceResponseDTO> result = new ArrayList<>();
         for (StudentAttendanceRecord records : requestDTO.getRecords()) {
+            if (records.getStudentId() == null) {
+                throw new IllegalArgumentException("Student id is required for each attendance record.");
+            }
+            if (records.getStatus() == null) {
+                throw new IllegalArgumentException("Attendance status is required for each student.");
+            }
+            if (!processedStudentIds.add(records.getStudentId())) {
+                throw new IllegalArgumentException("Duplicate attendance record found for student id: " + records.getStudentId());
+            }
 
             Student student = studentRepository.findByIdAndSchool_Id(records.getStudentId(), teacher.getSchool().getId())
                     .orElseThrow(() -> new RuntimeException("Student not found with this id"));
@@ -134,6 +150,10 @@ public class AttendanceService {
     public List<RosterStudentDTO> getRoster(Long classroomId, LocalDate date) {
 
         Teacher teacher = schoolConfig.getTeacher();
+
+        if (date == null) {
+            date = LocalDate.now();
+        }
 
         Classroom classroom = classroomRespository.findByIdAndSchool(classroomId, teacher.getSchool())
                 .orElseThrow(() -> new RuntimeException("Classroom not found with this id."));
@@ -199,21 +219,29 @@ public class AttendanceService {
         AcademicYear currentYear = academicYearRepository.findByIsCurrentAndSchool_Id(true, teacher.getSchool().getId())
                 .orElseThrow(() -> new RuntimeException("No active Year found"));
 
-        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacherAndAcademicYear(teacher,
-                currentYear);
-
-        return assignments.stream()
+        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacher(teacher);
+        List<Classroom> classrooms = assignments.stream()
                 .map(TeacherAssignment::getClassroom)
                 .distinct()
+                .toList();
+        Map<Long, Integer> activeStudentCounts = classrooms.isEmpty()
+                ? Map.of()
+                : enrollmentRepository.countByClassroomIdsAndAcademicYearAndStatus(
+                                classrooms.stream().map(Classroom::getId).toList(),
+                                currentYear,
+                                StudentStatus.ACTIVE)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                row -> (Long) row[0],
+                                row -> ((Long) row[1]).intValue()));
+
+        return classrooms.stream()
                 .map(classroom -> {
-                    // Optimized single query count from enrollment repository
-                    int activeStudents = enrollmentRepository.countByClassroomAndAcademicYearAndStatus(classroom,
-                            currentYear, StudentStatus.ACTIVE);
                     return ClassroomAttendanceStatsDTO.builder()
                             .id(classroom.getId())
                             .gradeLevel(classroom.getGradeLevel().getDisplayName())
                             .section(classroom.getSection())
-                            .activeStudents(activeStudents)
+                            .activeStudents(activeStudentCounts.getOrDefault(classroom.getId(), 0))
                             .attendancePercentage(null)
                             .build();
                 })

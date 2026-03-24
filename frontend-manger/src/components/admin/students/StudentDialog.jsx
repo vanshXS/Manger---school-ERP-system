@@ -6,6 +6,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/axios';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {

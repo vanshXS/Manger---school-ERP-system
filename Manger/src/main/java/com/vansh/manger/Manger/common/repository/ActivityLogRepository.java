@@ -21,4 +21,8 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
 
     Page<ActivityLog> findBySchool_IdAndRoleOrderByCreatedAtDesc(Long schoolId, Roles role, Pageable pageable);
 
+    List<ActivityLog> findTop10BySchool_IdAndRoleAndTeacher_IdOrderByCreatedAtDesc(Long schoolId, Roles role, Long teacherId);
+
+    Page<ActivityLog> findBySchool_IdAndRoleAndTeacher_IdOrderByCreatedAtDesc(Long schoolId, Roles role, Long teacherId, Pageable pageable);
+
 }

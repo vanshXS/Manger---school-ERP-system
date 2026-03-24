@@ -1,16 +1,11 @@
 package com.vansh.manger.Manger.teacher.service;
 
 
-import com.vansh.manger.Manger.classroom.dto.ClassroomResponseDTO;
-import com.vansh.manger.Manger.student.dto.StudentResponseDTO;
 import com.vansh.manger.Manger.teacher.dto.TeacherAssignmentDTO;
 import com.vansh.manger.Manger.teacher.dto.TeacherResponseDTO;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
-import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
-import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +14,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TeacherService{
-
 
     private final TeacherSchoolConfig schoolConfig;
     private final TeacherAssignmentRepository teacherAssignmentRepository;
@@ -38,7 +32,7 @@ public class TeacherService{
                              .teacherId(teacher.getId())
                              .teacherName(teacher.getFirstName() + " " + teacher.getLastName())
                              .classroomId(ta.getClassroom().getId())
-                             .className(new ClassroomResponseDTO().getDisplayName(ta.getClassroom()))
+                             .className(ta.getClassroom().getGradeLevel().getDisplayName() + " - " + ta.getClassroom().getSection().toUpperCase())
                              .subjectId(ta.getSubject().getId())
                              .subjectName(ta.getSubject().getName())
                              .mandatory(ta.isMandatory())

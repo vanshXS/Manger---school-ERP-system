@@ -11,13 +11,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
-import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 
 public interface TeacherRespository extends JpaRepository<Teacher, Long>, JpaSpecificationExecutor<Teacher> {
 
     boolean existsByEmailAndSchool_Id(String email, Long schoolId);
 
-    Optional<Teacher>findByEmailAndSchool_Id(String email, Long schoolId);
+    Optional<Teacher> findByEmailAndSchool_Id(String email, Long schoolId);
 
 
     @Query("""

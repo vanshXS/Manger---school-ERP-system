@@ -105,7 +105,7 @@ public class EnrollmentService{
 
         if(enrollments.isEmpty()) {
             log.info("[Promotion] {} -empty", fromLabel);
-            emptyResult(fromLabel);
+            return emptyResult(fromLabel);
         }
 
         if(isTerminal) {
@@ -135,7 +135,7 @@ public class EnrollmentService{
                 continue;
             }
 
-            if(status == StudentStatus.ACTIVE) {
+            if(status == StudentStatus.ACTIVE || status == StudentStatus.INACTIVE) {
                 enrollment.setStatus(StudentStatus.PROMOTED);
                 enrollmentRepository.save(enrollment);
 
@@ -225,7 +225,7 @@ public class EnrollmentService{
         //if student at the end of the classroom
         if(isTerminal) {
             long willGraduate = enrollments.stream()
-                    .filter(e -> e.getStudent().getGraduationYear() != null)
+                    .filter(e -> e.getStudent().getGraduationYear() == null)
                     .filter(e -> e.getStatus() == StudentStatus.ACTIVE || e.getStatus() == StudentStatus.INACTIVE)
                     .count();
 
@@ -249,7 +249,10 @@ public class EnrollmentService{
 
 
         for(Enrollment enrollment : enrollments) {
-            if(enrollmentRepository.existsByAcademicYearAndStudent(nextYear, enrollment.getStudent())) alreadyDone++;
+            if(enrollmentRepository.existsByAcademicYearAndStudent(nextYear, enrollment.getStudent())) {
+                alreadyDone++;
+                continue;
+            }
 
             StudentStatus status = enrollment.getStatus();
             if(status == StudentStatus.ACTIVE || status == StudentStatus.INACTIVE) {willPromote++; continue;}

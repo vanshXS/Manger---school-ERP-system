@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
 import { classroomDisplayName } from '@/lib/classroomDisplayName';
-import { BookCopy, Edit, MoreHorizontal, PauseCircle, Trash2, User, UserCheck, UserX } from 'lucide-react';
+import { BookCopy, Edit, MoreHorizontal, PauseCircle, Trash2, User, UserCheck, UserX, Mail } from 'lucide-react';
 
 export default function StudentTable({
   students, onEdit, onManageSubjects, onDelete, onDownloadSlip, onUpdateStatus, onSendReset, onRowClick,
@@ -106,6 +106,10 @@ export default function StudentTable({
 
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onManageSubjects(s); }}>
                         <BookCopy className="mr-2 h-4 w-4" /> Subjects
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSendReset(s.id); }}>
+                        <Mail className="mr-2 h-4 w-4" /> Send Reset Link
                       </DropdownMenuItem>
 
                       <DropdownMenuSeparator />

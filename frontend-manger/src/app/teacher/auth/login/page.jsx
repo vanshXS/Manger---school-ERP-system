@@ -1,7 +1,7 @@
 'use client';
 
 import { useTeacherAuth } from '@/contexts/TeacherAuthContext';
-import apiClient from '@/lib/axios';
+import teacherApiClient from '@/lib/teacherAxios';
 import { showError, showSuccess } from '@/lib/toastHelper';
 import { AlertTriangle, KeyRound, LogIn, Mail, School } from 'lucide-react';
 import Link from 'next/link';
@@ -47,7 +47,7 @@ export default function TeacherLoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await apiClient.post('/api/auth/teacher/login', { email, password });
+            const response = await teacherApiClient.post('/api/auth/teacher/login', { email, password });
 
             const { accessToken } = response.data;
 

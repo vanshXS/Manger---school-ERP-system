@@ -110,7 +110,7 @@ export default function TeacherProfilePage() {
                     <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
                         <Avatar className="h-20 w-20 sm:h-24 sm:w-24 ring-4 ring-white shadow-lg">
                             {profile.profilePictureUrl && (
-                                <AvatarImage src={`http://localhost:8080/api/files/teachers/${profile.profilePictureUrl}`} alt={fullName} />
+                                <AvatarImage src={`${teacherApiClient.defaults.baseURL}/api/files/teachers/${profile.profilePictureUrl}`} alt={fullName} />
                             )}
                             <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-xl sm:text-2xl font-bold">
                                 {initials}
