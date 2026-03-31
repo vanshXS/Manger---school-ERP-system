@@ -37,6 +37,11 @@
 **/.secret
 **/*.secrets
 
+# Application Configuration (sensitive data)
+**/src/main/resources/application.properties
+**/src/main/resources/application-*.properties
+**/src/test/resources/application-*.properties
+
 # ------------------------------------------------------------------------------
 # OS GENERATED FILES
 # ------------------------------------------------------------------------------
