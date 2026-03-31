@@ -1,7 +1,7 @@
 'use client';
 
 import StudentProtectedRoute from '@/components/StudentProtectedRoute';
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -121,6 +121,7 @@ export default function StudentDashboardLayout({ children }) {
     const [isSidebarHovered, setSidebarHovered] = useState(false);
     const [studentName, setStudentName] = useState('');
     const [academicYear, setAcademicYear] = useState('');
+    const [profilePictureUrl, setProfilePictureUrl] = useState(null);
     const [isMoreOpen, setIsMoreOpen] = useState(false);
 
     const { logout, isAuthenticated, isLoading } = useStudentAuth();
@@ -137,6 +138,7 @@ export default function StudentDashboardLayout({ children }) {
                 .then((res) => {
                     setStudentName(res.data?.firstName + ' ' + (res.data?.lastName || ''));
                     setAcademicYear(res.data?.academicYearName || '');
+                    setProfilePictureUrl(res.data?.profilePictureUrl || null);
                 })
                 .catch(() => setStudentName('Student'));
         }
@@ -179,6 +181,7 @@ export default function StudentDashboardLayout({ children }) {
                             <DropdownMenuTrigger asChild>
                                 <button className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/30 min-h-[44px] min-w-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 touch-manipulation" aria-label="Account menu">
                                     <Avatar className="h-8 w-8 ring-2 ring-slate-100">
+                                        <AvatarImage src={profilePictureUrl} />
                                         <AvatarFallback className="bg-gradient-to-tr from-orange-500 to-amber-500 text-white text-xs font-bold">
                                             {studentName ? studentName.slice(0, 2).toUpperCase() : 'ST'}
                                         </AvatarFallback>

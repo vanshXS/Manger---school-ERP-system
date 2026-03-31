@@ -44,14 +44,4 @@ public class AdminSchoolController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SchoolProfileDTO> updateSchoolLogo(
-            @RequestParam("file") MultipartFile logoFile) {
-
-        // The service method will find the admin's school and update its logo
-        SchoolProfileDTO updatedProfile = adminSchoolService.updateSchoolLogo(logoFile);
-        return ResponseEntity.ok(updatedProfile);
-    }
-
-
 }

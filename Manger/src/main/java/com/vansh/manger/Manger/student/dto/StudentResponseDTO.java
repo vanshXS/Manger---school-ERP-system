@@ -5,16 +5,14 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.vansh.manger.Manger.classroom.dto.ClassroomResponseDTO;
+import com.vansh.manger.Manger.common.entity.Gender;
 import com.vansh.manger.Manger.student.entity.StudentStatus;
-
 import com.vansh.manger.Manger.subject.dto.SubjectResponseDTO;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.vansh.manger.Manger.common.entity.Gender;
-import com.vansh.manger.Manger.student.entity.Student;
-import com.vansh.manger.Manger.student.entity.Enrollment;
 
 /**
  * Represents a Student's profile AND their *current* enrollment status.

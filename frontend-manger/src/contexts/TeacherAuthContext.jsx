@@ -10,7 +10,7 @@ export function TeacherAuthProvider({ children }) {
     const [isLoading, setIsLoading] = useState(true);
     const [accessToken, setAccessToken] = useState(null);
 
-    const baseURL = apiClient.defaults.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const baseURL = 'http://localhost:8080';
 
     // ================= INIT AUTH =================
     useEffect(() => {
@@ -36,7 +36,7 @@ export function TeacherAuthProvider({ children }) {
         try {
             const response = await fetch(`${baseURL}/api/auth/teacher/refresh`, {
                 method: 'POST',
-                credentials: 'include',
+                credentials: 'include', // Sends teacherRefreshToken cookie
                 headers: {
                     'Content-Type': 'application/json',
                 },

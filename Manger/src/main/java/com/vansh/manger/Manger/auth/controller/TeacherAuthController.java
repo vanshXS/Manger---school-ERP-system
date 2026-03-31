@@ -78,7 +78,7 @@ public class TeacherAuthController {
                     user.getRoles().name()
             );
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+            ResponseCookie cookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(false)
                     .path("/")
@@ -101,7 +101,7 @@ public class TeacherAuthController {
         String refreshToken = null;
         if(request.getCookies() != null) {
             for(Cookie cookie : request.getCookies()) {
-                if("refreshToken".equals(cookie.getName())){
+                if("teacherRefreshToken".equals(cookie.getName())){
                     refreshToken = cookie.getValue();
                     break;
                 }
@@ -130,7 +130,7 @@ public class TeacherAuthController {
 
        TokenRefreshResponseDTO tokenRefreshResponseDTO = new TokenRefreshResponseDTO(accessToken, user.getRoles().name());
 
-       ResponseCookie responseCookie = ResponseCookie.from("refreshToken", refreshToken)
+       ResponseCookie responseCookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
                .httpOnly(true)
                .secure(false)
                .maxAge(7*24*60*60)
@@ -151,7 +151,7 @@ public class TeacherAuthController {
 
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
+                if ("teacherRefreshToken".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
                     break;
                 }

@@ -53,4 +53,5 @@ public interface AcademicYearRepository extends JpaRepository<AcademicYear, Long
         List<AcademicYear> candidates = findNextAcademicYearCandidates(currentEndDate, schoolId);
         return candidates.isEmpty() ? Optional.empty() : Optional.of(candidates.get(0));
     }
+
 }

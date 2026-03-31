@@ -10,7 +10,7 @@ export function StudentAuthProvider({ children }) {
     const [isLoading, setIsLoading] = useState(true);
     const [accessToken, setAccessToken] = useState(null);
 
-    const baseURL = studentApiClient.defaults.baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const baseURL = 'http://localhost:8080';
 
     // ================= INIT AUTH =================
     useEffect(() => {
@@ -36,7 +36,7 @@ export function StudentAuthProvider({ children }) {
         try {
             const response = await fetch(`${baseURL}/api/auth/student/refresh`, {
                 method: 'POST',
-                credentials: 'include',
+                credentials: 'include', // Sends studentRefreshToken cookie
                 headers: {
                     'Content-Type': 'application/json',
                 },

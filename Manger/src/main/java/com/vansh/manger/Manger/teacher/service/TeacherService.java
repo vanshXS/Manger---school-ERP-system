@@ -1,75 +1,37 @@
 package com.vansh.manger.Manger.teacher.service;
 
+import org.springframework.stereotype.Service;
 
-import com.vansh.manger.Manger.teacher.dto.TeacherAssignmentDTO;
+import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
 import com.vansh.manger.Manger.teacher.dto.TeacherResponseDTO;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
+import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
+import com.vansh.manger.Manger.teacher.mapper.TeacherResponseMapper;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
-import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Provides teacher-facing read operations (teacher's own profile).
+ *
+ * <p><b>SRP</b> — only the teacher's self-service read operations.
+ * <b>DIP</b> — depends on {@link TeacherResponseMapper} abstraction for
+ * mapping (was previously a static method duplicated here).
+ * <b>DRY</b> — eliminated the static {@code getTeacherResponseDTO} duplicate.</p>
+ */
 @Service
 @RequiredArgsConstructor
-public class TeacherService{
+public class TeacherService {
 
     private final TeacherSchoolConfig schoolConfig;
     private final TeacherAssignmentRepository teacherAssignmentRepository;
+    private final TeacherResponseMapper teacherResponseMapper;
 
-
-
-     public TeacherResponseDTO getMyProfile() {
-
-         Teacher teacher = schoolConfig.getTeacher();
-
-         List<TeacherAssignmentDTO> assignments = teacherAssignmentRepository.findByTeacher(teacher)
-                 .stream()
-                 .map(ta -> {
-                      return TeacherAssignmentDTO
-                             .builder()
-                             .teacherId(teacher.getId())
-                             .teacherName(teacher.getFirstName() + " " + teacher.getLastName())
-                             .classroomId(ta.getClassroom().getId())
-                             .className(ta.getClassroom().getGradeLevel().getDisplayName() + " - " + ta.getClassroom().getSection().toUpperCase())
-                             .subjectId(ta.getSubject().getId())
-                             .subjectName(ta.getSubject().getName())
-                             .mandatory(ta.isMandatory())
-                             .build();
-
-                 }).toList();
-
-         return getTeacherResponseDTO(teacher, assignments);
-     }
-
-
-    static TeacherResponseDTO getTeacherResponseDTO(Teacher teacher, List<TeacherAssignmentDTO> assignments) {
-        return TeacherResponseDTO.builder()
-                .id(teacher.getId())
-                .firstName(teacher.getFirstName())
-                .lastName(teacher.getLastName())
-                .phoneNumber(teacher.getPhoneNumber())
-                .email(teacher.getEmail())
-                .profilePictureUrl(teacher.getProfilePictureUrl())
-                .active(teacher.isActive())
-                .joinDate(teacher.getJoiningDate() != null ? teacher.getJoiningDate().toString() : null)
-                .assignedClassrooms(assignments)
-                .employeeId(teacher.getEmployeeId())
-                .qualification(teacher.getQualification())
-                .specialization(teacher.getSpecialization())
-                .yearsOfExperience(teacher.getYearsOfExperience())
-                .employmentType(teacher.getEmploymentType())
-                .salary(teacher.getSalary())
-                .fullAddress(teacher.getFullAddress())
-                .city(teacher.getCity())
-                .state(teacher.getState())
-                .pincode(teacher.getPincode())
-                .emergencyContactName(teacher.getEmergencyContactName())
-                .emergencyContactNumber(teacher.getEmergencyContactNumber())
-                .gender(teacher.getGender())
-                .build();
+    public TeacherResponseDTO getMyProfile() {
+        Teacher teacher = schoolConfig.getTeacher();
+        List<TeacherAssignment> assignments = teacherAssignmentRepository.findByTeacher(teacher);
+        return teacherResponseMapper.toDTO(teacher, assignments);
     }
-
-
 }

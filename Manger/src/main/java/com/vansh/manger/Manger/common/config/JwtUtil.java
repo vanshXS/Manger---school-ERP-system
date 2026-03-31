@@ -10,11 +10,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.time.LocalTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -89,6 +87,27 @@ public class JwtUtil {
         return extractClaims(token, claims -> claims.get("role", String.class));
     }
 
+    public Long extractUserId(String token) {
+        return extractLongClaim(token, "userId");
+    }
+
+    public Long extractSchoolId(String token) {
+        return extractLongClaim(token, "schoolId");
+    }
+
+    private Long extractLongClaim(String token, String claimName) {
+        return extractClaims(token, claims -> {
+            Object value = claims.get(claimName);
+            if (value == null) {
+                return null;
+            }
+            if (value instanceof Number number) {
+                return number.longValue();
+            }
+            return Long.parseLong(value.toString());
+        });
+    }
+
     // ================= Validation =================
 
     public Boolean validateToken(String token, UserDetails userDetails) {
@@ -103,6 +122,10 @@ public class JwtUtil {
     public String generateAccessToken(User user, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("userId", user.getId());
+        if (user.getSchool() != null && user.getSchool().getId() != null) {
+            claims.put("schoolId", user.getSchool().getId());
+        }
         return createAccessToken(claims, user.getEmail());
     }
 

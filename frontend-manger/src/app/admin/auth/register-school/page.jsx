@@ -23,8 +23,6 @@ export default function RegisterSchoolPage() {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState('');
   const [errors, setErrors] = useState({});
 
   // Step 1 Validation
@@ -54,20 +52,6 @@ export default function RegisterSchoolPage() {
     if (validateStep1()) setStep(2);
   };
 
-  // File Change
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        showError('File is too large. Maximum size is 2MB.');
-        e.target.value = '';
-        return;
-      }
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
-    }
-  };
-
   // Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,7 +67,6 @@ export default function RegisterSchoolPage() {
     formData.append('adminEmail', email);
     formData.append('adminPhoneNumber', phoneNumber);
     formData.append('adminPassword', password);
-    if (logoFile) formData.append('logoFile', logoFile);
 
     try {
       await apiClient.post('/api/schools/register', formData);
@@ -154,24 +137,6 @@ export default function RegisterSchoolPage() {
                     />
                   </div>
                   {errors.schoolAddress && <p className="mt-1 text-sm text-red-600" role="alert">{errors.schoolAddress}</p>}
-                </div>
-
-                {/* Logo Upload */}
-                <div>
-                  <Label htmlFor="logoFile">School Logo (Optional)</Label>
-                  <div className="flex items-center gap-4 mt-1 flex-wrap">
-                    <Avatar className="h-16 w-16 border bg-slate-50">
-                      <AvatarImage src={logoPreview || ''} alt="Logo Preview" />
-                      <AvatarFallback className="text-3xl"><FileImage /></AvatarFallback>
-                    </Avatar>
-                    <Input
-                      id="logoFile"
-                      type="file"
-                      accept="image/png, image/jpeg"
-                      onChange={handleFileChange}
-                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
-                  </div>
                 </div>
 
                 <Button onClick={handleNextStep} className="w-full text-base py-3 mt-4">

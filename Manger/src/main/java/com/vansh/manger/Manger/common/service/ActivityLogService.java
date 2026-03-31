@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,11 +26,13 @@ public class ActivityLogService {
     private final TeacherSchoolConfig teacherSchoolConfig;
 
     @Transactional
+    @Async
     public void logActivity(String description, String category) {
         logActivity(description, category, Roles.ADMIN);
     }
 
     @Transactional
+    @Async
     public void logActivity(String description, String category, Roles roles) {
         School school = schoolConfig.requireCurrentSchool();
         ActivityLog log = ActivityLog.builder()
@@ -43,6 +46,7 @@ public class ActivityLogService {
     }
 
     @Transactional
+    @Async
     public void logActivityForSchool(School school, String description, String category) {
         ActivityLog log = ActivityLog.builder()
                 .school(school)
@@ -55,6 +59,7 @@ public class ActivityLogService {
     }
 
     @Transactional
+    @Async
     public void logTeacherActivity( School school, String description, String category) {
         Teacher teacher = teacherSchoolConfig.getTeacher();
         ActivityLog log = ActivityLog.builder()

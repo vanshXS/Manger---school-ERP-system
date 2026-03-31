@@ -40,7 +40,7 @@ function groupByClassroom(assignments = []) {
 const getImageUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  return `http://localhost:8080/api/files/teachers/${url}`;
+  return url;
 };
 
 const InfoItem = ({ icon: Icon, label, value, iconColor = 'text-slate-400', mono }) => {

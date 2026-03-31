@@ -8,8 +8,9 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMailMessage;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import com.vansh.manger.Manger.common.entity.School;
+
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Async
     public void sendNewUserWelcomeEmail(String toEmail, String fullName, String rawPassword) {
         SimpleMailMessage message = new SimpleMailMessage();
 
@@ -37,6 +39,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void sendPasswordResetEmail(String toEmail, String fullName, String newRawPassword) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
@@ -52,6 +55,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void sendMarksheet(String to, byte[] pdfBytes, String studentName, String examName,  String rollNo,  String subjectName) {
 
         try {

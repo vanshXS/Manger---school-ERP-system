@@ -69,6 +69,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+
+
     /* -------------------------------------------------
        3. Entity Not Found (JPA / resource not found)
        ------------------------------------------------- */

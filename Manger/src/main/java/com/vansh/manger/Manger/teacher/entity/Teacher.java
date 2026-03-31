@@ -3,6 +3,7 @@ package com.vansh.manger.Manger.teacher.entity;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -51,7 +52,12 @@ public class Teacher {
   @NotBlank(message = "Password is required")
   private String password;
 
+  @Column(length = 512)
   private String profilePictureUrl;
+
+  @JsonIgnore
+  @Column(length = 255)
+  private String profilePicturePublicId;
 
   private LocalDate joiningDate;
 

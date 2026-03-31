@@ -153,7 +153,7 @@ export default function TeacherTable({
                       <TableCell className="pl-6 py-3">
                         <div className="flex gap-3 items-center">
                           <Avatar className="h-9 w-9 border border-slate-200 shadow-sm">
-                            <AvatarImage src={t.profilePictureUrl ? `http://localhost:8080/api/files/teachers/${t.profilePictureUrl}` : ''} className="object-cover" />
+                            <AvatarImage src={t.profilePictureUrl || ''} className="object-cover" />
                             <AvatarFallback className="bg-indigo-50 text-indigo-700 font-semibold text-xs">
                               {t.firstName?.[0]}{t.lastName?.[0]}
                             </AvatarFallback>

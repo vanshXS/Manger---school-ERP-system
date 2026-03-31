@@ -28,6 +28,6 @@ public class SchoolRegistrationRequestDTO {
     private String phoneNumber;
 
 
-    private MultipartFile logoFile;
+
 
 }

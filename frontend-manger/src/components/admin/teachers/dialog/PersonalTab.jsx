@@ -2,14 +2,35 @@
 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { FormField, inputCls, inputErr } from '../../shared/FormComponents';
 
-export default function PersonalTab({ register, errors, watch, setValue }) {
+export default function PersonalTab({ register, errors, watch, setValue, existingImageUrl }) {
     const profilePictureFile = watch('profilePicture');
-    const profilePictureName = profilePictureFile && profilePictureFile.length > 0
-        ? profilePictureFile[0].name
-        : null;
+    const isRemoveProfilePicture = watch('removeProfilePicture');
+    
+    const [localPreview, setLocalPreview] = useState(null);
+
+    useEffect(() => {
+        if (profilePictureFile && profilePictureFile.length > 0) {
+            const objectUrl = URL.createObjectURL(profilePictureFile[0]);
+            setLocalPreview(objectUrl);
+            setValue('removeProfilePicture', false);
+            return () => URL.revokeObjectURL(objectUrl);
+        } else {
+            setLocalPreview(null);
+        }
+    }, [profilePictureFile, setValue]);
+
+    const displayUrl = localPreview || (!isRemoveProfilePicture && existingImageUrl) || null;
+
+    const handleClearPicture = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setValue('profilePicture', null);
+        setValue('removeProfilePicture', true);
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -36,16 +57,32 @@ export default function PersonalTab({ register, errors, watch, setValue }) {
                 </Select>
             </FormField>
             <FormField label="Profile Photo" span2>
-                <div className="relative border-2 border-dashed border-slate-300 rounded-lg p-5 hover:bg-slate-100 transition-colors text-center cursor-pointer group bg-white">
-                    <input type="file" accept="image/*" {...register('profilePicture')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                    <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="p-2 bg-slate-100 rounded-full group-hover:bg-indigo-50 transition-colors">
-                            <Upload className="h-5 w-5 text-slate-500 group-hover:text-indigo-600" />
+                <div className="relative border-2 border-dashed border-slate-300 rounded-lg p-5 hover:bg-slate-100 transition-colors text-center cursor-pointer group bg-white overflow-hidden min-h-[140px] flex items-center justify-center">
+                    
+                    {displayUrl ? (
+                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                            <img src={displayUrl} alt="Preview" className="h-24 w-24 object-cover rounded-full border border-slate-200 shadow-sm z-20" />
+                            <button 
+                                type="button"
+                                onClick={handleClearPicture}
+                                className="absolute top-0 right-0 p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 z-30 transition-colors"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
                         </div>
-                        <span className="text-sm text-slate-600 font-medium">
-                            {profilePictureName || 'Click to browse or drag and drop'}
-                        </span>
-                    </div>
+                    ) : (
+                        <>
+                            <input type="file" accept="image/*" {...register('profilePicture')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                            <div className="flex flex-col items-center justify-center gap-2">
+                                <div className="p-2 bg-slate-100 rounded-full group-hover:bg-indigo-50 transition-colors">
+                                    <Upload className="h-5 w-5 text-slate-500 group-hover:text-indigo-600" />
+                                </div>
+                                <span className="text-sm text-slate-600 font-medium">
+                                    Click to browse or drag and drop
+                                </span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </FormField>
         </div>

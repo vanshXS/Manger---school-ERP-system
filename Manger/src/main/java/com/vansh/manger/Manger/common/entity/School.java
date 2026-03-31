@@ -1,5 +1,6 @@
 package com.vansh.manger.Manger.common.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.vansh.manger.Manger.classroom.entity.Classroom;
 import jakarta.persistence.*;
@@ -7,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,8 +34,12 @@ public class School {
     @Column(length = 20)
     private String phoneNumber;
 
-@Column
+    @Column(length = 512)
     private String logoUrl;
+
+    @JsonIgnore
+    @Column(length = 255)
+    private String logoPublicId;
 
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -61,7 +61,6 @@ const Sidebar = ({ isCollapsed, school, handleLogout }) => {
       <div className="flex items-center h-16 px-4 border-b border-slate-800 shrink-0">
         <div className="flex items-center gap-3 w-full overflow-hidden">
           <Avatar className="h-8 w-8 ring-2 ring-slate-700/50 shrink-0">
-            <AvatarImage src={school?.logoUrl} />
             <AvatarFallback className="bg-blue-600 text-white font-bold text-xs">
               {initial}
             </AvatarFallback>
@@ -175,7 +174,6 @@ export default function AdminLayout({ children }) {
           <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between lg:justify-end shrink-0 shadow-sm z-10">
             <div className="flex items-center gap-3 lg:hidden">
               <Avatar className="h-8 w-8 ring-1 ring-slate-200">
-                <AvatarImage src={schoolData?.logoUrl} />
                 <AvatarFallback className="bg-blue-600 text-white font-bold text-[10px]">
                   {(schoolData?.name || 'S')[0]?.toUpperCase()}
                 </AvatarFallback>

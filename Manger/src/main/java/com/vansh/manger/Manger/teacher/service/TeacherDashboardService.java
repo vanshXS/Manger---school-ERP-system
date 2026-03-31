@@ -39,6 +39,8 @@ import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.timetable.entity.TimeTable;
 import com.vansh.manger.Manger.timetable.repository.TimeTableRepository;
+import com.vansh.manger.Manger.common.util.ClassroomDisplayHelper;
+import com.vansh.manger.Manger.exam.util.ExamStatusResolver;
 
 import lombok.RequiredArgsConstructor;
 
@@ -57,6 +59,8 @@ public class TeacherDashboardService {
     private final ExamRepository examRepository;
     private final StudentSubjectMarksRepository marksRepository;
     private final ActivityLogService activityLogService;
+    private final ExamStatusResolver examStatusResolver;
+
 
     @Transactional(readOnly = true)
     public TeacherDashboardResponseDTO getDashboardSummary() {
@@ -101,7 +105,7 @@ public class TeacherDashboardService {
                 .sorted(Comparator.comparing(TimeTable::getStartTime))
                 .map(tt -> {
                     String timeSlot = formatTime(tt.getStartTime()) + " - " + formatTime(tt.getEndTime());
-                    String className = formatClassName(
+                    String className = ClassroomDisplayHelper.formatName(
                             tt.getTeacherAssignment().getClassroom().getGradeLevel().getDisplayName(),
                             tt.getTeacherAssignment().getClassroom().getSection());
                     return TeacherDashboardResponseDTO.TodayClassDTO.builder()
@@ -212,7 +216,7 @@ public class TeacherDashboardService {
 
                     if (!attendanceMarked && !today.getDayOfWeek().equals(DayOfWeek.SUNDAY)) {
                         tasks.add(TeacherDashboardResponseDTO.PendingTaskDTO.builder()
-                                .title("Mark attendance for " + formatClassName(
+                                .title("Mark attendance for " + ClassroomDisplayHelper.formatName(
                                         classroom.getGradeLevel().getDisplayName(),
                                         classroom.getSection()))
                                 .type("Attendance")
@@ -230,7 +234,7 @@ public class TeacherDashboardService {
             examRepository.findBySchool_IdOrderByStartDateDesc(schoolConfig.requireCurrentSchool().getId()).stream()
                     .filter(exam -> classroomIds.contains(exam.getClassroom().getId()))
                     .filter(exam -> exam.getAcademicYear() != null && exam.getAcademicYear().getId().equals(currentYear.getId()))
-                    .filter(exam -> resolveExamStatus(exam.getStartDate(), exam.getEndDate(), exam.getStatus()) == ExamStatus.ONGOING)
+                    .filter(exam -> examStatusResolver.resolve(exam.getStartDate(), exam.getEndDate(), exam.getStatus()) == ExamStatus.ONGOING)
                     .limit(3)
                     .forEach(exam -> tasks.add(TeacherDashboardResponseDTO.PendingTaskDTO.builder()
                             .title("Enter marks for " + exam.getName())
@@ -254,7 +258,7 @@ public class TeacherDashboardService {
             return null;
         }
 
-        String className = formatClassName(
+        String className = ClassroomDisplayHelper.formatName(
                 enrollment.getClassroom().getGradeLevel().getDisplayName(),
                 enrollment.getClassroom().getSection());
 
@@ -273,24 +277,8 @@ public class TeacherDashboardService {
                 .build();
     }
 
-    private ExamStatus resolveExamStatus(LocalDate startDate, LocalDate endDate, ExamStatus currentStatus) {
-        if (currentStatus == ExamStatus.COMPLETED) {
-            return ExamStatus.COMPLETED;
-        }
-
-        LocalDate today = LocalDate.now();
-        if (today.isBefore(startDate)) {
-            return ExamStatus.UPCOMING;
-        }
-        if (today.isAfter(endDate)) {
-            return ExamStatus.COMPLETED;
-        }
-        return ExamStatus.ONGOING;
-    }
-
-    private String formatClassName(String gradeLevel, String section) {
-        return gradeLevel + " - " + section;
-    }
+    // DRY: Removed resolveExamStatus — now uses ExamStatusResolver component
+    // DRY: Removed formatClassName — now uses ClassroomDisplayHelper.formatName
 
     private String formatTime(LocalTime time) {
         if (time == null) {

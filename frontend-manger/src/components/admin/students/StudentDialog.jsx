@@ -36,6 +36,7 @@ const studentSchema = z.object({
   phoneNumber: z.string().optional(),
   classroomId: z.string().optional(),
   profilePicture: z.any().optional(),
+  removeProfilePicture: z.boolean().optional(),
   fatherName: z.string().optional(),
   motherName: z.string().optional(),
   guardianName: z.string().optional(),
@@ -162,6 +163,7 @@ export default function StudentDialog({
     if (data.phoneNumber) formData.append('phoneNumber', data.phoneNumber);
     if (data.classroomId && data.classroomId !== 'none') formData.append('classroomId', data.classroomId);
     if (data.profilePicture?.length) formData.append('profilePicture', data.profilePicture[0]);
+    if (data.removeProfilePicture) formData.append('removeProfilePicture', 'true');
 
     const optionals = [
       'fatherName', 'motherName', 'guardianName', 'parentPhonePrimary', 'parentPhoneSecondary',
@@ -267,7 +269,7 @@ export default function StudentDialog({
               {/* SCROLLABLE CONTENT */}
               <div className="flex-1 overflow-y-auto p-6">
                 <TabsContent value="personal" className="mt-0 focus-visible:ring-0">
-                  <PersonalTab register={register} errors={errors} watch={watch} setValue={setValue} classrooms={classrooms} />
+                  <PersonalTab register={register} errors={errors} watch={watch} setValue={setValue} classrooms={classrooms} existingImageUrl={editingStudent?.profilePictureUrl} />
                 </TabsContent>
 
                 <TabsContent value="family" className="mt-0 focus-visible:ring-0">

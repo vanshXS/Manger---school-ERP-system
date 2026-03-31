@@ -1,11 +1,16 @@
 package com.vansh.manger.Manger.common.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 
-
+/**
+ * Generates cryptographically secure random passwords.
+ *
+ * <p><b>DIP</b> — now a Spring-managed {@code @Component} so services
+ * depend on the injected abstraction rather than instantiating via {@code new}.</p>
+ */
+@Component
 public class RandomPasswordGenerator {
 
 

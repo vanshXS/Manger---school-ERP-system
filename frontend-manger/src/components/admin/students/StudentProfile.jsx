@@ -159,7 +159,7 @@ export default function StudentProfile({
           <CardContent className="pt-8 pb-6 px-6 flex flex-col items-center text-center bg-gradient-to-b from-white to-slate-50/70">
             <div className="relative mb-4">
               <Avatar className="h-28 w-28 ring-4 ring-white shadow-md">
-                <AvatarImage src={profilePictureUrl ? `http://localhost:8080/api/files/students/${profilePictureUrl}` : ''} className="object-cover" />
+                <AvatarImage src={profilePictureUrl || ''} className="object-cover" />
                 <AvatarFallback className="text-3xl font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
                   {firstName?.[0]}{lastName?.[0]}
                 </AvatarFallback>

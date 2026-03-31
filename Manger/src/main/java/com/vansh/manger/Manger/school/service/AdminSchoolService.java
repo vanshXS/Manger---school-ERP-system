@@ -1,25 +1,25 @@
 package com.vansh.manger.Manger.school.service;
 
-import com.vansh.manger.Manger.auth.dto.ChangePasswordRequestDTO;
-import com.vansh.manger.Manger.school.dto.SchoolProfileDTO;
-import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.User;
-import com.vansh.manger.Manger.common.repository.SchoolRepository;
-import com.vansh.manger.Manger.common.repository.UserRepo;
-
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import com.vansh.manger.Manger.common.service.FileStorageService;
+import com.vansh.manger.Manger.auth.dto.ChangePasswordRequestDTO;
+import com.vansh.manger.Manger.common.dto.CloudinaryResponse;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.common.entity.User;
+import com.vansh.manger.Manger.common.repository.SchoolRepository;
+import com.vansh.manger.Manger.common.repository.UserRepo;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
+import com.vansh.manger.Manger.common.service.FileStorageService;
+import com.vansh.manger.Manger.school.dto.SchoolProfileDTO;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,10 +31,11 @@ public class AdminSchoolService {
     private final FileStorageService fileStorageService;
     private final UserRepo userRepo;
 
-
-    /* -------------------------------------------------------
+    /*
+     * -------------------------------------------------------
      * 🔐 AUTH HELPERS
-     * ------------------------------------------------------- */
+     * -------------------------------------------------------
+     */
 
     private Long getAuthenticatedUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -43,7 +44,7 @@ public class AdminSchoolService {
             return ((User) principal).getId();
         }
 
-        if (principal instanceof String) {  
+        if (principal instanceof String) {
             String email = (String) principal;
             return userRepo.findByEmail(email)
                     .orElseThrow(() -> new EntityNotFoundException("User not found via email."))
@@ -59,24 +60,25 @@ public class AdminSchoolService {
                 .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found."));
     }
 
-
-    /* -------------------------------------------------------
+    /*
+     * -------------------------------------------------------
      * 📌 DTO MAPPER
-     * ------------------------------------------------------- */
+     * -------------------------------------------------------
+     */
     private SchoolProfileDTO mapToDTO(School school) {
         SchoolProfileDTO dto = new SchoolProfileDTO();
         dto.setId(school.getId());
         dto.setName(school.getName());
         dto.setAddress(school.getAddress());
         dto.setPhoneNumber(school.getPhoneNumber());
-        dto.setLogoUrl(school.getLogoUrl());
         return dto;
     }
 
-
-    /* -------------------------------------------------------
+    /*
+     * -------------------------------------------------------
      * 📌 FETCH SCHOOL PROFILE
-     * ------------------------------------------------------- */
+     * -------------------------------------------------------
+     */
     @Transactional(readOnly = true)
     public SchoolProfileDTO getSchoolProfile() {
 
@@ -90,10 +92,11 @@ public class AdminSchoolService {
         return mapToDTO(school);
     }
 
-
-    /* -------------------------------------------------------
+    /*
+     * -------------------------------------------------------
      * 📌 UPDATE SCHOOL INFO
-     * ------------------------------------------------------- */
+     * -------------------------------------------------------
+     */
     @Transactional
     public SchoolProfileDTO updateSchoolProfile(SchoolProfileDTO dto) {
 
@@ -112,16 +115,16 @@ public class AdminSchoolService {
 
         activityLogService.logActivity(
                 admin.getFullName() + " updated school profile.",
-                "Settings"
-        );
+                "Settings");
 
         return mapToDTO(updated);
     }
 
-
-    /* -------------------------------------------------------
+    /*
+     * -------------------------------------------------------
      * 🔐 CHANGE PASSWORD
-     * ------------------------------------------------------- */
+     * -------------------------------------------------------
+     */
     @Transactional
     public void changePassword(ChangePasswordRequestDTO dto) {
 
@@ -143,14 +146,14 @@ public class AdminSchoolService {
 
         activityLogService.logActivity(
                 admin.getFullName() + " changed their password.",
-                "Security"
-        );
+                "Security");
     }
 
-
-    /* -------------------------------------------------------
+    /*
+     * -------------------------------------------------------
      * 📷 UPDATE SCHOOL LOGO
-     * ------------------------------------------------------- */
+     * -------------------------------------------------------
+     */
     @Transactional
     public SchoolProfileDTO updateSchoolLogo(MultipartFile file) {
 
@@ -161,21 +164,48 @@ public class AdminSchoolService {
             throw new EntityNotFoundException("No school associated with this admin.");
         }
 
-        try {
-            String logoUrl = fileStorageService.saveSchoolLogo(file, school.getId());
+        CloudinaryResponse uploadedLogo = null;
+        String previousPublicId = school.getLogoPublicId();
 
-            school.setLogoUrl(logoUrl);
+        try {
+            uploadedLogo = fileStorageService.uploadSchoolLogo(file, school.getId());
+            school.setLogoUrl(uploadedLogo.getUrl());
+            school.setLogoPublicId(uploadedLogo.getPublicId());
             School updated = schoolRepository.save(school);
+            deletePreviousImage(previousPublicId, uploadedLogo.getPublicId());
 
             activityLogService.logActivity(
                     admin.getFullName() + " updated the school logo.",
-                    "Settings"
-            );
+                    "Settings");
 
             return mapToDTO(updated);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save school logo.", e);
+            cleanupUploadedImage(uploadedLogo);
+            throw new RuntimeException("Failed to upload school logo.", e);
+        } catch (RuntimeException e) {
+            cleanupUploadedImage(uploadedLogo);
+            throw e;
+        }
+    }
+
+    private void cleanupUploadedImage(CloudinaryResponse uploadedImage) {
+        if (uploadedImage == null) {
+            return;
+        }
+        try {
+            fileStorageService.deleteFile(uploadedImage.getPublicId());
+        } catch (RuntimeException ignored) {
+        }
+    }
+
+    private void deletePreviousImage(String previousPublicId, String replacementPublicId) {
+        if (previousPublicId == null || previousPublicId.equals(replacementPublicId)) {
+            return;
+        }
+        try {
+            fileStorageService.deleteFile(previousPublicId);
+        } catch (RuntimeException ignored) {
         }
     }
 }

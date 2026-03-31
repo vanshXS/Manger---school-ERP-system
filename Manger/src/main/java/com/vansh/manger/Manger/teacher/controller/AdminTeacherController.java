@@ -28,6 +28,8 @@ import com.vansh.manger.Manger.common.service.PDFService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/admin/teachers")
 @RequiredArgsConstructor
@@ -39,7 +41,7 @@ public class AdminTeacherController {
         @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<TeacherResponseDTO> createTeacher(
                         @Valid @ModelAttribute TeacherRequestDTO teacherRequestDTO,
-                        @RequestParam(value = "profilePicture", required = false) MultipartFile profilePic) {
+                        @RequestParam(value = "profilePicture", required = false) MultipartFile profilePic) throws IOException {
 
                 teacherRequestDTO.setProfilePicture(profilePic);
                 TeacherResponseDTO teacher = adminTeacherService.createTeacher(teacherRequestDTO);
@@ -74,7 +76,7 @@ public class AdminTeacherController {
 
         @PutMapping(value = "/{teacherId:\\d+}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<TeacherResponseDTO> updateTeacher(@PathVariable Long teacherId,
-                        @Valid @ModelAttribute TeacherRequestDTO teacherRequestDTO) {
+                        @Valid @ModelAttribute TeacherRequestDTO teacherRequestDTO) throws IOException {
 
                 return new ResponseEntity<>(adminTeacherService.updateTeacher(teacherId, teacherRequestDTO),
                                 HttpStatus.OK);

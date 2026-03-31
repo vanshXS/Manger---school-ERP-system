@@ -45,6 +45,7 @@ public class TeacherRequestDTO {
     private String phoneNumber;
 
     private MultipartFile profilePicture;
+    private Boolean removeProfilePicture;
 
     // --- Optional extended fields (validated when provided) ---
     @Size(max = 30, message = "Employee ID must not exceed 30 characters")

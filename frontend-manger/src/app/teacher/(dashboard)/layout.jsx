@@ -1,7 +1,7 @@
 'use client';
 
 import TeacherProtectedRoute from '@/components/TeacherProtectedRoute';
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -125,6 +125,7 @@ export default function TeacherDashboardLayout({ children }) {
     const [isSidebarHovered, setSidebarHovered] = useState(false);
     const [teacherName, setTeacherName] = useState('');
     const [schoolName, setSchoolName] = useState('');
+    const [profilePictureUrl, setProfilePictureUrl] = useState(null);
     const [isMoreOpen, setIsMoreOpen] = useState(false);
 
     const { logout, isAuthenticated, isLoading } = useTeacherAuth();
@@ -142,6 +143,7 @@ export default function TeacherDashboardLayout({ children }) {
                 .then((res) => {
                     setTeacherName(res.data?.firstName || res.data?.fullName || 'Teacher');
                     setSchoolName(res.data?.schoolName || '');
+                    setProfilePictureUrl(res.data?.profilePictureUrl || null);
                 })
                 .catch(() => setTeacherName('Teacher'));
         }
@@ -184,6 +186,7 @@ export default function TeacherDashboardLayout({ children }) {
                             <DropdownMenuTrigger asChild>
                                 <button className="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-100 active:bg-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 min-h-[44px] min-w-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 touch-manipulation" aria-label="Account menu">
                                     <Avatar className="h-8 w-8 ring-2 ring-slate-100">
+                                        <AvatarImage src={profilePictureUrl} />
                                         <AvatarFallback className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white text-xs font-bold">
                                             {teacherName.slice(0, 2).toUpperCase() || 'TE'}
                                         </AvatarFallback>

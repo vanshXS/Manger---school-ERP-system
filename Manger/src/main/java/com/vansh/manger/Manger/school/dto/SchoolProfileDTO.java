@@ -15,7 +15,7 @@ public class SchoolProfileDTO {
     private String address;
     @Size(max = 20, message = "Phone number cannot exceed 20 characters")
     private String phoneNumber;
-    private String logoUrl;
+    
 
 
 }

@@ -41,15 +41,18 @@ public class Student {
     private String email;
     private String phoneNumber;
     private String admissionNo;
-
     private String password;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Enrollment> enrollments;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 512)
     private String profilePictureUrl;
+
+    @JsonIgnore
+    @Column(nullable = true, length = 255)
+    private String profilePicturePublicId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id", nullable = false)

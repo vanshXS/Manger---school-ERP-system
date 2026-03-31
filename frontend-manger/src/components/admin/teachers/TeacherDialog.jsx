@@ -27,6 +27,7 @@ const teacherSchema = z.object({
   email: z.string().email('Invalid email address.'),
   phoneNumber: z.string().optional(),
   profilePicture: z.any().optional(),
+  removeProfilePicture: z.boolean().optional(),
   qualification: z.string().optional(),
   specialization: z.string().optional(),
   yearsOfExperience: z.union([z.number(), z.string().transform(Number)]).optional(),
@@ -136,6 +137,7 @@ export default function TeacherDialog({
     formData.append('phoneNumber', data.phoneNumber ?? '');
 
     if (data.profilePicture?.length) formData.append('profilePicture', data.profilePicture[0]);
+    if (data.removeProfilePicture) formData.append('removeProfilePicture', 'true');
 
     const optionals = [
       'qualification', 'specialization', 'employmentType',
@@ -233,6 +235,7 @@ export default function TeacherDialog({
                   errors={errors}
                   watch={watch}
                   setValue={setValue}
+                  existingImageUrl={editingTeacher?.profilePictureUrl}
                 />
               </TabsContent>
 

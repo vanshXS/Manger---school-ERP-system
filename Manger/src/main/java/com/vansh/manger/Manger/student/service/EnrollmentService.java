@@ -16,6 +16,7 @@ import com.vansh.manger.Manger.student.repository.EnrollmentRepository;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.student.service.AdminStudentService;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
+import com.vansh.manger.Manger.student.util.StudentAssignSubjects;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,8 +38,10 @@ public class EnrollmentService{
     private final AcademicYearRepository academicYearRepository;
     private final ClassroomRespository classroomRespository;
     private final AdminSchoolConfig schoolConfig;
+    private final StudentAssignSubjects studentAssignSubjects;
     private final AdminStudentService adminStudentService;
     private final ActivityLogService activityLogService;
+    private final StudentEnrollmentService studentEnrollmentService;
 
     public SchoolPromotionResultDTO previewSchoolPromotion() {
         School       school      = schoolConfig.requireCurrentSchool();
@@ -143,12 +146,12 @@ public class EnrollmentService{
                         .student(student)
                         .classroom(targetClassroom)
                         .academicYear(nextYear)
-                        .rollNo(adminStudentService.generateNextRollNoForClass(targetClassroom, nextYear))
+                        .rollNo(studentEnrollmentService.generateNextRollNoForClass(targetClassroom, nextYear))
                         .school(school)
                         .build();
                 enrollmentRepository.save(newEnrollment);
 
-                adminStudentService.autoAssignMandatorySubjects(student, targetClassroom);
+                studentAssignSubjects.autoAssignMandatorySubjects(student, targetClassroom);
                 promoted++;
 
                 continue;

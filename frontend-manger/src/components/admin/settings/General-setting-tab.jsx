@@ -92,94 +92,6 @@ function SchoolProfileForm({ schoolData, fetchSchoolData }) {
   );
 }
 
-function SchoolLogoForm({ schoolData, fetchSchoolData }) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState(null);
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("File is too large. Max size is 2MB.");
-      return;
-    }
-
-    // Show preview immediately
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
-
-    // Auto upload on select
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setIsUploading(true);
-    const promise = apiClient.post('/api/admin/school/logo', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-
-    toast.promise(promise, {
-      loading: 'Uploading logo...',
-      success: 'Logo updated successfully',
-      error: 'Failed to upload logo',
-    });
-
-    try {
-      await promise;
-      fetchSchoolData();
-    } catch (error) {
-      setPreview(null); // Revert preview on error
-      console.error(error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  
-  return (
-    <Card className="border-slate-200 shadow-sm h-full">
-      <CardHeader>
-        <CardTitle>School Branding</CardTitle>
-        <CardDescription>Upload your official school logo.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center space-y-6 py-6">
-        <div className="relative group">
-          <Avatar className="h-32 w-32 border-2 border-slate-100 shadow-inner bg-white">
-            <AvatarImage src={preview || schoolData?.logoUrl} className="object-contain p-2" />
-            <AvatarFallback className="bg-slate-50 text-slate-300">
-              <ImageIcon className="h-12 w-12" />
-            </AvatarFallback>
-          </Avatar>
-          {isUploading && (
-            <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-              <Loader2 className="h-8 w-8 text-white animate-spin" />
-            </div>
-          )}
-        </div>
-        
-        <div className="flex items-center justify-center w-full">
-          <label htmlFor="logo-upload" className="cursor-pointer">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-md shadow-sm hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700">
-              <Upload className="h-4 w-4" />
-              <span>Click to Upload</span>
-            </div>
-            <input 
-              id="logo-upload" 
-              type="file" 
-              className="hidden" 
-              accept="image/png, image/jpeg" 
-              onChange={handleFileChange}
-              disabled={isUploading}
-            />
-          </label>
-        </div>
-        <p className="text-xs text-slate-500 text-center">
-          SVG, PNG, JPG or GIF (max. 2MB)
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function GeneralSettingsTab() {
   const [schoolData, setSchoolData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -202,31 +114,18 @@ export function GeneralSettingsTab() {
 
   if (isLoading) {
     return (
-        <div className="grid gap-6 md:grid-cols-3">
-           <div className="md:col-span-2 space-y-4">
-              <Skeleton className="h-[300px] w-full rounded-xl" />
-           </div>
-           <div>
-              <Skeleton className="h-[300px] w-full rounded-xl" />
-           </div>
+        <div className="max-w-3xl space-y-4">
+            <Skeleton className="h-[300px] w-full rounded-xl" />
         </div>
     );
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-      <div className="md:col-span-2">
-        <SchoolProfileForm 
-          schoolData={schoolData} 
-          fetchSchoolData={fetchSchoolData} 
-        />
-      </div>
-      <div>
-        <SchoolLogoForm 
-          schoolData={schoolData} 
-          fetchSchoolData={fetchSchoolData}
-        />
-      </div>
+    <div className="max-w-3xl">
+      <SchoolProfileForm 
+        schoolData={schoolData} 
+        fetchSchoolData={fetchSchoolData} 
+      />
     </div>
   );
 }

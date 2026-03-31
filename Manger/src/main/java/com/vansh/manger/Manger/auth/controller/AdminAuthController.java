@@ -120,8 +120,8 @@ public class AdminAuthController {
                     refreshToken,
                     user.getRoles().name());
 
-            // Set refresh token as HTTP-only cookie
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+            // Set refresh token as HTTP-only cookie (admin-specific)
+            ResponseCookie refreshCookie = ResponseCookie.from("adminRefreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(false) // Set to true in production with HTTPS
                     .path("/")
@@ -156,11 +156,11 @@ public class AdminAuthController {
     @PostMapping(value = "/refresh", produces = "application/json")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // Extract refresh token from cookie
+            // Extract refresh token from cookie (admin-specific)
             String refreshToken = null;
             if (request.getCookies() != null) {
                 for (Cookie cookie : request.getCookies()) {
-                    if ("refreshToken".equals(cookie.getName())) {
+                    if ("adminRefreshToken".equals(cookie.getName())) {
                         refreshToken = cookie.getValue();
                         break;
                     }
@@ -202,8 +202,8 @@ public class AdminAuthController {
                     newAccessToken,
                     user.getRoles().name());
 
-            // Extend refresh token cookie expiry
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+            // Extend refresh token cookie expiry (admin-specific)
+            ResponseCookie refreshCookie = ResponseCookie.from("adminRefreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(false) // Set to true in production
                     .path("/")
@@ -220,8 +220,8 @@ public class AdminAuthController {
         } catch (RuntimeException e) {
             log.error("Token refresh failed: {}", e.getMessage());
 
-            // Clear invalid cookie
-            ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+            // Clear invalid cookie (admin-specific)
+            ResponseCookie clearCookie = ResponseCookie.from("adminRefreshToken", "")
                     .httpOnly(true)
                     .secure(false)
                     .path("/")
@@ -244,11 +244,11 @@ public class AdminAuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // Extract and delete refresh token from database
+            // Extract and delete refresh token from database (admin-specific)
             String refreshToken = null;
             if (request.getCookies() != null) {
                 for (Cookie cookie : request.getCookies()) {
-                    if ("refreshToken".equals(cookie.getName())) {
+                    if ("adminRefreshToken".equals(cookie.getName())) {
                         refreshToken = cookie.getValue();
                         break;
                     }
@@ -260,8 +260,8 @@ public class AdminAuthController {
                 refreshTokenService.deleteByToken(refreshToken);
             }
 
-            // Clear refresh token cookie
-            ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+            // Clear refresh token cookie (admin-specific)
+            ResponseCookie clearCookie = ResponseCookie.from("adminRefreshToken", "")
                     .httpOnly(true)
                     .secure(false) // Set to true in production
                     .path("/")

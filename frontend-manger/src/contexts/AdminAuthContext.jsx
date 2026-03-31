@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${baseURL}/api/auth/admin/refresh`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // Sends adminRefreshToken cookie
         headers: {
           'Content-Type': 'application/json',
         },

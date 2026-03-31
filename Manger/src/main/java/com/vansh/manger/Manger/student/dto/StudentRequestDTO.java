@@ -1,8 +1,8 @@
 package com.vansh.manger.Manger.student.dto;
 
 import java.time.LocalDate;
-
 import org.springframework.web.multipart.MultipartFile;
+
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.vansh.manger.Manger.common.entity.Gender;
-import com.vansh.manger.Manger.student.entity.Student;
 
 /**
  * Request DTO for create/update Student.
@@ -45,6 +44,7 @@ public class StudentRequestDTO {
 
     private Long classroomId;
     private MultipartFile profilePicture;
+    private Boolean removeProfilePicture;
 
     // --- Optional extended fields (validated when provided) ---
     @Size(max = 30, message = "Admission number must not exceed 30 characters")

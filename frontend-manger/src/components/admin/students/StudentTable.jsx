@@ -58,7 +58,7 @@ export default function StudentTable({
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9 border border-slate-100">
-                      <AvatarImage src={s.profilePictureUrl ? `http://localhost:8080/api/files/students/${s.profilePictureUrl}` : ''} />
+                      <AvatarImage src={s.profilePictureUrl || ''} />
                       <AvatarFallback className="bg-indigo-50 text-indigo-600 font-bold text-xs">
                         {s.firstName?.[0]}{s.lastName?.[0]}
                       </AvatarFallback>

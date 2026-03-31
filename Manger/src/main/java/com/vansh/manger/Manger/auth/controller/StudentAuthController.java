@@ -75,7 +75,7 @@ public class StudentAuthController {
 
             AuthResponseDTO responseDTO = new AuthResponseDTO(accessToken, refreshToken, user.getRoles().name());
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+            ResponseCookie cookie = ResponseCookie.from("studentRefreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(false)
                     .path("/")
@@ -99,7 +99,7 @@ public class StudentAuthController {
 
         if(request.getCookies() != null) {
             for(Cookie cookie : request.getCookies()) {
-                if("refreshToken".equals(cookie.getName())){
+                if("studentRefreshToken".equals(cookie.getName())){
                     refreshToken = cookie.getValue();
                     break;
                 }
@@ -128,7 +128,7 @@ public class StudentAuthController {
 
         TokenRefreshResponseDTO tokenRefreshResponseDTO = new TokenRefreshResponseDTO(accessToken, user.getRoles().name());
 
-        ResponseCookie responseCookie = ResponseCookie.from("refreshToken", refreshToken)
+        ResponseCookie responseCookie = ResponseCookie.from("studentRefreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(false)
                 .maxAge(TimeUnit.DAYS.toSeconds(7))
@@ -148,7 +148,7 @@ public class StudentAuthController {
 
         if(request.getCookies() != null){
             for(Cookie cookie : request.getCookies()) {
-                if("refreshToken".equals(cookie.getName())) {
+                if("studentRefreshToken".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
                     break;
                 }

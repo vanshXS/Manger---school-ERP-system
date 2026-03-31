@@ -25,7 +25,7 @@ export default function TeacherProfileHeader({ teacher }) {
     // If it's already a full URL, return it
     if (url.startsWith('http')) return url;
     // Otherwise append to API base
-    return `http://localhost:8080/api/files/teachers/${url}`;
+    return url;
   };
 
   return (
