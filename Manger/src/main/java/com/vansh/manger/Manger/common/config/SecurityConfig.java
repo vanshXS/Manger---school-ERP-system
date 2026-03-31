@@ -44,7 +44,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/student/**").hasAuthority("ROLE_STUDENT")
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
