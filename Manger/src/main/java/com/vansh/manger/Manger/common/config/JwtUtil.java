@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,14 @@ public class JwtUtil {
     // For HS256, use at least 256 bits (32 characters). Prefer env var: jwt.key
     @Value("${jwt.key}")
     private String SECRET_KEY;
+
+    @PostConstruct
+    public void validate() {
+        if(SECRET_KEY == null || SECRET_KEY.isEmpty()){
+            throw new RuntimeException("JWT key is missing");
+        }
+    }
+
 
     // ✅ 24 hours validity for access token
     private final long accessTokenValidity = TimeUnit.MINUTES.toMillis(15);// 15 minutes
