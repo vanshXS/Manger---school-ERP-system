@@ -15,7 +15,7 @@ import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
-import com.vansh.manger.Manger.common.service.EmailService;
+import com.vansh.manger.Manger.common.service.EmailSender;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.common.util.InputNormalizer;
 import com.vansh.manger.Manger.student.dto.StudentRequestDTO;
@@ -54,7 +54,7 @@ public class StudentAdmissionService implements StudentAdmissionOperations {
     private final PasswordEncoder passwordEncoder;
     private final RandomPasswordGenerator randomPasswordGenerator;
     private final ActivityLogService activityLogService;
-    private final EmailService emailService;
+    private final EmailSender emailSender;
     private final StudentEnrollmentService studentEnrollmentService;
     private final StudentAssignSubjects studentAssignSubjects;
     private final StudentResponseMapper studentResponseMapper;
@@ -143,7 +143,7 @@ public class StudentAdmissionService implements StudentAdmissionOperations {
 
         // Send Welcome Email (non-blocking)
         try {
-            emailService.sendNewUserWelcomeEmail(
+            emailSender.sendNewUserWelcomeEmail(
                     savedStudent.getEmail(), savedStudent.getFirstName(), rawPassword);
             activityLogService.logActivity(
                     "New student enrolled: " + savedStudent.getFirstName()

@@ -154,7 +154,7 @@ public class StudentAuthController {
                 }
             }
         }
-        if (refreshTokenValidator(response, refreshToken, refreshTokenService))
+        if (refreshTokenValidator(response, refreshToken, refreshTokenService, "studentRefreshToken"))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
@@ -232,15 +232,14 @@ public class StudentAuthController {
         return ResponseEntity.ok("Password reset successful");
     }
 
-    static boolean refreshTokenValidator(HttpServletResponse response, String refreshToken, RefreshTokenService refreshTokenService) {
+    static boolean refreshTokenValidator(HttpServletResponse response, String refreshToken, RefreshTokenService refreshTokenService, String cookieName) {
         if(refreshToken == null || refreshToken.isEmpty()) {
             return true;
-
         }
 
         refreshTokenService.deleteByToken(refreshToken);
 
-        ResponseCookie clearCookie = ResponseCookie.from("refreshToken")
+        ResponseCookie clearCookie = ResponseCookie.from(cookieName, "")
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Strict")

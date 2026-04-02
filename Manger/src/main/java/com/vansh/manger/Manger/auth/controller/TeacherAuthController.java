@@ -158,7 +158,7 @@ public class TeacherAuthController {
             }
         }
 
-        if (StudentAuthController.refreshTokenValidator(response, refreshToken, refreshTokenService))
+        if (StudentAuthController.refreshTokenValidator(response, refreshToken, refreshTokenService, "teacherRefreshToken"))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("refreshToken", refreshToken));
 

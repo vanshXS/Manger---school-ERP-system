@@ -7,6 +7,7 @@ import { AlertTriangle, GraduationCap, KeyRound, LogIn, Mail } from 'lucide-reac
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { PasswordInput } from '@/components/common/PasswordInput';
 
 export default function StudentLoginPage() {
     const [email, setEmail] = useState('');
@@ -121,21 +122,17 @@ export default function StudentLoginPage() {
                                         Forgot password?
                                     </Link>
                                 </div>
-                                <div className="relative">
-                                    <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-slate-400 pointer-events-none" />
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className={`block w-full pl-10 pr-3 py-2 border rounded-md text-sm shadow-sm focus:outline-none transition-all ${errors.password
-                                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                            : 'border-slate-300 focus:ring-orange-500 focus:border-orange-500'
-                                            }`}
-                                        placeholder="••••••••"
-                                        disabled={isLoading}
-                                    />
-                                </div>
+                                <PasswordInput
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    disabled={isLoading}
+                                    icon={KeyRound}
+                                    className={errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}
+                                    ringColor="focus:ring-orange-500"
+                                    borderColor="focus:border-orange-500"
+                                />
                                 {errors.password && (
                                     <p className="mt-1 text-sm text-red-600" role="alert">{errors.password}</p>
                                 )}

@@ -1,0 +1,63 @@
+version: "3.9"
+services:
+  db:
+    image: mysql:8.0
+    container_name: erp-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: manger
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    networks:
+      - erp-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./Manger
+    container_name: erp-backend
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+    networks:
+      - erp-network
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/manger?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQL8Dialect
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_SECRET}
+
+  frontend:
+    build:
+      context: ./frontend-manger
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8080
+    container_name: erp-frontend
+    restart: always
+    networks:
+      - erp-network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+
+networks:
+   erp-network:

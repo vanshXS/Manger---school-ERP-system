@@ -6,6 +6,7 @@ import { AlertTriangle, Hash, KeyRound, School } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { PasswordInput } from '@/components/common/PasswordInput';
 
 function TeacherResetPasswordContent() {
     const router = useRouter();
@@ -113,23 +114,18 @@ function TeacherResetPasswordContent() {
                                 <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">
                                     New Password
                                 </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <KeyRound className="w-5 h-5 text-slate-400" />
-                                    </div>
-                                    <input
-                                        id="newPassword"
-                                        type="password"
-                                        required
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none text-sm transition-all ${errors.password
-                                            ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                                            : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-                                            }`}
-                                        placeholder="5-15 characters"
-                                    />
-                                </div>
+                                <PasswordInput
+                                    id="newPassword"
+                                    required
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="5-15 characters"
+                                    disabled={isLoading}
+                                    icon={KeyRound}
+                                    className={errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}
+                                    ringColor="focus:ring-blue-500"
+                                    borderColor="focus:border-blue-500"
+                                />
                                 {errors.password && (
                                     <p className="mt-1 text-sm text-red-600" role="alert">{errors.password}</p>
                                 )}

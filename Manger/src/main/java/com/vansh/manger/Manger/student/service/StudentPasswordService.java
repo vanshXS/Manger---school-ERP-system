@@ -8,7 +8,7 @@ import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.UserRepo;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
-import com.vansh.manger.Manger.common.service.EmailService;
+import com.vansh.manger.Manger.common.service.EmailSender;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.student.entity.Student;
 import com.vansh.manger.Manger.student.repository.StudentRepository;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
  * <p><b>SRP</b> — one responsibility: password lifecycle.
  * <b>LSP</b> — faithfully implements {@link StudentPasswordOperations}.
  * <b>DIP</b> — depends on injected abstractions ({@link RandomPasswordGenerator},
- * {@link PasswordEncoder}, {@link EmailService}).</p>
+ * {@link PasswordEncoder}, {@link EmailSender}).</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class StudentPasswordService implements StudentPasswordOperations {
     private final PasswordEncoder passwordEncoder;
     private final RandomPasswordGenerator randomPasswordGenerator;
     private final ActivityLogService activityLogService;
-    private final EmailService emailService;
+    private final EmailSender emailSender;
 
     @Override
     @Transactional
@@ -62,7 +62,7 @@ public class StudentPasswordService implements StudentPasswordOperations {
 
         // Send the new password to the student's email
         try {
-            emailService.sendNewUserWelcomeEmail(
+            emailSender.sendNewUserWelcomeEmail(
                     student.getEmail(), student.getFirstName(), newRawPassword);
             activityLogService.logActivity(
                     "Admin triggered password reset for student: " + student.getFirstName() + " "

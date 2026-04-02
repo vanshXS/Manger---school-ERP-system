@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/common/PasswordInput';
 
 export default function RegisterSchoolPage() {
   const [step, setStep] = useState(1);
@@ -209,17 +210,16 @@ export default function RegisterSchoolPage() {
                 {/* Password */}
                 <div>
                   <Label htmlFor="password">Password</Label>
-                  <div className="relative mt-1">
-                    <KeyRound className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="5–15 characters"
-                      className={`pl-10 ${errors.password ? 'border-red-500' : 'border-slate-300'}`}
-                    />
-                  </div>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="5–15 characters"
+                  icon={KeyRound}
+                  className={errors.password ? 'border-red-500' : 'border-slate-300'}
+                  ringColor="focus:ring-blue-500"
+                  borderColor="focus:border-blue-500"
+                />
                   {errors.password && <p className="mt-1 text-sm text-red-600" role="alert">{errors.password}</p>}
                 </div>
 

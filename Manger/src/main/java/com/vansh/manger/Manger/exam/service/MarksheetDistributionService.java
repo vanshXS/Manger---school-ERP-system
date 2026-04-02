@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
-import com.vansh.manger.Manger.common.service.EmailService;
+import com.vansh.manger.Manger.common.service.EmailSender;
 import com.vansh.manger.Manger.common.service.PDFService;
 import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
 import com.vansh.manger.Manger.exam.entity.Exam;
@@ -39,7 +39,7 @@ public class MarksheetDistributionService implements MarksheetDistributionOperat
     private final EnrollmentRepository enrollmentRepository;
     private final TeacherAssignmentRepository teacherAssignmentRepository;
     private final PDFService pdfService;
-    private final EmailService emailService;
+    private final EmailSender emailSender;
     private final ActivityLogService activityLogService;
     private final ExamStatusResolver examStatusResolver;
 
@@ -77,7 +77,7 @@ public class MarksheetDistributionService implements MarksheetDistributionOperat
         }
 
         byte[] pdfBytes = pdfService.generateMarksSheet(enrollment, subjectRecords, exam.getName());
-        emailService.sendMarksheet(
+        emailSender.sendMarksheet(
                 enrollment.getStudent().getEmail(),
                 pdfBytes,
                 enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName(),
@@ -123,7 +123,7 @@ public class MarksheetDistributionService implements MarksheetDistributionOperat
             }
 
             byte[] pdfBytes = pdfService.generateMarksSheet(enrollment, subjectRecords, exam.getName());
-            emailService.sendMarksheet(
+            emailSender.sendMarksheet(
                     enrollment.getStudent().getEmail(),
                     pdfBytes,
                     enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName(),

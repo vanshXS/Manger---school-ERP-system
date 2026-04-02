@@ -12,7 +12,7 @@ import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
-import com.vansh.manger.Manger.common.service.EmailService;
+import com.vansh.manger.Manger.common.service.EmailSender;
 import com.vansh.manger.Manger.common.service.FileStorageService;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.common.util.ImageCleanupHelper;
@@ -41,7 +41,7 @@ public class TeacherAdmissionService implements TeacherAdmissionOperations {
     private final TeacherRespository teacherRespository;
     private final TeacherAssignmentRepository teacherAssignmentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
+    private final EmailSender emailSender;
     private final AdminSchoolConfig adminSchoolConfig;
     private final ActivityLogService activityLogService;
     private final FileStorageService fileStorageService;
@@ -112,7 +112,7 @@ public class TeacherAdmissionService implements TeacherAdmissionOperations {
                     "Teacher Management");
 
             try {
-                emailService.sendNewUserWelcomeEmail(
+                emailSender.sendNewUserWelcomeEmail(
                         savedTeacher.getEmail(),
                         savedTeacher.getFirstName(),
                         rawPassword);
