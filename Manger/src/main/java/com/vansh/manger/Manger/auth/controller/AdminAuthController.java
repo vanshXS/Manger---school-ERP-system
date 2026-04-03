@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.vansh.manger.Manger.common.config.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.vansh.manger.Manger.auth.dto.AuthLoginDTO;
 import com.vansh.manger.Manger.auth.dto.AuthRegisterationDTO;
@@ -48,6 +50,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class AdminAuthController {
+
+    @Value("${COOKIE_SECURE:false}") // Defaults to false for local testing
+    private boolean isSecure;
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
@@ -123,10 +128,10 @@ public class AdminAuthController {
             // Set refresh token as HTTP-only cookie (admin-specific)
             ResponseCookie refreshCookie = ResponseCookie.from("adminRefreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false) // Set to true in production with HTTPS
+                    .secure(isSecure) // This will now be dynamic
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60) // 7 days
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
 
             response.addHeader("Set-Cookie", refreshCookie.toString());
@@ -205,10 +210,10 @@ public class AdminAuthController {
             // Extend refresh token cookie expiry (admin-specific)
             ResponseCookie refreshCookie = ResponseCookie.from("adminRefreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false) // Set to true in production
+                    .secure(isSecure)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60) // 7 days
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
 
             response.addHeader("Set-Cookie", refreshCookie.toString());
@@ -223,10 +228,10 @@ public class AdminAuthController {
             // Clear invalid cookie (admin-specific)
             ResponseCookie clearCookie = ResponseCookie.from("adminRefreshToken", "")
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(isSecure)
                     .path("/")
                     .maxAge(0)
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
             response.addHeader("Set-Cookie", clearCookie.toString());
 
@@ -263,10 +268,10 @@ public class AdminAuthController {
             // Clear refresh token cookie (admin-specific)
             ResponseCookie clearCookie = ResponseCookie.from("adminRefreshToken", "")
                     .httpOnly(true)
-                    .secure(false) // Set to true in production
+                    .secure(isSecure)
                     .path("/")
                     .maxAge(0)
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
 
             response.addHeader("Set-Cookie", clearCookie.toString());

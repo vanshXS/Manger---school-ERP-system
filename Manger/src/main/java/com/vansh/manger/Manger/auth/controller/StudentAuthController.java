@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -44,6 +45,9 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/api/auth/student")
 @RequiredArgsConstructor
 public class StudentAuthController {
+
+    @Value("${COOKIE_SECURE:false}") // Defaults to false for local testing
+    private boolean isSecure;
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
@@ -77,9 +81,9 @@ public class StudentAuthController {
 
             ResponseCookie cookie = ResponseCookie.from("studentRefreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(isSecure)
                     .path("/")
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .maxAge(TimeUnit.DAYS.toSeconds(7))
                     .build();
 
@@ -130,10 +134,10 @@ public class StudentAuthController {
 
         ResponseCookie responseCookie = ResponseCookie.from("studentRefreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false)
+                .secure(isSecure)
                 .maxAge(TimeUnit.DAYS.toSeconds(7))
                 .path("/")
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
         response.addHeader("Set-Cookie", responseCookie.toString());
 
@@ -154,7 +158,7 @@ public class StudentAuthController {
                 }
             }
         }
-        if (refreshTokenValidator(response, refreshToken, refreshTokenService, "studentRefreshToken"))
+        if (refreshTokenValidator(response, refreshToken, refreshTokenService, "studentRefreshToken", isSecure))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
@@ -232,7 +236,7 @@ public class StudentAuthController {
         return ResponseEntity.ok("Password reset successful");
     }
 
-    static boolean refreshTokenValidator(HttpServletResponse response, String refreshToken, RefreshTokenService refreshTokenService, String cookieName) {
+    static boolean refreshTokenValidator(HttpServletResponse response, String refreshToken, RefreshTokenService refreshTokenService, String cookieName, boolean isSecure) {
         if(refreshToken == null || refreshToken.isEmpty()) {
             return true;
         }
@@ -241,8 +245,8 @@ public class StudentAuthController {
 
         ResponseCookie clearCookie = ResponseCookie.from(cookieName, "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Strict")
+                .secure(isSecure)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();

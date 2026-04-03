@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.User;
@@ -42,6 +43,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/auth/teacher")
 @RequiredArgsConstructor
 public class TeacherAuthController {
+
+    @Value("${COOKIE_SECURE:false}") // Defaults to false for local testing
+    private boolean isSecure;
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
@@ -80,10 +84,10 @@ public class TeacherAuthController {
 
             ResponseCookie cookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(isSecure)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
             response.addHeader("Set-Cookie", cookie.toString());
 
@@ -132,10 +136,10 @@ public class TeacherAuthController {
 
        ResponseCookie responseCookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
                .httpOnly(true)
-               .secure(false)
+               .secure(isSecure)
                .maxAge(7*24*60*60)
                .path("/")
-               .sameSite("Strict")
+               .sameSite("None")
                .build();
 
        response.addHeader("Set-Cookie", responseCookie.toString());
@@ -158,7 +162,7 @@ public class TeacherAuthController {
             }
         }
 
-        if (StudentAuthController.refreshTokenValidator(response, refreshToken, refreshTokenService, "teacherRefreshToken"))
+        if (StudentAuthController.refreshTokenValidator(response, refreshToken, refreshTokenService, "teacherRefreshToken", isSecure))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("refreshToken", refreshToken));
 
