@@ -21,7 +21,7 @@ import java.util.function.Function;
 public class JwtUtil {
 
     // For HS256, use at least 256 bits (32 characters). Prefer env var: jwt.key
-    @Value("${jwt.key}")
+    @Value("${jwt.secret}")
     private String SECRET_KEY;
 
     @PostConstruct
