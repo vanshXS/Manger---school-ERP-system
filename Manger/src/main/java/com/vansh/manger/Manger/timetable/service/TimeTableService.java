@@ -56,6 +56,10 @@ public class TimeTableService {
             throw new IllegalArgumentException("Assignment does not belong to your school.");
         }
 
+        if(teacherAssignment.getTeacher() == null) {
+            throw new IllegalArgumentException("No teacher assigned for this subject. Do it");
+        }
+
         DayOfWeek day = DayOfWeek.valueOf(requestDTO.getDay().toUpperCase());
 
         //validation : teacher busy?
