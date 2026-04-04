@@ -11,7 +11,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 public class EmailConfig {
 
     @Bean
-    @ConditionalOnProperty(name = "mail.provider", havingValue = "gmail", matchIfMissing = true)
     public EmailSender gmailEmailSender(JavaMailSender javaMailSender) {
         return new GMailEmailService(javaMailSender);
     }

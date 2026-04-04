@@ -68,41 +68,96 @@ public class PDFService {
 
     /**
      * Generates an information slip for a teacher.
-     * This version is SECURE and does NOT include the teacher's password.
+     * This version is professionally styled with a header, table, and footer.
      */
     public byte[] generateTeacherSlip(TeacherResponseDTO teacher) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            Document document = new Document();
+            Document document = new Document(PageSize.A4, 50, 50, 60, 50);
             PdfWriter.getInstance(document, out);
             document.open();
 
-            Paragraph title = new Paragraph("=== Teacher Information Slip ===", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18));
+            // ---------- Header ----------
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, new Color(33, 97, 140));
+            Paragraph title = new Paragraph("MANGER | Teacher Information Slip", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
-            document.add(new Paragraph("\n")); // Add spacing
+            document.add(new Paragraph("\n"));
 
-            document.add(new Paragraph("Teacher ID: " + teacher.getId()));
-            document.add(new Paragraph("Name: " + teacher.getFirstName() + " " + teacher.getLastName()));
-            document.add(new Paragraph("Email: " + teacher.getEmail()));
-            document.add(new Paragraph("Phone Number: " + (teacher.getPhoneNumber() != null ? teacher.getPhoneNumber() : "N/A")));
+            // ---------- Teacher Details Table ----------
+            PdfPTable table = new PdfPTable(2);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            table.setSpacingAfter(10f);
+            table.setWidths(new float[]{1, 2});
 
-            if(teacher.getAssignedClassrooms() != null && !teacher.getAssignedClassrooms().isEmpty()) {
-                document.add(new Paragraph("Assigned Classrooms: " + String.join(", ", teacher.getAssignedClassrooms().toString())));
+            addTablePair(table, "Teacher ID", String.valueOf(teacher.getId()));
+            addTablePair(table, "Employee ID", teacher.getEmployeeId() != null ? teacher.getEmployeeId() : "N/A");
+            addTablePair(table, "Full Name", teacher.getFirstName() + " " + teacher.getLastName());
+            addTablePair(table, "Email", teacher.getEmail());
+            addTablePair(table, "Phone Number", teacher.getPhoneNumber() != null ? teacher.getPhoneNumber() : "N/A");
+            addTablePair(table, "Gender", teacher.getGender() != null ? teacher.getGender().name() : "N/A");
+            addTablePair(table, "Join Date", teacher.getJoinDate() != null ? teacher.getJoinDate() : "N/A");
+            addTablePair(table, "Employment Type", teacher.getEmploymentType() != null ? teacher.getEmploymentType().name() : "N/A");
+            addTablePair(table, "Qualification", teacher.getQualification() != null ? teacher.getQualification() : "N/A");
+            addTablePair(table, "Specialization", teacher.getSpecialization() != null ? teacher.getSpecialization() : "N/A");
+            addTablePair(table, "Experience", teacher.getYearsOfExperience() != null ? teacher.getYearsOfExperience() + " Years" : "N/A");
+
+            if (teacher.getAssignedClassrooms() != null && !teacher.getAssignedClassrooms().isEmpty()) {
+                java.util.StringJoiner joiner = new java.util.StringJoiner(", ");
+                teacher.getAssignedClassrooms().forEach(c -> {
+                    String display = c.getClassName();
+                    if (c.getSubjectName() != null) {
+                        display += " (" + c.getSubjectName() + ")";
+                    }
+                    joiner.add(display);
+                });
+                addTablePair(table, "Assigned Sections", joiner.toString());
             } else {
-                document.add(new Paragraph("Assigned Classrooms: Not assigned"));
+                addTablePair(table, "Assigned Sections", "Not assigned");
             }
 
-            // --- SECURITY FIX: PASSWORD REMOVED ---
-            document.add(new Paragraph("\nNote: The teacher's password was sent to their registered email."));
+            document.add(table);
 
-            document.add(new Paragraph("\nGenerated At: " + new Date()));
+            // ---------- Security Note ----------
+            Font noteFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 11, Color.DARK_GRAY);
+            Paragraph note = new Paragraph("\nNote: Your temporary password has been sent to your registered email address. " +
+                    "Please log in and change it immediately for security purposes.", noteFont);
+            note.setAlignment(Element.ALIGN_CENTER);
+            document.add(note);
+
+            // ---------- Footer ----------
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 10, Color.GRAY);
+            String generatedDate = java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"));
+            Paragraph footer = new Paragraph(
+                    "\n\n\nGenerated On: " + generatedDate + "\nMANGER: Virtual School Management System",
+                    footerFont
+            );
+            footer.setAlignment(Element.ALIGN_CENTER);
+            document.add(footer);
+
             document.close();
-
             return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("Error generating teacher PDF: " + e.getMessage(), e);
         }
+    }
+
+    private void addTablePair(PdfPTable table, String label, String value) {
+        Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, new Color(50, 50, 50));
+        Font valueFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Color.BLACK);
+
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
+        labelCell.setBackgroundColor(new Color(245, 245, 245));
+        labelCell.setPadding(8f);
+        labelCell.setBorderColor(Color.LIGHT_GRAY);
+        table.addCell(labelCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, valueFont));
+        valueCell.setPadding(8f);
+        valueCell.setBorderColor(Color.LIGHT_GRAY);
+        table.addCell(valueCell);
     }
 
     /**
