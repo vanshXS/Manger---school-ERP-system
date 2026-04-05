@@ -26,7 +26,7 @@ import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.teacher.specification.TeacherSpecification;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**

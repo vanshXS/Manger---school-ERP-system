@@ -29,7 +29,7 @@ import com.vansh.manger.Manger.student.util.StudentAssignSubjects;
 import com.vansh.manger.Manger.student.util.StudentProfileUploader;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**

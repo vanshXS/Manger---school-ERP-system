@@ -13,7 +13,7 @@ import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

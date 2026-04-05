@@ -1,19 +1,26 @@
 package com.vansh.manger.Manger.common.service;
 
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Implementation of EmailSender using JavaMailSender (typically for SMTP/Gmail).
  */
 @RequiredArgsConstructor
+@Slf4j
 public class GMailEmailService implements EmailSender {
 
     private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.username}")
+    private String senderEmail;
 
     @Async
     @Override
@@ -62,12 +69,14 @@ public class GMailEmailService implements EmailSender {
                     "Best regards, <br/>The Manger Team"
             );
 
+            helper.setFrom(senderEmail);
             helper.setTo(to);
             helper.setSubject(examName + " | Your Marksheet for " + subjectName);
             helper.setText(htmlContent, true);
             helper.addAttachment("Marksheet_" + studentName.replace(" ", "_") + ".pdf", new ByteArrayResource(pdfBytes));
             mailSender.send(message);
         } catch (Exception e) {
+            log.error("SMTP Error: Failed to send marksheet email to {}. Reason: {}", to, e.getMessage());
             throw new RuntimeException("Failed to send marksheet email: " + e.getMessage());
         }
     }
@@ -77,12 +86,14 @@ public class GMailEmailService implements EmailSender {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
+            helper.setFrom(senderEmail);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
             
             mailSender.send(message);
         } catch (Exception e) {
+            log.error("SMTP Error: Failed to send HTML email to {}. Reason: {}", to, e.getMessage());
             throw new RuntimeException("Failed to send HTML email: " + e.getMessage());
         }
     }

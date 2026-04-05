@@ -35,7 +35,7 @@ import com.vansh.manger.Manger.timetable.repository.*;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

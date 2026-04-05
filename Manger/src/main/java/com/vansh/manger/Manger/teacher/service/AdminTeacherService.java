@@ -30,6 +30,7 @@ public class AdminTeacherService {
     private final TeacherAdmissionOperations admissionOperations;
     private final TeacherProfileOperations profileOperations;
     private final TeacherLifecycleOperations lifecycleOperations;
+    private final TeacherPasswordOperations passwordOperations;
 
     // ── Admission ───────────────────────────────────────────────
 
@@ -59,5 +60,11 @@ public class AdminTeacherService {
 
     public void delete(Long teacherId) {
         lifecycleOperations.delete(teacherId);
+    }
+
+    // ── Security ────────────────────────────────────────────────
+
+    public void sendPasswordReset(Long teacherId) {
+        passwordOperations.sendPasswordReset(teacherId);
     }
 }

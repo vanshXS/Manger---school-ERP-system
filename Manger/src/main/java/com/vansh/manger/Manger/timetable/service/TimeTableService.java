@@ -12,7 +12,7 @@ import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.teacher.dto.TeacherResponseDTO;
 import com.vansh.manger.Manger.timetable.dto.TimeTableRequestDTO;
 import com.vansh.manger.Manger.timetable.dto.TimeTableResponseDTO;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

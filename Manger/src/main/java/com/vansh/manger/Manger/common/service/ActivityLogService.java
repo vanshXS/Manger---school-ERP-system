@@ -8,7 +8,8 @@ import com.vansh.manger.Manger.common.repository.ActivityLogRepository;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.common.util.TeacherSchoolConfig;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,48 +26,32 @@ public class ActivityLogService {
     private final AdminSchoolConfig schoolConfig;
     private final TeacherSchoolConfig teacherSchoolConfig;
 
-    @Transactional
-    @Async
     public void logActivity(String description, String category) {
         logActivity(description, category, Roles.ADMIN);
     }
 
-    @Transactional
-    @Async
     public void logActivity(String description, String category, Roles roles) {
         School school = schoolConfig.requireCurrentSchool();
-        ActivityLog log = ActivityLog.builder()
-                .description(description)
-                .category(category)
-                .role(roles)
-                .school(school)
-                .build();
-
-        activityLogRepository.save(log);
+        saveLogInternal(description, category, roles, school, null);
     }
 
-    @Transactional
-    @Async
     public void logActivityForSchool(School school, String description, String category) {
-        ActivityLog log = ActivityLog.builder()
-                .school(school)
-                .category(category)
-                .description(description)
-                .role(Roles.ADMIN)
-                .build();
-
-        activityLogRepository.save(log);
+        saveLogInternal(description, category, Roles.ADMIN, school, null);
     }
 
-    @Transactional
-    @Async
-    public void logTeacherActivity( School school, String description, String category) {
+    public void logTeacherActivity(School school, String description, String category) {
         Teacher teacher = teacherSchoolConfig.getTeacher();
+        saveLogInternal(description, category, Roles.TEACHER, school, teacher);
+    }
+
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveLogInternal(String description, String category, Roles role, School school, Teacher teacher) {
         ActivityLog log = ActivityLog.builder()
-                .school(school)
-                .category(category)
                 .description(description)
-                .role(Roles.TEACHER)
+                .category(category)
+                .role(role)
+                .school(school)
                 .teacher(teacher)
                 .build();
 

@@ -24,7 +24,7 @@ import com.vansh.manger.Manger.teacher.mapper.TeacherResponseMapper;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**

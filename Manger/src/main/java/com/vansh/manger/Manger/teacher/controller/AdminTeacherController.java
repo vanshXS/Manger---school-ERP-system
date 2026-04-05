@@ -101,4 +101,10 @@ public class AdminTeacherController {
                                 .body(pdfBytes);
         }
 
+        @PostMapping("/{teacherId:\\d+}/send-password-reset")
+        public ResponseEntity<String> sendPasswordResetEmail(@PathVariable Long teacherId) {
+                adminTeacherService.sendPasswordReset(teacherId);
+                return ResponseEntity.ok("Password reset email sent successfully to the teacher.");
+        }
+
 }

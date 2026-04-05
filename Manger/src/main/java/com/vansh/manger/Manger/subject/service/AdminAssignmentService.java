@@ -21,7 +21,7 @@ import com.vansh.manger.Manger.academicyear.repository.AcademicYearRepository;
 import com.vansh.manger.Manger.student.repository.EnrollmentRepository;
 import com.vansh.manger.Manger.student.repository.StudentSubjectEnrollmentRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

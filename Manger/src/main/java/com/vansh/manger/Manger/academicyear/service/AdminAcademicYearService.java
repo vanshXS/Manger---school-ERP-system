@@ -9,7 +9,7 @@ import com.vansh.manger.Manger.student.repository.EnrollmentRepository;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

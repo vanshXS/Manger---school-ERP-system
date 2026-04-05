@@ -12,7 +12,7 @@ import com.vansh.manger.Manger.student.entity.Student;
 import com.vansh.manger.Manger.exam.entity.StudentSubjectMarks;
 import com.vansh.manger.Manger.subject.entity.Subject;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface StudentSubjectMarksRepository extends JpaRepository<StudentSubjectMarks, Long> {

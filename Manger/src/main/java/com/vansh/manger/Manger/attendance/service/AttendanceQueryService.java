@@ -28,7 +28,7 @@ import com.vansh.manger.Manger.teacher.entity.Teacher;
 import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**

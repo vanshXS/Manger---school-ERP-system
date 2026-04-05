@@ -12,7 +12,7 @@ import com.vansh.manger.Manger.exam.repository.ExamRepository;
 import com.vansh.manger.Manger.exam.util.ExamStatusResolver;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

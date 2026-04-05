@@ -17,7 +17,7 @@ import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.student.service.AdminStudentService;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.student.util.StudentAssignSubjects;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
