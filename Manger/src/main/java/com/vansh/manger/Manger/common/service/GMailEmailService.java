@@ -25,6 +25,7 @@ public class GMailEmailService implements EmailSender {
     @Async
     @Override
     public void sendNewUserWelcomeEmail(String toEmail, String fullName, String rawPassword) {
+        log.info("📧 START: Async task to send Welcome Email to {}. Sender: <{}>", toEmail, senderEmail);
         String htmlContent = generateHtmlTemplate(
                 "Welcome to Manger",
                 "Hello " + fullName + ",",
@@ -41,6 +42,7 @@ public class GMailEmailService implements EmailSender {
     @Async
     @Override
     public void sendPasswordResetEmail(String toEmail, String fullName, String newRawPassword) {
+        log.info("📧 START: Async task to send Password Reset to {}. Sender: <{}>", toEmail, senderEmail);
         String htmlContent = generateHtmlTemplate(
                 "Password Reset Success",
                 "Hello " + fullName + ",",
@@ -56,6 +58,7 @@ public class GMailEmailService implements EmailSender {
     @Async
     @Override
     public void sendMarksheet(String to, byte[] pdfBytes, String studentName, String examName, String rollNo, String subjectName) {
+        log.info("📧 START: Async task to send Marksheet to {} (Roll: {}). Sender: <{}>", to, rollNo, senderEmail);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -92,8 +95,9 @@ public class GMailEmailService implements EmailSender {
             helper.setText(htmlContent, true);
             
             mailSender.send(message);
+            log.info("✅ SUCCESS: Email sent to <{}> with subject '{}'", to, subject);
         } catch (Exception e) {
-            log.error("SMTP Error: Failed to send HTML email to {}. Reason: {}", to, e.getMessage());
+            log.error("❌ SMTP FAILURE: Failed to send Email to <{}>. Reason: {}", to, e.getMessage());
             throw new RuntimeException("Failed to send HTML email: " + e.getMessage());
         }
     }
