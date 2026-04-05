@@ -14,4 +14,5 @@ public class EmailConfig {
     public EmailSender gmailEmailSender(JavaMailSender javaMailSender) {
         return new GMailEmailService(javaMailSender);
     }
+
 }
