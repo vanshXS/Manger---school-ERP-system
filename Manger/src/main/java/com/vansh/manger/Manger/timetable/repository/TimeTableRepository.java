@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +17,7 @@ import java.util.Optional;
 public interface TimeTableRepository extends JpaRepository<TimeTable, Long> {
 
     /** All timetables for a school (use for admin getAll). */
+    @EntityGraph(attributePaths = {"teacherAssignment", "teacherAssignment.subject", "teacherAssignment.teacher", "teacherAssignment.classroom"})
     List<TimeTable> findBySchool_Id(Long schoolId);
 
     /** Get one timetable by id only if it belongs to the school (secure update/delete). */

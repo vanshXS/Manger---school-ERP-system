@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.vansh.manger.Manger.common.entity.GradeLevel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,6 +22,7 @@ public interface ClassroomRespository extends JpaRepository<Classroom, Long>, Jp
     // --- NEW SCHOOL-SCOPED METHODS ---
 
     /** Finds all classrooms for a specific school with a specific status. */
+    @EntityGraph(attributePaths = {"school"})
     List<Classroom> findBySchoolAndStatus(School school, ClassroomStatus status);
 
     /** Checks if a classroom section exists WITHIN a specific school. */
@@ -32,6 +34,7 @@ public interface ClassroomRespository extends JpaRepository<Classroom, Long>, Jp
     /** Finds a classroom by ID and ensures it belongs to the given school. */
     Optional<Classroom> findByIdAndSchool(Long id, School school);
 
+    @EntityGraph(attributePaths = {"school"})
     List<Classroom> findBySchool_Id(Long schoolId);
 
     /**
@@ -48,6 +51,7 @@ public interface ClassroomRespository extends JpaRepository<Classroom, Long>, Jp
     );
 
     boolean existsByGradeLevelAndSectionAndSchool(GradeLevel gradeLevel, String section, School school);
+    @EntityGraph(attributePaths = {"school"})
     List<Classroom> findBySchoolOrderByGradeLevelAsc(School school);
     Optional<Classroom>findByIdAndSchool_Id(Long classroomId, Long schoolId);
     Optional<Classroom> findByGradeLevelAndSectionAndSchool(GradeLevel gradeLevel, String section, School school);

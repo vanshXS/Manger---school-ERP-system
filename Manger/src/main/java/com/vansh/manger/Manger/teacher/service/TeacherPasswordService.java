@@ -74,8 +74,6 @@ public class TeacherPasswordService implements TeacherPasswordOperations {
                     "Admin triggered password reset for teacher: " + teacher.getFirstName() + " "
                             + teacher.getLastName(),
                     "Security");
-            
-            log.info("Password reset success for teacher ID: {}", teacherId);
         } catch (Exception e) {
             log.error("Failed to send password reset email for teacher ID {}: {}", teacherId, e.getMessage());
             throw new RuntimeException(

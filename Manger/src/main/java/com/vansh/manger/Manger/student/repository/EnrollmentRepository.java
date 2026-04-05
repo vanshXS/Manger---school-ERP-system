@@ -1,15 +1,10 @@
 package com.vansh.manger.Manger.student.repository;
 
-import com.vansh.manger.Manger.academicyear.entity.*;
-import com.vansh.manger.Manger.attendance.entity.*;
-import com.vansh.manger.Manger.auth.entity.*;
-import com.vansh.manger.Manger.classroom.entity.*;
-import com.vansh.manger.Manger.common.entity.*;
-import com.vansh.manger.Manger.exam.entity.*;
-import com.vansh.manger.Manger.student.entity.*;
-import com.vansh.manger.Manger.subject.entity.*;
-import com.vansh.manger.Manger.teacher.entity.*;
-import com.vansh.manger.Manger.timetable.entity.*;
+import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
+import com.vansh.manger.Manger.classroom.entity.Classroom;
+import com.vansh.manger.Manger.student.entity.Enrollment;
+import com.vansh.manger.Manger.student.entity.Student;
+import com.vansh.manger.Manger.student.entity.StudentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -37,6 +32,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> , 
     /**
      * Finds all enrollments for a specific classroom and academic year.
      */
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
     List<Enrollment> findByClassroomAndSchool_IdAndAcademicYear(Classroom classroom, Long schoolId, AcademicYear academicYear);
 
     /**
@@ -52,11 +48,14 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> , 
     boolean existsByAcademicYearAndStudent(AcademicYear academicYear, Student student);
     boolean existsByStudentAndClassroomAndAcademicYear(Student student, Classroom classroom,AcademicYear academicYear);
 
+    @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
     List<Enrollment> findByClassroomId(Long classroomId);
 
     Optional<Enrollment> findActiveByStudent(Student student);
+
     @EntityGraph(attributePaths = {"student", "classroom", "academicYear"})
     List<Enrollment> findByClassroomAndAcademicYear(Classroom classroom, AcademicYear academicYear);
+    
     int countByClassroomAndAcademicYearAndStatus(Classroom classroom, AcademicYear academicYear, StudentStatus status);
 
     /** All enrollments for a student within a school (academic year history). */
