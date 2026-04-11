@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import TemporaryCredentialsDialog from '@/components/common/TemporaryCredentialsDialog';
 import {
   Dialog, DialogContent,
   DialogDescription, DialogFooter,
@@ -68,6 +69,7 @@ export default function TeacherDialog({
   onOpenChange,
   editingTeacher,
   fetchTeachers,
+  newTeacherCredentials,
   setNewTeacherCredentials
 }) {
   const [activeTab, setActiveTab] = useState('personal');
@@ -189,8 +191,9 @@ export default function TeacherDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 rounded-xl border-slate-200 shadow-xl bg-slate-50 flex flex-col max-h-[90vh] overflow-hidden">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl p-0 rounded-xl border-slate-200 shadow-xl bg-slate-50 flex flex-col max-h-[90vh] overflow-hidden">
 
         {/* HEADER */}
         <div className="bg-white border-b border-slate-200 px-6 py-5 shrink-0">
@@ -277,7 +280,14 @@ export default function TeacherDialog({
             </DialogFooter>
           </Tabs>
         </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <TemporaryCredentialsDialog
+        credentials={newTeacherCredentials}
+        onClose={() => setNewTeacherCredentials?.(null)}
+        entityLabel="Teacher"
+      />
+    </>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import PaginationBar from '@/components/common/PaginationBar';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -21,8 +22,6 @@ import teacherApiClient from '@/lib/teacherAxios';
 import { format, isValid } from 'date-fns';
 import {
     AlertCircle,
-    ChevronLeft,
-    ChevronRight,
     History,
     RefreshCcw
 } from 'lucide-react';
@@ -171,29 +170,19 @@ export default function TeacherActivityLogsPage() {
 
                 {!loading && !error && logs.length > 0 && (
                     <CardFooter className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 p-4">
-                        <div className="text-xs font-semibold text-slate-500">
-                            Page {page + 1} of {totalPages}
-                        </div>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={page === 0}
-                                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                                className="h-8 px-3 bg-white hover:bg-slate-50 border-slate-200 shadow-sm"
-                            >
-                                <ChevronLeft className="mr-1 h-3.5 w-3.5 text-slate-500" /> <span className="text-xs font-medium">Prev</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={page >= totalPages - 1}
-                                onClick={() => setPage((p) => p + 1)}
-                                className="h-8 px-3 bg-white hover:bg-slate-50 border-slate-200 shadow-sm"
-                            >
-                                <span className="text-xs font-medium">Next</span> <ChevronRight className="ml-1 h-3.5 w-3.5 text-slate-500" />
-                            </Button>
-                        </div>
+                        <PaginationBar
+                            pageData={{
+                                number: page,
+                                totalPages,
+                                totalElements,
+                                size: pageSize,
+                                numberOfElements: logs.length
+                            }}
+                            itemLabel="logs"
+                            onPageChange={setPage}
+                            isLoading={loading}
+                            className="w-full"
+                        />
                     </CardFooter>
                 )}
             </Card>

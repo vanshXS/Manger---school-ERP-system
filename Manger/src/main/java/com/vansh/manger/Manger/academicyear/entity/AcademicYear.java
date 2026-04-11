@@ -1,15 +1,18 @@
 package com.vansh.manger.Manger.academicyear.entity;
 
+import com.vansh.manger.Manger.common.entity.BaseEntity;
+import com.vansh.manger.Manger.common.entity.School;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
 
 import java.time.LocalDate;
-import com.vansh.manger.Manger.common.entity.School;
 
 @Entity
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
 @Table(
     name = "academic_year",
     uniqueConstraints = @UniqueConstraint(columnNames = { "school_id", "name" }),
@@ -23,7 +26,7 @@ import com.vansh.manger.Manger.common.entity.School;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AcademicYear {
+public class AcademicYear extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,11 +41,9 @@ public class AcademicYear {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    /** Only one academic year per school should be current at a time. */
     @Column(name = "is_current", nullable = false)
     private Boolean isCurrent = false;
 
-    /** When true, this year is closed and students can be promoted from it to the next. */
     @Column(nullable = false)
     private Boolean closed = false;
 

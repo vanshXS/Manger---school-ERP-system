@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.UserRepo;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import com.vansh.manger.Manger.auth.service.RefreshTokenService;
 
 import jakarta.validation.Valid;
@@ -61,17 +62,17 @@ public class TeacherAuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(teacherLogin.getEmail() + ":ROLE_W_SPLIT:" + Roles.TEACHER.name(), teacherLogin.getPassword()));
 
-            User user = (User) authentication.getPrincipal();
+            CurrentUserPrincipal user = (CurrentUserPrincipal) authentication.getPrincipal();
 
-            if (!user.getRoles().equals(Roles.TEACHER)) {
+            if (!user.role().equals(Roles.TEACHER)) {
                 return ResponseEntity.status(403).build();
 
             }
-            String accessToken = jwtUtil.generateAccessToken(user, user.getRoles().name());
-            String refreshToken = jwtUtil.generateRefreshToken(user, user.getRoles().name());
+            String accessToken = jwtUtil.generateAccessToken(user);
+            String refreshToken = jwtUtil.generateRefreshToken(user);
 
             refreshTokenService.createRefreshToken(
-                    user.getId(),
+                    user.userId(),
                     refreshToken,
                     Instant.now().plusMillis(7 * 24 * 60 * 60 * 1000) // 7 days
             );
@@ -79,7 +80,7 @@ public class TeacherAuthController {
             AuthResponseDTO responseDTO = new AuthResponseDTO(
                     accessToken,
                     refreshToken,
-                    user.getRoles().name()
+                    user.role().name()
             );
 
             ResponseCookie cookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
@@ -87,7 +88,7 @@ public class TeacherAuthController {
                     .secure(isSecure)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("None")
+                    .sameSite(isSecure ? "None" : "Lax")
                     .build();
             response.addHeader("Set-Cookie", cookie.toString());
 
@@ -139,7 +140,7 @@ public class TeacherAuthController {
                .secure(isSecure)
                .maxAge(7*24*60*60)
                .path("/")
-               .sameSite("None")
+               .sameSite(isSecure ? "None" : "Lax")
                .build();
 
        response.addHeader("Set-Cookie", responseCookie.toString());

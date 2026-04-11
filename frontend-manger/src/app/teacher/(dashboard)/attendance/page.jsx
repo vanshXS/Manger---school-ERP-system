@@ -74,7 +74,7 @@ const STATUS_CONFIG = [
     { key: 'LEAVE', label: 'L', icon: Clock, active: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-110', idle: 'bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 hover:border-amber-300 hover:shadow-sm' },
 ];
 
-function StudentRow({ student, index, onStatusChange, isEven }) {
+function StudentRow({ student, index, onStatusChange, isEven, classroomId }) {
     const s = student.status;
     const initials = (student.studentName || '?')
         .split(' ')
@@ -103,14 +103,39 @@ function StudentRow({ student, index, onStatusChange, isEven }) {
                 {index + 1}
             </span>
 
-            {/* Avatar */}
-            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0 shadow-sm`}>
-                <span className="text-[10px] font-bold text-white">{initials}</span>
+            {/* Avatar & Profile Link */}
+            <div className="relative group/avatar shrink-0">
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center shadow-sm`}>
+                    <span className="text-[10px] font-bold text-white">{initials}</span>
+                </div>
+                {classroomId && student.studentId && (
+                    <a
+                        href={`/teacher/classrooms/${classroomId}/students/${student.studentId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+                        title="View Profile"
+                    >
+                        <Users size={12} className="text-white" />
+                    </a>
+                )}
             </div>
 
             {/* Name & Roll */}
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate leading-tight">{student.studentName}</p>
+                <div className="flex items-center gap-1.5 overflow-hidden">
+                    <p className="text-sm font-semibold text-slate-800 truncate leading-tight">{student.studentName}</p>
+                    {classroomId && student.studentId && (
+                        <a
+                            href={`/teacher/classrooms/${classroomId}/students/${student.studentId}`}
+                            target="_blank"
+                            className="hidden group-hover:block text-blue-500 hover:text-blue-700 p-0.5"
+                            title="View Profile"
+                        >
+                            <Users size={12} />
+                        </a>
+                    )}
+                </div>
                 <p className="text-[10px] text-slate-400 font-medium">Roll: {student.rollNo || 'N/A'}</p>
             </div>
 
@@ -520,6 +545,7 @@ export default function TeacherAttendancePage() {
                                 index={i}
                                 onStatusChange={handleStatusChange}
                                 isEven={i % 2 === 0}
+                                classroomId={selectedClassroomId}
                             />
                         ))}
                         {filteredRoster.length === 0 && searchQuery && (

@@ -1,5 +1,6 @@
 'use client';
 
+import PaginationBar from '@/components/common/PaginationBar';
 import { GradingSheetTable } from '@/components/teacher/marks/GradingSheetTable';
 import { TopStats } from '@/components/teacher/marks/TopStats';
 import {
@@ -10,7 +11,7 @@ import {
 import teacherApiClient from '@/lib/teacherAxios';
 import { showError, showSuccess } from '@/lib/toastHelper';
 import {
-    ArrowLeft, BookOpen, Calendar, ChevronLeft, ChevronRight, Clock,
+    ArrowLeft, BookOpen, Calendar, ChevronRight, Clock,
     FileText, GraduationCap, Loader2, Mail, Save, Search, X
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -587,26 +588,19 @@ export default function TeacherExamsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {displayedExams.map((exam) => <ExamCard key={exam.id} exam={exam} onSelect={handleSelectExam} />)}
                     </div>
-                    {/* Server-side pagination controls */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-between pt-2">
-                            <p className="text-sm text-slate-500">
-                                Showing page <span className="font-semibold text-slate-700">{currentPage + 1}</span> of{' '}
-                                <span className="font-semibold text-slate-700">{totalPages}</span>
-                                <span className="hidden sm:inline"> &middot; {totalElements} total exams</span>
-                            </p>
-                            <div className="flex gap-2">
-                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0}
-                                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                                    <ChevronLeft size={16} /> Prev
-                                </button>
-                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1}
-                                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                                    Next <ChevronRight size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <PaginationBar
+                        pageData={{
+                            number: currentPage,
+                            totalPages,
+                            totalElements,
+                            size: PAGE_SIZE,
+                            numberOfElements: exams.length
+                        }}
+                        itemLabel="exams"
+                        onPageChange={handlePageChange}
+                        isLoading={loadingExams}
+                        className="pt-2"
+                    />
                 </>
             )}
         </div>

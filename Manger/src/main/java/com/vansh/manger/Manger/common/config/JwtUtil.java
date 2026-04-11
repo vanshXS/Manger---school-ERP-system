@@ -1,6 +1,7 @@
 package com.vansh.manger.Manger.common.config;
 
 import com.vansh.manger.Manger.common.entity.User;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -20,29 +21,22 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    // For HS256, use at least 256 bits (32 characters). Prefer env var: jwt.key
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
     @PostConstruct
     public void validate() {
-        if(SECRET_KEY == null || SECRET_KEY.isEmpty()){
+        if (SECRET_KEY == null || SECRET_KEY.isEmpty()) {
             throw new RuntimeException("JWT key is missing");
         }
     }
 
-
-    // ✅ 24 hours validity for access token
-    private final long accessTokenValidity = TimeUnit.MINUTES.toMillis(15);// 15 minutes
-    // ✅ 7 days validity for refresh token
-    private final long refreshTokenValidity = TimeUnit.DAYS.toMillis(7); // 7 days
+    private final long accessTokenValidity = TimeUnit.MINUTES.toMillis(15);
+    private final long refreshTokenValidity = TimeUnit.DAYS.toMillis(7);
 
     private Key getSigningKey() {
-        // Keys.hmacShaKeyFor() requires min 256 bits for HS256
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
-
-    // ================= Token Creation =================
 
     public String createAccessToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
@@ -64,8 +58,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // ================= Claims Extraction =================
-
     public <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -74,7 +66,7 @@ public class JwtUtil {
     public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
-                .setAllowedClockSkewSeconds(60) // ✅ allow 1 min clock skew
+                .setAllowedClockSkewSeconds(60)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -117,32 +109,36 @@ public class JwtUtil {
         });
     }
 
-    // ================= Validation =================
-
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
-    // ================= Token Generators =================
-
-
-    // For your custom User entity
     public String generateAccessToken(User user, String role) {
+        return generateAccessToken(CurrentUserPrincipal.from(user));
+    }
+
+    public String generateAccessToken(CurrentUserPrincipal user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
-        claims.put("userId", user.getId());
-        if (user.getSchool() != null && user.getSchool().getId() != null) {
-            claims.put("schoolId", user.getSchool().getId());
+        claims.put("role", user.role().name());
+        claims.put("userId", user.userId());
+        if (user.schoolId() != null) {
+            claims.put("schoolId", user.schoolId());
         }
-        return createAccessToken(claims, user.getEmail());
+        return createAccessToken(claims, user.email());
     }
 
     public String generateRefreshToken(User user, String role) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
-        return createRefreshToken(claims, user.getEmail());
+        return generateRefreshToken(CurrentUserPrincipal.from(user));
     }
 
-
+    public String generateRefreshToken(CurrentUserPrincipal user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.role().name());
+        claims.put("userId", user.userId());
+        if (user.schoolId() != null) {
+            claims.put("schoolId", user.schoolId());
+        }
+        return createRefreshToken(claims, user.email());
+    }
 }

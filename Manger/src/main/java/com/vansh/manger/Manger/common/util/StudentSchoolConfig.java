@@ -1,8 +1,8 @@
 package com.vansh.manger.Manger.common.util;
 
 import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.SchoolRepository;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import com.vansh.manger.Manger.common.security.SecurityContextHelper;
 import com.vansh.manger.Manger.student.entity.Enrollment;
 import com.vansh.manger.Manger.student.entity.Student;
@@ -20,11 +20,11 @@ public class StudentSchoolConfig {
     private final EnrollmentRepository enrollmentRepo;
 
     public Long requireCurrentSchoolId() {
-        User currentUser = SecurityContextHelper.getCurrentUser();
-        if (currentUser.getSchool() == null) {
+        CurrentUserPrincipal currentUser = SecurityContextHelper.getCurrentPrincipal();
+        if (currentUser.schoolId() == null) {
             throw new IllegalStateException("User is not associated with any school");
         }
-        return currentUser.getSchool().getId();
+        return currentUser.schoolId();
     }
 
     public School requireCurrentSchool() {
@@ -33,14 +33,13 @@ public class StudentSchoolConfig {
     }
 
     public Student currentStudent() {
-        User currentUser = SecurityContextHelper.getCurrentUser();
+        CurrentUserPrincipal currentUser = SecurityContextHelper.getCurrentPrincipal();
 
-        return studentRepo.findByEmailAndSchool_Id(currentUser.getUsername(), requireCurrentSchoolId())
+        return studentRepo.findByEmailAndSchool_Id(currentUser.email(), requireCurrentSchoolId())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 
     public Enrollment getCurrentEnrollment() {
-
         Student student = currentStudent();
 
         return enrollmentRepo.findByStudentAndSchool_IdAndAcademicYearIsCurrent(student, requireCurrentSchoolId(), true)

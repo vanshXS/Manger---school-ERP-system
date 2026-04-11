@@ -36,6 +36,7 @@ import com.vansh.manger.Manger.auth.entity.RefreshToken;
 import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.UserRepo;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import com.vansh.manger.Manger.auth.service.RefreshTokenService;
 
 import jakarta.servlet.http.Cookie;
@@ -99,22 +100,22 @@ public class AdminAuthController {
                             authLoginDTO.getEmail() + ":ROLE_W_SPLIT:" + Roles.ADMIN.name(),
                             authLoginDTO.getPassword()));
 
-            User user = (User) authentication.getPrincipal();
+            CurrentUserPrincipal user = (CurrentUserPrincipal) authentication.getPrincipal();
 
             // Verify admin role
-            if (!Roles.ADMIN.equals(user.getRoles())) {
+            if (!Roles.ADMIN.equals(user.role())) {
                 return ResponseEntity
                         .status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "This account is not an admin account"));
             }
 
             // Generate tokens
-            String accessToken = jwtUtil.generateAccessToken(user, user.getRoles().name());
-            String refreshToken = jwtUtil.generateRefreshToken(user, user.getRoles().name());
+            String accessToken = jwtUtil.generateAccessToken(user);
+            String refreshToken = jwtUtil.generateRefreshToken(user);
 
             // Save refresh token in database
             refreshTokenService.createRefreshToken(
-                    user.getId(),
+                    user.userId(),
                     refreshToken,
                     Instant.now().plusMillis(7L * 24 * 60 * 60 * 1000) // 7 days
             );
@@ -123,7 +124,7 @@ public class AdminAuthController {
             AuthResponseDTO responseDTO = new AuthResponseDTO(
                     accessToken,
                     refreshToken,
-                    user.getRoles().name());
+                    user.role().name());
 
             // Set refresh token as HTTP-only cookie (admin-specific)
             ResponseCookie refreshCookie = ResponseCookie.from("adminRefreshToken", refreshToken)
@@ -131,12 +132,12 @@ public class AdminAuthController {
                     .secure(isSecure) // This will now be dynamic
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60) // 7 days
-                    .sameSite("None")
+                    .sameSite(isSecure ? "None" : "Lax")
                     .build();
 
             response.addHeader("Set-Cookie", refreshCookie.toString());
 
-            log.info("Admin logged in successfully: {}", user.getEmail());
+            log.info("Admin logged in successfully: {}", user.email());
 
             return ResponseEntity.ok(responseDTO);
 
@@ -213,7 +214,7 @@ public class AdminAuthController {
                     .secure(isSecure)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60) // 7 days
-                    .sameSite("None")
+                    .sameSite(isSecure ? "None" : "Lax")
                     .build();
 
             response.addHeader("Set-Cookie", refreshCookie.toString());
@@ -231,7 +232,7 @@ public class AdminAuthController {
                     .secure(isSecure)
                     .path("/")
                     .maxAge(0)
-                    .sameSite("None")
+                    .sameSite(isSecure ? "None" : "Lax")
                     .build();
             response.addHeader("Set-Cookie", clearCookie.toString());
 
@@ -271,7 +272,7 @@ public class AdminAuthController {
                     .secure(isSecure)
                     .path("/")
                     .maxAge(0)
-                    .sameSite("None")
+                    .sameSite(isSecure ? "None" : "Lax")
                     .build();
 
             response.addHeader("Set-Cookie", clearCookie.toString());

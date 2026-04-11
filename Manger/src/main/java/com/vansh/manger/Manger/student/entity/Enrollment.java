@@ -1,18 +1,21 @@
 package com.vansh.manger.Manger.student.entity;
 
+import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
+import com.vansh.manger.Manger.classroom.entity.Classroom;
+import com.vansh.manger.Manger.common.entity.BaseEntity;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.exam.entity.StudentSubjectMarks;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
 
 import java.util.Set;
-import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
-import com.vansh.manger.Manger.classroom.entity.Classroom;
-import com.vansh.manger.Manger.exam.entity.StudentSubjectMarks;
 
 @Entity
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
 @Table(name = "enrollments",
 uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "academic_year_id"}) ,
 indexes = {
@@ -23,9 +26,10 @@ indexes = {
 }
 )
 @Data
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class Enrollment {
+public class Enrollment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,32 +1,33 @@
 package com.vansh.manger.Manger.timetable.entity;
 
+import com.vansh.manger.Manger.common.entity.BaseEntity;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalTime;
-import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 
 @Entity
-@AllArgsConstructor @NoArgsConstructor
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Builder
-public class TimeTable {
+public class TimeTable extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-   private Long id;
+    private Long id;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DayOfWeek day;
-
-
 
     @Column(nullable = false)
     private LocalTime startTime;
@@ -41,5 +42,4 @@ public class TimeTable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id", nullable = false)
     private School school;
-
 }

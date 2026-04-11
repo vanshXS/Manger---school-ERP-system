@@ -2,7 +2,6 @@ package com.vansh.manger.Manger.school.service;
 
 import java.io.IOException;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +13,7 @@ import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.SchoolRepository;
 import com.vansh.manger.Manger.common.repository.UserRepo;
+import com.vansh.manger.Manger.common.security.SecurityContextHelper;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.common.service.FileStorageService;
 import com.vansh.manger.Manger.school.dto.SchoolProfileDTO;
@@ -31,27 +31,8 @@ public class AdminSchoolService {
     private final FileStorageService fileStorageService;
     private final UserRepo userRepo;
 
-    /*
-     * -------------------------------------------------------
-     * 🔐 AUTH HELPERS
-     * -------------------------------------------------------
-     */
-
     private Long getAuthenticatedUserId() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (principal instanceof User) {
-            return ((User) principal).getId();
-        }
-
-        if (principal instanceof String) {
-            String email = (String) principal;
-            return userRepo.findByEmail(email)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found via email."))
-                    .getId();
-        }
-
-        throw new IllegalStateException("Invalid authentication principal.");
+        return SecurityContextHelper.getCurrentUserId();
     }
 
     private User getAuthenticatedUserEntity() {
@@ -60,11 +41,6 @@ public class AdminSchoolService {
                 .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found."));
     }
 
-    /*
-     * -------------------------------------------------------
-     * 📌 DTO MAPPER
-     * -------------------------------------------------------
-     */
     private SchoolProfileDTO mapToDTO(School school) {
         SchoolProfileDTO dto = new SchoolProfileDTO();
         dto.setId(school.getId());
@@ -74,14 +50,8 @@ public class AdminSchoolService {
         return dto;
     }
 
-    /*
-     * -------------------------------------------------------
-     * 📌 FETCH SCHOOL PROFILE
-     * -------------------------------------------------------
-     */
     @Transactional(readOnly = true)
     public SchoolProfileDTO getSchoolProfile() {
-
         User admin = getAuthenticatedUserEntity();
         School school = admin.getSchool();
 
@@ -92,14 +62,8 @@ public class AdminSchoolService {
         return mapToDTO(school);
     }
 
-    /*
-     * -------------------------------------------------------
-     * 📌 UPDATE SCHOOL INFO
-     * -------------------------------------------------------
-     */
     @Transactional
     public SchoolProfileDTO updateSchoolProfile(SchoolProfileDTO dto) {
-
         User admin = getAuthenticatedUserEntity();
         School school = admin.getSchool();
 
@@ -120,27 +84,18 @@ public class AdminSchoolService {
         return mapToDTO(updated);
     }
 
-    /*
-     * -------------------------------------------------------
-     * 🔐 CHANGE PASSWORD
-     * -------------------------------------------------------
-     */
     @Transactional
     public void changePassword(ChangePasswordRequestDTO dto) {
-
         User admin = getAuthenticatedUserEntity();
 
-        // 1. Verify old password
         if (!passwordEncoder.matches(dto.getOldPassword(), admin.getPassword())) {
             throw new IllegalArgumentException("Incorrect current password.");
         }
 
-        // 2. Prevent using the same password
         if (passwordEncoder.matches(dto.getNewPassword(), admin.getPassword())) {
             throw new IllegalArgumentException("New password cannot be the same as the old password.");
         }
 
-        // 3. Update password
         admin.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         userRepo.save(admin);
 
@@ -149,14 +104,8 @@ public class AdminSchoolService {
                 "Security");
     }
 
-    /*
-     * -------------------------------------------------------
-     * 📷 UPDATE SCHOOL LOGO
-     * -------------------------------------------------------
-     */
     @Transactional
     public SchoolProfileDTO updateSchoolLogo(MultipartFile file) {
-
         User admin = getAuthenticatedUserEntity();
         School school = admin.getSchool();
 

@@ -1,11 +1,12 @@
 'use client';
 
 import TeacherDialog from '@/components/admin/teachers/TeacherDialog';
+import PaginationBar from '@/components/common/PaginationBar';
 import TeacherTable from '@/components/admin/teachers/TeacherTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import apiClient from '@/lib/axios';
-import { Search, ShieldAlert, UserPlus, Users } from 'lucide-react';
+import { Search, UserPlus, Users } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ export default function TeachersPage() {
   const [currentTab, setCurrentTab] = useState('all');
 
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
@@ -45,6 +47,7 @@ export default function TeachersPage() {
 
       setTeachers(res.data.content || []);
       setTotalPages(res.data.totalPages || 0);
+      setTotalElements(res.data.totalElements || 0);
     } catch (e) {
       toast.error('Failed to fetch teachers' || e.customMessage);
     } finally {
@@ -85,8 +88,11 @@ export default function TeachersPage() {
     try {
       await apiClient.delete(`/api/admin/teachers/${teacherId}`);
       toast.success('Teacher deleted');
-      setTeachers((prev) => prev.filter((t) => t.id !== teacherId));
-      if (teachers.length === 1 && page > 0) setPage(p => p - 1);
+      if (teachers.length === 1 && page > 0) {
+        setPage((currentValue) => currentValue - 1);
+      } else {
+        fetchTeachers();
+      }
     } catch (e) {
       toast.error(e.customMessage || 'Failed to delete teacher');
     }
@@ -188,29 +194,19 @@ export default function TeachersPage() {
       />
 
       {/* Pagination */}
-      {totalPages > 0 && (
-        <div className="flex justify-end items-center gap-4 mt-6 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm w-fit ml-auto">
-          <Button
-            variant="outline"
-            className="rounded-lg font-medium"
-            disabled={page === 0 || isLoading}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
-          <span className="text-sm font-bold text-slate-600">
-            Page {page + 1} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            className="rounded-lg font-medium"
-            disabled={page + 1 >= totalPages || isLoading}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
+      <PaginationBar
+        pageData={{
+          number: page,
+          totalPages,
+          totalElements,
+          size: 10,
+          numberOfElements: teachers.length
+        }}
+        itemLabel="teachers"
+        onPageChange={setPage}
+        isLoading={isLoading}
+        className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+      />
 
       {/* Add / Edit Dialog */}
       <TeacherDialog
@@ -218,50 +214,9 @@ export default function TeachersPage() {
         onOpenChange={setIsDialogOpen}
         editingTeacher={editingTeacher}
         fetchTeachers={fetchTeachers}
+        newTeacherCredentials={newTeacherCredentials}
         setNewTeacherCredentials={setNewTeacherCredentials}
       />
-
-      {/* Credentials Modal */}
-      {newTeacherCredentials && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl shadow-2xl p-0 max-w-md w-full animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="bg-emerald-50 border-b border-emerald-100 p-6 flex flex-col items-center text-center">
-              <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-                <ShieldAlert className="h-7 w-7 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-extrabold text-emerald-900">Account Created</h3>
-              <p className="text-sm font-medium text-emerald-700 mt-1">Please securely share these credentials with the teacher.</p>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 font-medium">Name</span>
-                  <span className="font-bold text-slate-900">{newTeacherCredentials.name}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 font-medium">Email</span>
-                  <span className="font-bold text-slate-900">{newTeacherCredentials.email}</span>
-                </div>
-                <div className="pt-3 border-t border-slate-200 mt-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Temporary Password</p>
-                  <div className="font-mono bg-white border border-slate-200 p-3 rounded-xl select-all text-xl text-center font-bold tracking-wider text-slate-800 shadow-inner">
-                    {newTeacherCredentials.password}
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs font-semibold text-amber-600 text-center flex items-center justify-center gap-1.5 bg-amber-50 py-2 rounded-lg">
-                <ShieldAlert className="h-4 w-4" /> Copy this password now. It will not be shown again.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-50 border-t border-slate-100">
-              <Button className="w-full h-11 text-base font-semibold rounded-xl" onClick={() => setNewTeacherCredentials(null)}>
-                I have copied the credentials
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

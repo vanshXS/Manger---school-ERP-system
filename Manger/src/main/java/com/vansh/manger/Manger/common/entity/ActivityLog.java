@@ -1,21 +1,24 @@
 package com.vansh.manger.Manger.common.entity;
 
+import com.vansh.manger.Manger.teacher.entity.Teacher;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import com.vansh.manger.Manger.teacher.entity.Teacher;
+import org.hibernate.annotations.Filter;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
 @Table(name = "activity_log")
 @Data
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class ActivityLog {
+public class ActivityLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +45,4 @@ public class ActivityLog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
-
 }

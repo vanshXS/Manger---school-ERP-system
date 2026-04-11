@@ -38,6 +38,8 @@ frontend-manger/.env.local
 **/*.secrets
 
 # Application Configuration (sensitive data)
+**/application-dev.properties
+**/application-test.properties
 
 
 # ------------------------------------------------------------------------------

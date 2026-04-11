@@ -1,11 +1,11 @@
 package com.vansh.manger.Manger.common.util;
 
 import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.SchoolRepository;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import com.vansh.manger.Manger.common.security.SecurityContextHelper;
-import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.teacher.entity.Teacher;
+import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +17,11 @@ public class TeacherSchoolConfig {
     private final TeacherRespository teacherRespository;
 
     public Long requireCurrentSchoolId() {
-        User currentUser = SecurityContextHelper.getCurrentUser();
-        if (currentUser.getSchool() == null) {
+        CurrentUserPrincipal currentUser = SecurityContextHelper.getCurrentPrincipal();
+        if (currentUser.schoolId() == null) {
             throw new IllegalStateException("User is not associated with any school");
         }
-        return currentUser.getSchool().getId();
+        return currentUser.schoolId();
     }
 
     public School requireCurrentSchool() {
@@ -30,9 +30,9 @@ public class TeacherSchoolConfig {
     }
 
     public Teacher getTeacher() {
-        User currentUser = SecurityContextHelper.getCurrentUser();
+        CurrentUserPrincipal currentUser = SecurityContextHelper.getCurrentPrincipal();
 
-        return teacherRespository.findByEmailAndSchool_Id(currentUser.getUsername(), requireCurrentSchoolId())
+        return teacherRespository.findByEmailAndSchool_Id(currentUser.email(), requireCurrentSchoolId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
     }
 }

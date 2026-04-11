@@ -13,6 +13,7 @@ import com.vansh.manger.Manger.common.dto.TokenRefreshResponseDTO;
 import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.UserRepo;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,26 +65,26 @@ public class StudentAuthController {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.getEmail() + ":ROLE_W_SPLIT:" + Roles.STUDENT.name(), loginDTO.getPassword())
             );
-            User user = (User) auth.getPrincipal();
-            if (!user.getRoles().equals(Roles.STUDENT)) {
+            CurrentUserPrincipal user = (CurrentUserPrincipal) auth.getPrincipal();
+            if (!user.role().equals(Roles.STUDENT)) {
                 return ResponseEntity.status(403).build();
             }
 
-            String accessToken = jwtUtil.generateAccessToken(user, user.getRoles().name());
-            String refreshToken = jwtUtil.generateRefreshToken(user, user.getRoles().name());
+            String accessToken = jwtUtil.generateAccessToken(user);
+            String refreshToken = jwtUtil.generateRefreshToken(user);
 
             refreshTokenService.createRefreshToken(
-                    user.getId(), refreshToken, Instant.now().plusMillis(TimeUnit.DAYS.toMillis(7))
+                    user.userId(), refreshToken, Instant.now().plusMillis(TimeUnit.DAYS.toMillis(7))
             );
 
 
-            AuthResponseDTO responseDTO = new AuthResponseDTO(accessToken, refreshToken, user.getRoles().name());
+            AuthResponseDTO responseDTO = new AuthResponseDTO(accessToken, refreshToken, user.role().name());
 
             ResponseCookie cookie = ResponseCookie.from("studentRefreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(isSecure)
                     .path("/")
-                    .sameSite("None")
+                    .sameSite(isSecure ? "None" : "Lax")
                     .maxAge(TimeUnit.DAYS.toSeconds(7))
                     .build();
 
@@ -137,7 +138,7 @@ public class StudentAuthController {
                 .secure(isSecure)
                 .maxAge(TimeUnit.DAYS.toSeconds(7))
                 .path("/")
-                .sameSite("None")
+                .sameSite(isSecure ? "None" : "Lax")
                 .build();
         response.addHeader("Set-Cookie", responseCookie.toString());
 
@@ -246,7 +247,7 @@ public class StudentAuthController {
         ResponseCookie clearCookie = ResponseCookie.from(cookieName, "")
                 .httpOnly(true)
                 .secure(isSecure)
-                .sameSite("None")
+                .sameSite(isSecure ? "None" : "Lax")
                 .path("/")
                 .maxAge(0)
                 .build();

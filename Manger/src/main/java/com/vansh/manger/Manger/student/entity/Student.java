@@ -1,22 +1,23 @@
 package com.vansh.manger.Manger.student.entity;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import com.vansh.manger.Manger.common.entity.BaseEntity;
+import com.vansh.manger.Manger.common.entity.Gender;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.common.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.vansh.manger.Manger.common.entity.User;
-import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.Gender;
+import org.hibernate.annotations.Filter;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Entity
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +27,7 @@ import com.vansh.manger.Manger.common.entity.Gender;
         @Index(name = "idx_student_email", columnList = "email")
 
 })
-public class Student {
+public class Student extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,8 +61,6 @@ public class Student {
 
     @Column
     private Integer graduationYear;
-
-
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", unique = true, nullable = false)

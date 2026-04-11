@@ -14,7 +14,7 @@ import { TableSkeleton } from '@/components/admin/students/Skeletons';
 import StudentDialog from '@/components/admin/students/StudentDialog';
 import StudentSheet from '@/components/admin/students/StudentSheet';
 import StudentTable from '@/components/admin/students/StudentTable';
-import PaginationBar from '@/components/admin/students/PaginationBar';
+import PaginationBar from '@/components/common/PaginationBar';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter,
@@ -88,7 +88,7 @@ export default function StudentsPage() {
   const searchParams = useSearchParams();
 
   /* URL as state */
-  const currentPage   = parseInt(searchParams.get('page') || '1', 10) - 1;
+  const currentPage   = Math.max(0, parseInt(searchParams.get('page') || '1', 10) - 1);
   const currentSearch = searchParams.get('search') || '';
   const currentStatus = searchParams.get('status') || null;
 
@@ -96,6 +96,7 @@ export default function StudentsPage() {
   const [students,    setStudents]    = useState([]);
   const [classrooms,  setClassrooms]  = useState([]);
   const [totalPages,  setTotalPages]  = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [isLoading,   setIsLoading]   = useState(true);
   const [searchInput, setSearchInput] = useState(currentSearch);
 
@@ -149,6 +150,7 @@ export default function StudentsPage() {
       });
       setStudents(res.data.content || []);
       setTotalPages(res.data.totalPages || 0);
+      setTotalElements(res.data.totalElements || 0);
     } catch { toast.error('Failed to load students'); }
     finally   { setIsLoading(false); }
   }, [currentPage, currentSearch, currentStatus]);
@@ -212,6 +214,7 @@ export default function StudentsPage() {
   };
 
   const activeFilterCfg = currentStatus ? STATUS_CONFIG[currentStatus] : null;
+  const handlePageChange = (nextPage) => updateFilters({ page: String(nextPage + 1) });
 
   return (
     <div className="space-y-5">
@@ -316,11 +319,17 @@ export default function StudentsPage() {
 
       {/* ── PAGINATION ── */}
       <PaginationBar
-        page={currentPage}
-        totalPages={totalPages}
-        searchParams={searchParams}
-        pathname={pathname}
-        router={router}
+        pageData={{
+          number: currentPage,
+          totalPages,
+          totalElements,
+          size: 10,
+          numberOfElements: students.length
+        }}
+        itemLabel="students"
+        onPageChange={handlePageChange}
+        isLoading={isLoading}
+        className="rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm"
       />
 
       {/* ── DIALOGS ── */}

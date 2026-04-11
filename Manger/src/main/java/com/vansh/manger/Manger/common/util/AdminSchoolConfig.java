@@ -1,8 +1,8 @@
 package com.vansh.manger.Manger.common.util;
 
 import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.SchoolRepository;
+import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
 import com.vansh.manger.Manger.common.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,12 +14,11 @@ public class AdminSchoolConfig {
     private final SchoolRepository schoolRepository;
 
     public Long requireCurrentSchoolId() {
-        User currentUser = SecurityContextHelper.getCurrentUser();
-        if (currentUser.getSchool() == null) {
+        CurrentUserPrincipal currentUser = SecurityContextHelper.getCurrentPrincipal();
+        if (currentUser.schoolId() == null) {
             throw new IllegalStateException("User is not associated with any school");
         }
-        // Lazy proxy — Hibernate already has the FK, no extra DB query
-        return currentUser.getSchool().getId();
+        return currentUser.schoolId();
     }
 
     public School requireCurrentSchool() {

@@ -1,5 +1,6 @@
 "use client";
 
+import PaginationBar from '@/components/common/PaginationBar';
 import { GradingSheetTable } from '@/components/teacher/marks/GradingSheetTable';
 import { TopStats } from '@/components/teacher/marks/TopStats';
 import teacherApiClient from '@/lib/teacherAxios';
@@ -321,7 +322,7 @@ export default function TeacherMarksPage() {
                 </div>
 
                 {/* Pagination for exams */}
-                {totalPages > 1 && (
+                {false && (
                     <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
                         <p className="text-xs text-slate-500">
                             Page <span className="font-semibold text-slate-700">{currentPage + 1}</span> of{' '}
@@ -340,6 +341,19 @@ export default function TeacherMarksPage() {
                         </div>
                     </div>
                 )}
+                <PaginationBar
+                    pageData={{
+                        number: currentPage,
+                        totalPages,
+                        totalElements,
+                        size: PAGE_SIZE,
+                        numberOfElements: exams.length
+                    }}
+                    itemLabel="exams"
+                    onPageChange={handlePageChange}
+                    isLoading={loadingExams}
+                    className="mt-4 border-t border-slate-100 pt-3"
+                />
             </div>
 
             {/* Loading Sheet State */}

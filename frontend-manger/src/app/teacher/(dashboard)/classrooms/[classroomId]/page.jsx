@@ -8,6 +8,7 @@ import {
     Search, User,
     X
 } from 'lucide-react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -127,18 +128,27 @@ export default function ClassroomStudentsPage() {
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {displayed.map((s) => (
-                            <button key={s.enrollmentId || s.studentId}
-                                onClick={() => router.push(`/teacher/classrooms/${classroomId}/students/${s.studentId}`)}
+                            <Link key={s.enrollmentId || s.studentId}
+                                href={`/teacher/classrooms/${classroomId}/students/${s.studentId}`}
                                 className="w-full text-left bg-white rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 p-4 group flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
                                     {s.studentName?.charAt(0) || '?'}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-semibold text-slate-800 group-hover:text-indigo-700 transition-colors truncate">{s.studentName}</h4>
-                                    <p className="text-xs text-slate-500">Roll: {s.rollNo || '—'}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-xs text-slate-500">Roll: {s.rollNo || '—'}</p>
+                                        <span className="text-slate-300">•</span>
+                                        <p className="text-xs text-slate-500">{s.gender || 'N/A'}</p>
+                                    </div>
+                                </div>
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-[10px] font-bold text-indigo-600 uppercase bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
+                                        Profile
+                                    </span>
                                 </div>
                                 <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 shrink-0 transition-colors" />
-                            </button>
+                            </Link>
                         ))}
                     </div>
                     {!showAll && filtered.length > INITIAL_SHOW && (

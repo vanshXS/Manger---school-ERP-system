@@ -9,7 +9,7 @@ public final class SecurityContextHelper {
     private SecurityContextHelper() {
     }
 
-    public static User getCurrentUser() {
+    public static CurrentUserPrincipal getCurrentPrincipal() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -17,10 +17,21 @@ public final class SecurityContextHelper {
         }
 
         Object principal = authentication.getPrincipal();
+        if (principal instanceof CurrentUserPrincipal currentUserPrincipal) {
+            return currentUserPrincipal;
+        }
         if (principal instanceof User user) {
-            return user;
+            return CurrentUserPrincipal.from(user);
         }
 
-        throw new IllegalStateException("Authenticated principal is not a User.");
+        throw new IllegalStateException("Authenticated principal type is unsupported: " + principal.getClass().getName());
+    }
+
+    public static Long getCurrentUserId() {
+        return getCurrentPrincipal().userId();
+    }
+
+    public static String getCurrentUsername() {
+        return getCurrentPrincipal().email();
     }
 }

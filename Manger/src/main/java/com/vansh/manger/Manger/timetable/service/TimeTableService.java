@@ -33,7 +33,7 @@ public class TimeTableService {
 
     public TimeTableResponseDTO mapToResponse(TimeTable timeTable) {
 
-       return TimeTableResponseDTO.builder()
+        return TimeTableResponseDTO.builder()
                 .id(timeTable.getId())
                 .teacherName(timeTable.getTeacherAssignment().getTeacher().getFirstName() + " " + timeTable.getTeacherAssignment().getTeacher().getLastName())
                 .subjectName(timeTable.getTeacherAssignment().getSubject().getName())
@@ -134,7 +134,7 @@ public class TimeTableService {
         TimeTable updated = timeTableRepository.save(existedTimeTable);
         return mapToResponse(updated);
     }
-          //delete timetable
+    //delete timetable
     public void deleteTimeTable(Long timeTableId) {
         School school = adminSchoolConfig.requireCurrentSchool();
         TimeTable timeTable = timeTableRepository.findByIdAndSchool_Id(timeTableId, school.getId())
@@ -156,7 +156,7 @@ public class TimeTableService {
         School school = adminSchoolConfig.requireCurrentSchool();
         Teacher teacher = teacherRespository.findByIdAndSchool_Id(teacherId, school.getId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found or does not belong to your school."));
-            
+
         return timeTableRepository.findByTeacherAssignment_Teacher_Id(teacher.getId())
                 .stream()
                 .map(this::mapToResponse)
@@ -167,7 +167,7 @@ public class TimeTableService {
     // FROM TEACHER PERSPECTIVE : FUNCTIONALITIES
 
     //get timetable
-   public List<TimeTableResponseDTO> getMyTimeTable(String email) {
+    public List<TimeTableResponseDTO> getMyTimeTable(String email) {
         Teacher teacher = teacherRespository.findByEmailAndSchool_Id(email, adminSchoolConfig.requireCurrentSchool().getId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
@@ -175,7 +175,7 @@ public class TimeTableService {
                 .stream()
                 .map(this :: mapToResponse)
                 .toList();
-   }
+    }
 
     public List<TimeTableResponseDTO> getByClassroomId(Long classroomId) {
         School school = adminSchoolConfig.requireCurrentSchool();

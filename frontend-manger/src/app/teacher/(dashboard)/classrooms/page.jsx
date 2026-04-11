@@ -7,6 +7,7 @@ import {
     ChevronRight, GraduationCap,
     Search, Users, X
 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -110,7 +111,7 @@ export default function TeacherClassroomsPage() {
                         {displayed.map((c) => {
                             const name = classroomDisplayName(c);
                             return (
-                                <button key={c.id} onClick={() => router.push(`/teacher/classrooms/${c.id}`)}
+                                <Link key={c.id} href={`/teacher/classrooms/${c.id}`}
                                     className="w-full text-left bg-white rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 p-5 group">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
@@ -135,7 +136,7 @@ export default function TeacherClassroomsPage() {
                                             </div>
                                         )}
                                     </div>
-                                </button>
+                                </Link>
                             );
                         })}
                     </div>

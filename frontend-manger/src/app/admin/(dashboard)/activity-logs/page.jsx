@@ -1,5 +1,6 @@
 'use client';
 
+import PaginationBar from '@/components/common/PaginationBar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,8 +23,6 @@ import apiClient from '@/lib/axios';
 import { format, isValid } from 'date-fns';
 import {
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   History,
   RefreshCcw
 } from 'lucide-react';
@@ -220,29 +219,19 @@ export default function ActivityLogsPage() {
 
         {!loading && !error && logs.length > 0 && (
           <CardFooter className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 p-4">
-            <div className="text-xs text-slate-500">
-              Page {page + 1} of {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="h-8 px-3"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" /> Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-                className="h-8 px-3"
-              >
-                Next <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
+            <PaginationBar
+              pageData={{
+                number: page,
+                totalPages,
+                totalElements,
+                size: pageSize,
+                numberOfElements: logs.length
+              }}
+              itemLabel="logs"
+              onPageChange={setPage}
+              isLoading={loading}
+              className="w-full"
+            />
           </CardFooter>
         )}
       </Card>

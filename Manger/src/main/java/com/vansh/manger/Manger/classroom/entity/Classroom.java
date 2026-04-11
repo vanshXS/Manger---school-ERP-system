@@ -1,19 +1,22 @@
 package com.vansh.manger.Manger.classroom.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vansh.manger.Manger.common.entity.BaseEntity;
+import com.vansh.manger.Manger.common.entity.GradeLevel;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.student.entity.Enrollment;
+import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
 
 import java.util.List;
-import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.GradeLevel;
-import com.vansh.manger.Manger.student.entity.Enrollment;
-import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 
 @Entity
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
 @Data
 @Table(
         name = "classrooms",
@@ -22,12 +25,11 @@ import com.vansh.manger.Manger.teacher.entity.TeacherAssignment;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Classroom {
+public class Classroom extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "grade_level")
@@ -55,7 +57,6 @@ public class Classroom {
     @JoinColumn(name = "school_id", nullable = false)
     @JsonIgnore
     private School school;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotes_to_classroom_id")

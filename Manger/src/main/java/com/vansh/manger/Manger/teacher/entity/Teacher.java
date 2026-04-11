@@ -1,9 +1,11 @@
 package com.vansh.manger.Manger.teacher.entity;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vansh.manger.Manger.common.entity.BaseEntity;
+import com.vansh.manger.Manger.common.entity.Gender;
+import com.vansh.manger.Manger.common.entity.Roles;
+import com.vansh.manger.Manger.common.entity.School;
+import com.vansh.manger.Manger.common.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -11,12 +13,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.vansh.manger.Manger.common.entity.User;
-import com.vansh.manger.Manger.common.entity.School;
-import com.vansh.manger.Manger.common.entity.Gender;
-import com.vansh.manger.Manger.common.entity.Roles;
+import org.hibernate.annotations.Filter;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
+@Filter(name = "schoolFilter", condition = "school_id = :schoolId")
 @Table(name = "teachers", indexes = {
     @Index(name = "idx_teacher_active", columnList = "active"),
     @Index(name = "idx_teacher_email", columnList = "email"),
@@ -27,7 +30,7 @@ import com.vansh.manger.Manger.common.entity.Roles;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Teacher {
+public class Teacher extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,7 +75,6 @@ public class Teacher {
   @JoinColumn(name = "user_id", unique = true, nullable = false)
   private User user;
 
-  // --- Extended fields (optional, backward compatible) ---
   @Column(name = "employee_id")
   private String employeeId;
 
@@ -103,6 +105,5 @@ public class Teacher {
     if (this.joiningDate == null) {
       this.joiningDate = LocalDate.now();
     }
-
   }
 }
