@@ -111,55 +111,47 @@ Mangerr/
 |- .env
 ```
 
-## Recommended screenshots for GitHub
-
-Store screenshots under `docs/screenshots/` and replace these notes with final image embeds when the assets are ready.
+## Screenshots for GitHub
 
 ### 1. Public landing page
 
 ![img.png](docs/screenshots/img.png)<!-- Screenshot: docs/screenshots/01-landing-page.png -->
-Show the homepage hero section with the product message, CTA, and feature cards.
+
 
 ### 2. Role selection screen
 
 ![img_3.png](docs/screenshots/img_3.png)<!-- Screenshot: docs/screenshots/02-role-selection.png -->
-Show the admin, teacher, and student portal chooser.
+
 
 ### 3. School onboarding flow
 
 ![img_1.png](docs/screenshots/img_1.png)![img_2.png](docs/screenshots/img_2.png)<!-- Screenshot: docs/screenshots/03-school-onboarding.png -->
-Capture the admin school registration flow, ideally step 1 and step 2 in a clean composite.
+
 
 ### 4. Admin dashboard
 
 ![img_4.png](docs/screenshots/img_4.png)<!-- Screenshot: docs/screenshots/04-admin-dashboard.png -->
-Show the KPI cards, enrollment chart, faculty workload panel, and recent activity table.
+
 
 ### 5. Admin management workspace
 
 ![img_5.png](docs/screenshots/img_5.png)<!-- Screenshot: docs/screenshots/05-admin-management.png -->
-Use either the students page, classrooms page, exams page, or timetable page to show day-to-day admin operations.
 
 ### 6. Teacher dashboard
 
 <!-- Screenshot: docs/screenshots/06-teacher-dashboard.png -->
-Show today's classes, pending tasks, recent activity, and the intervention queue.
 
 ### 7. Teacher marks or attendance screen
 
 ![img_6.png](docs/screenshots/img_6.png)<!-- Screenshot: docs/screenshots/07-teacher-marks-or-attendance.png -->
-Capture a screen that shows active academic work, such as mark entry, grading sheet, or attendance management.
 
 ### 8. Student dashboard
 
 ![img_7.png](docs/screenshots/img_7.png)<!-- Screenshot: docs/screenshots/08-student-dashboard.png -->
-Show the student overview with attendance, overall average, status, and today's classes.
 
 ### 9. Student risk analysis
 
 ![img_8.png](docs/screenshots/img_8.png)<!-- Screenshot: docs/screenshots/09-student-risk-analysis.png -->
-Capture the student-facing risk report with score, reasons, and recommended action.
-
 
 
 ## Local development setup
