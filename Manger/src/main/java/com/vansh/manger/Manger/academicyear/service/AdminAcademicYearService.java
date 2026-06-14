@@ -9,6 +9,8 @@ import com.vansh.manger.Manger.student.repository.EnrollmentRepository;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +62,7 @@ public class AdminAcademicYearService {
 
     // ─── CREATE ──────────────────────────────────────────────────────────────
     @Transactional
+    @CacheEvict(value = "academicYears", allEntries = true)
     public AcademicYearDTO createAcademicYear(AcademicYearDTO dto) {
 
 
@@ -98,6 +101,8 @@ public class AdminAcademicYearService {
     }
 
     // ─── READ ─────────────────────────────────────────────────────────────────
+
+    @Cacheable(value = "academicYears", key = "'all_' + @adminSchoolConfig.requireCurrentSchool().getId()")
     public List<AcademicYearDTO> getAllAcademicYears() {
         return academicYearRepository
                 .findBySchool_IdOrderByStartDateDesc(adminSchoolConfig.requireCurrentSchool().getId())
@@ -106,6 +111,7 @@ public class AdminAcademicYearService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "academicYears", key = "'current_' + @adminSchoolConfig.requireCurrentSchool().getId()")
     public AcademicYearDTO getCurrentAcademicYear() {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
         AcademicYear year = academicYearRepository
@@ -115,6 +121,7 @@ public class AdminAcademicYearService {
         return mapToResponse(year);
     }
 
+    @Cacheable(value = "academicYears", key = "'year_' + #yearId")
     public AcademicYearDTO getAcademicYearById(Long yearId) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
         AcademicYear year = academicYearRepository
@@ -126,6 +133,7 @@ public class AdminAcademicYearService {
 
     // ─── UPDATE ───────────────────────────────────────────────────────────────
     @Transactional
+    @CacheEvict(value = "academicYears", allEntries = true)
     public AcademicYearDTO updateAcademicYear(Long yearId, AcademicYearDTO dto) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
         AcademicYear year = academicYearRepository
@@ -165,6 +173,7 @@ public class AdminAcademicYearService {
     // ─── SET CURRENT ─────────────────────────────────────────────────────────
 
     @Transactional
+    @CacheEvict(value = "academicYears", allEntries = true)
     public AcademicYearDTO setCurrentAcademicYear(Long yearId) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
 
@@ -217,6 +226,7 @@ public class AdminAcademicYearService {
 
 
     @Transactional
+    @CacheEvict(value = "academicYears", allEntries = true)
     public void closeAcademicYear() {
         School school = adminSchoolConfig.requireCurrentSchool();
 
@@ -237,6 +247,7 @@ public class AdminAcademicYearService {
 
     // ─── DELETE ───────────────────────────────────────────────────────────────
     @Transactional
+    @CacheEvict(value = "academicYears", allEntries = true)
     public void deleteAcademicYear(Long yearId) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
 

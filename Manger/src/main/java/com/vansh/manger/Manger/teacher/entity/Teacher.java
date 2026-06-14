@@ -52,9 +52,6 @@ public class Teacher extends BaseEntity {
   @Column(nullable = false)
   private boolean active = true;
 
-  @NotBlank(message = "Password is required")
-  private String password;
-
   @Column(length = 512)
   private String profilePictureUrl;
 

@@ -82,7 +82,6 @@ public class TeacherAdmissionService implements TeacherAdmissionOperations {
                     .firstName(dto.getFirstName())
                     .lastName(dto.getLastName())
                     .phoneNumber(InputNormalizer.optional(dto.getPhoneNumber()))
-                    .password(encodedPassword)
                     .email(normalizedEmail)
                     .role(Roles.TEACHER)
                     .school(currentSchool)

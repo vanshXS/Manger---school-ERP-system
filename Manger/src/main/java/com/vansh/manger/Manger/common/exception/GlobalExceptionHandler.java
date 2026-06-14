@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException ex) {
         String message = ex.getMessage() != null ? ex.getMessage() : "Null pointer exception";
-        return buildErrorResponse(message, HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /* -------------------------------------------------
@@ -104,7 +104,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalStateException(
             IllegalStateException ex
     ) {
-        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     /* -------------------------------------------------
@@ -112,7 +112,7 @@ public class GlobalExceptionHandler {
        ------------------------------------------------- */
     @ExceptionHandler(JDBCException.class)
     public ResponseEntity<ErrorResponse> handleJDBCException(JDBCException ex) {
-        return buildErrorResponse("Database error occurred", HttpStatus.BAD_REQUEST);
+        return buildErrorResponse("Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /* -------------------------------------------------
@@ -120,7 +120,25 @@ public class GlobalExceptionHandler {
        ------------------------------------------------- */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
-        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /* -------------------------------------------------
+       8. Custom Business Exceptions
+       ------------------------------------------------- */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleException(BusinessRuleException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(DuplicateResourceException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     /* -------------------------------------------------

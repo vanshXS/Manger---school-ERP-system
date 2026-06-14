@@ -11,7 +11,9 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class AcademicYearDTO {
+public class AcademicYearDTO implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Long id; // Used for responses
 

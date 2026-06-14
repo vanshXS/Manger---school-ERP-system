@@ -1,43 +1,21 @@
 package com.vansh.manger.Manger.auth.controller;
 
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-
-import com.vansh.manger.Manger.common.config.JwtUtil;
-import com.vansh.manger.Manger.auth.dto.*;
-import com.vansh.manger.Manger.common.dto.*;
-import com.vansh.manger.Manger.auth.entity.RefreshToken;
-import jakarta.servlet.http.Cookie;
+import com.vansh.manger.Manger.auth.dto.AuthLoginDTO;
+import com.vansh.manger.Manger.auth.dto.ForgetPasswordRequest;
+import com.vansh.manger.Manger.auth.dto.ForgetResetPassword;
+import com.vansh.manger.Manger.auth.dto.ResetPasswordRequest;
+import com.vansh.manger.Manger.auth.service.AuthService;
+import com.vansh.manger.Manger.common.entity.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Value;
-
-import com.vansh.manger.Manger.common.entity.Roles;
-import com.vansh.manger.Manger.common.entity.User;
-import com.vansh.manger.Manger.common.repository.UserRepo;
-import com.vansh.manger.Manger.common.security.CurrentUserPrincipal;
-import com.vansh.manger.Manger.auth.service.RefreshTokenService;
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -45,203 +23,36 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TeacherAuthController {
 
-    @Value("${COOKIE_SECURE:false}") // Defaults to false for local testing
-    private boolean isSecure;
-
-    private final UserRepo userRepo;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenService refreshTokenService;
-    private final JavaMailSender mailsender;
+    private final AuthService authService;
+    private static final String COOKIE_NAME = "teacherRefreshToken";
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthLoginDTO teacherLogin, HttpServletResponse response) {
-
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(teacherLogin.getEmail() + ":ROLE_W_SPLIT:" + Roles.TEACHER.name(), teacherLogin.getPassword()));
-
-            CurrentUserPrincipal user = (CurrentUserPrincipal) authentication.getPrincipal();
-
-            if (!user.role().equals(Roles.TEACHER)) {
-                return ResponseEntity.status(403).build();
-
-            }
-            String accessToken = jwtUtil.generateAccessToken(user);
-            String refreshToken = jwtUtil.generateRefreshToken(user);
-
-            refreshTokenService.createRefreshToken(
-                    user.userId(),
-                    refreshToken,
-                    Instant.now().plusMillis(7 * 24 * 60 * 60 * 1000) // 7 days
-            );
-
-            AuthResponseDTO responseDTO = new AuthResponseDTO(
-                    accessToken,
-                    refreshToken,
-                    user.role().name()
-            );
-
-            ResponseCookie cookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
-                    .httpOnly(true)
-                    .secure(isSecure)
-                    .path("/")
-                    .maxAge(7 * 24 * 60 * 60)
-                    .sameSite(isSecure ? "None" : "Lax")
-                    .build();
-            response.addHeader("Set-Cookie", cookie.toString());
-
-            return ResponseEntity.ok(responseDTO);
-
-        }catch(BadCredentialsException e){
-            return ResponseEntity.status(403).build();
-        }
+    public ResponseEntity<?> login(@RequestBody @Valid AuthLoginDTO teacherLogin, HttpServletResponse response) {
+        return authService.login(teacherLogin, Roles.TEACHER, COOKIE_NAME, response);
     }
 
-
-   @PostMapping(value = "/refresh", produces = "application/json")
-   public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-
-        String refreshToken = null;
-        if(request.getCookies() != null) {
-            for(Cookie cookie : request.getCookies()) {
-                if("teacherRefreshToken".equals(cookie.getName())){
-                    refreshToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if(refreshToken == null || refreshToken.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid refresh token"));
-        }
-
-        Optional<RefreshToken> tokenOpt = refreshTokenService.findByToken(refreshToken);
-
-        if(tokenOpt.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
-        RefreshToken verifiedToken = refreshTokenService.verifyExpiration(tokenOpt.get());
-
-        User user = verifiedToken.getUser();
-
-        if(!user.getRoles().equals(Roles.TEACHER)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Invalid refresh token"));
-        }
-
-        String accessToken =  jwtUtil.generateAccessToken(user, user.getRoles().name());
-
-       TokenRefreshResponseDTO tokenRefreshResponseDTO = new TokenRefreshResponseDTO(accessToken, user.getRoles().name());
-
-       ResponseCookie responseCookie = ResponseCookie.from("teacherRefreshToken", refreshToken)
-               .httpOnly(true)
-               .secure(isSecure)
-               .maxAge(7*24*60*60)
-               .path("/")
-               .sameSite(isSecure ? "None" : "Lax")
-               .build();
-
-       response.addHeader("Set-Cookie", responseCookie.toString());
-
-       return ResponseEntity.status(HttpStatus.CREATED).body(tokenRefreshResponseDTO);
-
-   }
+    @PostMapping(value = "/refresh", produces = "application/json")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        return authService.refreshToken(request, response, Roles.TEACHER, COOKIE_NAME);
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-
-        String refreshToken = null;
-
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("teacherRefreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (StudentAuthController.refreshTokenValidator(response, refreshToken, refreshTokenService, "teacherRefreshToken", isSecure))
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token failed"));
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("refreshToken", refreshToken));
-
+        return authService.logout(request, response, COOKIE_NAME);
     }
 
-
-
-    // Change password (while logged in)
     @PostMapping("/change-password")
-    public ResponseEntity<String> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
-
-        User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.TEACHER)
-                .orElseThrow(() -> new RuntimeException("User with this email not registered"));
-
-        if (!user.getRoles().equals(Roles.TEACHER)) {
-            return ResponseEntity.badRequest().body("This is not a teacher account");
-        }
-
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            return ResponseEntity.badRequest().body("Old password is incorrect");
-        }
-
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepo.save(user);
-
-        return new ResponseEntity<>("Password changed successfully!", HttpStatus.ACCEPTED);
+    public ResponseEntity<?> changePassword(@RequestBody @Valid ResetPasswordRequest request) {
+        return authService.changePassword(request, Roles.TEACHER);
     }
 
-    // forget password(send otp)
     @PostMapping("/forget-password")
-    public ResponseEntity<String> forgetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
-
-        User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.TEACHER)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!user.getRoles().equals(Roles.TEACHER)) {
-            return ResponseEntity.status(403).body("Not a Teacher account");
-        }
-
-        String otp = String.valueOf(new SecureRandom().nextInt(900000) + 100000);
-        user.setResetOtp(otp);
-        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
-        userRepo.save(user);
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(user.getEmail());
-        message.setSubject("Teacher Password Reset OTP");
-        message.setText("Your OTP is: " + otp + "\nIt will expire in 10 minutes.");
-        mailsender.send(message);
-
-        return ResponseEntity.ok("OTP sent to registered email!");
-
+    public ResponseEntity<?> forgetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
+        return authService.forgetPassword(request, Roles.TEACHER, "Teacher");
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPasswordWithOtp(@RequestBody @Valid ForgetResetPassword request) {
-
-        User user = userRepo.findByEmailAndRoles(request.getEmail(), Roles.TEACHER)
-                .orElseThrow(() -> new RuntimeException("Teacher not found"));
-
-        if (!user.getRoles().equals(Roles.TEACHER)) {
-            return ResponseEntity.status(403).body("Not a Teacher account");
-        }
-
-        // Validate OTP
-        if (user.getResetOtp() == null || !user.getResetOtp().equals(request.getOtp())) {
-            return ResponseEntity.badRequest().body("Invalid OTP");
-        }
-        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body("OTP expired");
-        }
-
-        // Update password
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetOtp(null);
-        user.setOtpExpiry(null);
-        userRepo.save(user);
-
-        return ResponseEntity.ok("Password reset successful");
+    public ResponseEntity<?> resetPasswordWithOtp(@RequestBody @Valid ForgetResetPassword request) {
+        return authService.resetPassword(request, Roles.TEACHER);
     }
 }

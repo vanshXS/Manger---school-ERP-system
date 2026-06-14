@@ -16,7 +16,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TeacherResponseDTO {
+public class TeacherResponseDTO implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     private Long id;
     private String firstName;
     private String lastName;

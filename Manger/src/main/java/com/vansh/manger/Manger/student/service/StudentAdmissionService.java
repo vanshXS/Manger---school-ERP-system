@@ -15,7 +15,7 @@ import com.vansh.manger.Manger.common.entity.Roles;
 import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
-import com.vansh.manger.Manger.common.service.EmailSender;
+import com.vansh.manger.Manger.common.service.EmailNotificationService;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.common.util.InputNormalizer;
 import com.vansh.manger.Manger.student.dto.StudentRequestDTO;
@@ -54,7 +54,7 @@ public class StudentAdmissionService implements StudentAdmissionOperations {
     private final PasswordEncoder passwordEncoder;
     private final RandomPasswordGenerator randomPasswordGenerator;
     private final ActivityLogService activityLogService;
-    private final EmailSender emailSender;
+    private final EmailNotificationService emailNotificationService;
     private final StudentEnrollmentService studentEnrollmentService;
     private final StudentAssignSubjects studentAssignSubjects;
     private final StudentResponseMapper studentResponseMapper;
@@ -99,7 +99,6 @@ public class StudentAdmissionService implements StudentAdmissionOperations {
                 .user(studentUser)
                 .school(school)
                 .email(normalizedEmail)
-                .password(encodedPassword)
                 .phoneNumber(studentRequestDTO.getPhoneNumber())
                 .admissionNo(studentRequestDTO.getAdmissionNo())
                 .profilePictureUrl(uploadedProfilePicture != null ? uploadedProfilePicture.getUrl() : null)
@@ -141,22 +140,14 @@ public class StudentAdmissionService implements StudentAdmissionOperations {
                 student, classroom, newRollNo, currentYear, StudentStatus.ACTIVE,
                 getCurrentSchool.requireCurrentSchool());
 
-        // Send Welcome Email (non-blocking)
-        try {
-            emailSender.sendNewUserWelcomeEmail(
-                    savedStudent.getEmail(), savedStudent.getFirstName(), rawPassword);
-            activityLogService.logActivity(
-                    "New student enrolled: " + savedStudent.getFirstName()
-                            + " (" + newRollNo + "). Welcome email sent.",
-                    "Student Enrollment");
-        } catch (Exception e) {
-            System.err.println("CRITICAL: Failed to send welcome email for student "
-                    + savedStudent.getId() + ": " + e.getMessage());
-            activityLogService.logActivity(
-                    "New student enrolled: " + savedStudent.getFirstName()
-                            + ". FAILED TO SEND EMAIL.",
-                    "Student Enrollment (Error)");
-        }
+        // Send Welcome Email (non-blocking, failure resistant)
+        emailNotificationService.sendNewUserWelcomeEmailSafe(
+                savedStudent.getEmail(), savedStudent.getFirstName(), rawPassword, "Student");
+        
+        activityLogService.logActivity(
+                "New student enrolled: " + savedStudent.getFirstName()
+                        + " (" + newRollNo + ").",
+                "Student Enrollment");
 
         // Map to Response DTO
         StudentResponseDTO responseDTO = studentResponseMapper.toDTO(

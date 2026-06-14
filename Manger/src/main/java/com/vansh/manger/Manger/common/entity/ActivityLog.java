@@ -13,7 +13,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Filter(name = "schoolFilter", condition = "school_id = :schoolId")
-@Table(name = "activity_log")
+@Table(name = "activity_log", indexes = {
+    @Index(name = "idx_log_school_created", columnList = "school_id, created_at"),
+    @Index(name = "idx_log_school_role_created", columnList = "school_id, role, created_at")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

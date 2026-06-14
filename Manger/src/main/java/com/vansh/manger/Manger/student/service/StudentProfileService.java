@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.hibernate.annotations.Cache;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -40,14 +43,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Handles student profile CRUD and listings.
- *
- * <p><b>SRP</b> — one responsibility: student profile lifecycle (read, update, delete, list).
- * <b>LSP</b> — faithfully implements {@link StudentProfileOperations}.
- * <b>DIP</b> — depends on {@link StudentResponseMapper} (abstraction) for mapping,
- * {@link ImageCleanupHelper} for image lifecycle.</p>
- */
+
 @Service
 @RequiredArgsConstructor
 public class StudentProfileService implements StudentProfileOperations {
@@ -67,6 +63,7 @@ public class StudentProfileService implements StudentProfileOperations {
 
     @Override
     @Transactional
+    @Cacheable(value = "students", key = "'student:' + #studentId", unless = "#result == null")
     public StudentResponseDTO getStudentById(Long studentId) {
         School school = getCurrentSchool.requireCurrentSchool();
 
@@ -133,6 +130,7 @@ public class StudentProfileService implements StudentProfileOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = "students", key = "'student:' + #studentId")
     public StudentResponseDTO updateStudent(Long studentId, StudentRequestDTO studentRequestDTO)
             throws IOException {
         School school = getCurrentSchool.requireCurrentSchool();
@@ -213,6 +211,7 @@ public class StudentProfileService implements StudentProfileOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = "students", key = "'student:' + #studentId")
     public void deleteById(Long studentId) {
         School school = getCurrentSchool.requireCurrentSchool();
         Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
@@ -243,6 +242,7 @@ public class StudentProfileService implements StudentProfileOperations {
 
     @Override
     @Transactional
+    @Cacheable(value="classroom_students", key="#classroomId")
     public List<StudentResponseDTO> getStudentsByClassroom(Long classroomId) {
         School school = getCurrentSchool.requireCurrentSchool();
         Classroom classroom = classroomRespository.findByIdAndSchool(classroomId, school)

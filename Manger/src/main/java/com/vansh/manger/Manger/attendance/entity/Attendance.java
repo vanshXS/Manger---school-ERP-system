@@ -13,7 +13,11 @@ import com.vansh.manger.Manger.teacher.entity.Teacher;
 
 @Entity
 @Table(name = "attendance",
- uniqueConstraints = {@UniqueConstraint(columnNames = {"enrollment_id", "date"})}
+ uniqueConstraints = {@UniqueConstraint(columnNames = {"enrollment_id", "date"})},
+ indexes = {
+         @Index(name = "idx_att_enrollment_date", columnList = "enrollment_id, date"),
+         @Index(name = "idx_att_academic_year", columnList = "academic_year_id")
+ }
 )
 @Data
 @AllArgsConstructor @NoArgsConstructor

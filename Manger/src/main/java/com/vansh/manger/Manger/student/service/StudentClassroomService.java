@@ -21,6 +21,7 @@ import com.vansh.manger.Manger.student.repository.StudentRepository;
 import com.vansh.manger.Manger.student.util.StudentAssignSubjects;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -132,6 +133,7 @@ public class StudentClassroomService implements StudentClassroomOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = "students", key = "'student:' + #studentId")
     public void updateStatus(Long studentId, StudentStatus status) {
         School school = getCurrentSchool.requireCurrentSchool();
 

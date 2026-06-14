@@ -5,7 +5,8 @@ import lombok.Data;
 import com.vansh.manger.Manger.common.entity.School;
 
 @Data
-public class SchoolProfileDTO {
+public class SchoolProfileDTO implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
     private Long id; // Read-only
 

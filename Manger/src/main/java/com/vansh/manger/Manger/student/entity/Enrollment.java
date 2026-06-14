@@ -22,7 +22,8 @@ indexes = {
         @Index(columnList = "status"),
         @Index(columnList = "academic_year_id"),
         @Index(columnList = "classroom_id"),
-        @Index(columnList = "student_id,academic_year_id")
+        @Index(columnList = "student_id,academic_year_id"),
+        @Index(columnList = "school_id, academic_year_id")
 }
 )
 @Data

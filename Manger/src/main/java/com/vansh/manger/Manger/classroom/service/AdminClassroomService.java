@@ -20,6 +20,8 @@ import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.vansh.manger.Manger.common.entity.GradeLevel;
 
 @Service
@@ -78,6 +80,7 @@ public class AdminClassroomService {
         }
 
         @Transactional
+        @CacheEvict(value = "classrooms", key = "'classroom_' + #id")
         public ClassroomResponseDTO updateClassroom(Long id, ClassroomRequestDTO dto) {
                 School adminSchool = getCurrentSchool.requireCurrentSchool();
                 String normalizedSection = normalizeSection(dto.getSection());
@@ -106,6 +109,7 @@ public class AdminClassroomService {
         }
 
         @Transactional
+        @CacheEvict(value = "classrooms", key = "'classroom_' + #id")
         public void deleteClassroom(Long id) {
                 Classroom classroom = classroomRespository.findByIdAndSchool(id, getCurrentSchool.requireCurrentSchool())
                                 .orElseThrow(() -> new EntityNotFoundException("Classroom not found"));
@@ -139,6 +143,7 @@ public class AdminClassroomService {
         }
 
         @Transactional
+        @CacheEvict(value = "classrooms", key = "'classroom_' + #id")
         public ClassroomResponseDTO updateClassroomStatus(Long id, ClassroomStatus newStatus) {
                 School adminSchool = getCurrentSchool.requireCurrentSchool();
                 if (newStatus == null) {
@@ -165,6 +170,7 @@ public class AdminClassroomService {
                 return mapToResponse(classroomRespository.save(classroom));
         }
 
+        @Cacheable(value = "classrooms", key = "'classroom_' + #id")
         public ClassroomResponseDTO getClassroomById(Long id, Long schoolId) {
                 Classroom classroom = classroomRespository
                                 .findByIdAndSchool(id, getCurrentSchool.requireCurrentSchool())

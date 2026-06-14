@@ -1,5 +1,6 @@
 package com.vansh.manger.Manger.student.dto;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,7 +22,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StudentResponseDTO {
+public class StudentResponseDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     // --- Student Details ---
     private Long id;

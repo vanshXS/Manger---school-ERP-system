@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class TeacherAssignmentDTO {
+public class TeacherAssignmentDTO implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Long assignmentId;
 

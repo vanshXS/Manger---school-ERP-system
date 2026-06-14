@@ -42,7 +42,6 @@ public class Student extends BaseEntity {
     private String email;
     private String phoneNumber;
     private String admissionNo;
-    private String password;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore

@@ -26,6 +26,8 @@ import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 import com.vansh.manger.Manger.teacher.specification.TeacherSpecification;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +51,7 @@ public class TeacherProfileService implements TeacherProfileOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = "teachers", key = "'teacher_' + #teacherId")
     public TeacherResponseDTO updateTeacher(Long teacherId, TeacherRequestDTO dto) throws IOException {
         School currentSchool = adminSchoolConfig.requireCurrentSchool();
         String normalizedEmail = InputNormalizer.requireEmail(dto.getEmail());
@@ -128,6 +131,7 @@ public class TeacherProfileService implements TeacherProfileOperations {
     }
 
     @Override
+    @Cacheable(value = "teachers", key = "'teacher_' + #teacherId")
     public TeacherResponseDTO getTeacherById(Long teacherId) {
         Teacher teacher = teacherRespository
                 .findByIdAndSchool_Id(teacherId, adminSchoolConfig.requireCurrentSchool().getId())

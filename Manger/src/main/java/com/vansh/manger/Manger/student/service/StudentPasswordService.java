@@ -8,7 +8,7 @@ import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.entity.User;
 import com.vansh.manger.Manger.common.repository.UserRepo;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
-import com.vansh.manger.Manger.common.service.EmailSender;
+import com.vansh.manger.Manger.common.service.EmailNotificationService;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 import com.vansh.manger.Manger.student.entity.Student;
 import com.vansh.manger.Manger.student.repository.StudentRepository;
@@ -22,8 +22,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p><b>SRP</b> — one responsibility: password lifecycle.
  * <b>LSP</b> — faithfully implements {@link StudentPasswordOperations}.
- * <b>DIP</b> — depends on injected abstractions ({@link RandomPasswordGenerator},
- * {@link PasswordEncoder}, {@link EmailSender}).</p>
+ * {@link PasswordEncoder}, {@link EmailNotificationService}).</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +35,7 @@ public class StudentPasswordService implements StudentPasswordOperations {
     private final PasswordEncoder passwordEncoder;
     private final RandomPasswordGenerator randomPasswordGenerator;
     private final ActivityLogService activityLogService;
-    private final EmailSender emailSender;
+    private final EmailNotificationService emailNotificationService;
 
     @Override
     @Transactional
@@ -53,27 +52,18 @@ public class StudentPasswordService implements StudentPasswordOperations {
         String newRawPassword = randomPasswordGenerator.generateRandomPassword();
         String newEncodedPassword = passwordEncoder.encode(newRawPassword);
 
-        // Update password on both User and Student entities
+        // Update password on User entity
         user.setPassword(newEncodedPassword);
-        student.setPassword(newEncodedPassword);
 
         userRepo.save(user);
-        studentRepository.save(student);
 
-        // Send the new password to the student's email
-        try {
-            emailSender.sendNewUserWelcomeEmail(
-                    student.getEmail(), student.getFirstName(), newRawPassword);
-            activityLogService.logActivity(
-                    "Admin triggered password reset for student: " + student.getFirstName() + " "
-                            + student.getLastName(),
-                    "Security");
-        } catch (Exception e) {
-            System.err.println(
-                    "Failed to send password reset email for student " + student.getId() + ": "
-                            + e.getMessage());
-            throw new RuntimeException(
-                    "Password was reset, but failed to send email. Please notify the student manually.");
-        }
+        // Send the new password to the student's email (non-blocking, failure resistant)
+        emailNotificationService.sendNewUserWelcomeEmailSafe(
+                student.getEmail(), student.getFirstName(), newRawPassword, "Student");
+        
+        activityLogService.logActivity(
+                "Admin triggered password reset for student: " + student.getFirstName() + " "
+                        + student.getLastName(),
+                "Security");
     }
 }

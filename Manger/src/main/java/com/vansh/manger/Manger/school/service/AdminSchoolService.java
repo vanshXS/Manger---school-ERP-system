@@ -2,6 +2,8 @@ package com.vansh.manger.Manger.school.service;
 
 import java.io.IOException;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +53,7 @@ public class AdminSchoolService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "schoolProfile", key = "#root.target.getAuthenticatedUserId()")
     public SchoolProfileDTO getSchoolProfile() {
         User admin = getAuthenticatedUserEntity();
         School school = admin.getSchool();
@@ -63,6 +66,7 @@ public class AdminSchoolService {
     }
 
     @Transactional
+    @CacheEvict(value = "schoolProfile", key = "#root.target.getAuthenticatedUserId()")
     public SchoolProfileDTO updateSchoolProfile(SchoolProfileDTO dto) {
         User admin = getAuthenticatedUserEntity();
         School school = admin.getSchool();
@@ -104,57 +108,5 @@ public class AdminSchoolService {
                 "Security");
     }
 
-    @Transactional
-    public SchoolProfileDTO updateSchoolLogo(MultipartFile file) {
-        User admin = getAuthenticatedUserEntity();
-        School school = admin.getSchool();
 
-        if (school == null) {
-            throw new EntityNotFoundException("No school associated with this admin.");
-        }
-
-        CloudinaryResponse uploadedLogo = null;
-        String previousPublicId = school.getLogoPublicId();
-
-        try {
-            uploadedLogo = fileStorageService.uploadSchoolLogo(file, school.getId());
-            school.setLogoUrl(uploadedLogo.getUrl());
-            school.setLogoPublicId(uploadedLogo.getPublicId());
-            School updated = schoolRepository.save(school);
-            deletePreviousImage(previousPublicId, uploadedLogo.getPublicId());
-
-            activityLogService.logActivity(
-                    admin.getFullName() + " updated the school logo.",
-                    "Settings");
-
-            return mapToDTO(updated);
-
-        } catch (IOException e) {
-            cleanupUploadedImage(uploadedLogo);
-            throw new RuntimeException("Failed to upload school logo.", e);
-        } catch (RuntimeException e) {
-            cleanupUploadedImage(uploadedLogo);
-            throw e;
-        }
-    }
-
-    private void cleanupUploadedImage(CloudinaryResponse uploadedImage) {
-        if (uploadedImage == null) {
-            return;
-        }
-        try {
-            fileStorageService.deleteFile(uploadedImage.getPublicId());
-        } catch (RuntimeException ignored) {
-        }
-    }
-
-    private void deletePreviousImage(String previousPublicId, String replacementPublicId) {
-        if (previousPublicId == null || previousPublicId.equals(replacementPublicId)) {
-            return;
-        }
-        try {
-            fileStorageService.deleteFile(previousPublicId);
-        } catch (RuntimeException ignored) {
-        }
-    }
 }

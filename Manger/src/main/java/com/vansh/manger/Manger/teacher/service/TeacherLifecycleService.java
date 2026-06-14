@@ -10,6 +10,7 @@ import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 import com.vansh.manger.Manger.teacher.repository.TeacherRespository;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +31,7 @@ public class TeacherLifecycleService implements TeacherLifecycleOperations {
     private final ImageCleanupHelper imageCleanupHelper;
 
     @Override
+    @CacheEvict(value = "teachers", key = "'teacher_' + #teacherId")
     public void toggleStatus(Long teacherId, boolean active) {
         Teacher teacher = teacherRespository
                 .findByIdAndSchool_Id(teacherId, adminSchoolConfig.requireCurrentSchool().getId())
@@ -50,6 +52,7 @@ public class TeacherLifecycleService implements TeacherLifecycleOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = "teachers", key = "'teacher_' + #teacherId")
     public void delete(Long teacherId) {
         Teacher teacher = teacherRespository
                 .findByIdAndSchool_Id(teacherId, adminSchoolConfig.requireCurrentSchool().getId())

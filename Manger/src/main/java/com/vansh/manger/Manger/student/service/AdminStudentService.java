@@ -16,23 +16,7 @@ import com.vansh.manger.Manger.subject.dto.SubjectResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Thin facade over the 6 single-responsibility student services.
- *
- * <p><b>SRP</b> — this class has exactly one responsibility: routing controller
- * calls to the correct sub-service. It contains zero business logic.
- * <b>DIP</b> — depends on the <em>interfaces</em> (abstractions), not the
- * concrete implementations. Spring injects the implementations at runtime.
- * <b>ISP</b> — each dependency exposes only the methods relevant to its concern;
- * the facade composes them into the full admin API surface.
- * <b>OCP</b> — adding a new student concern (e.g. fee management) only requires
- * adding a new interface + implementation and one new delegation here.
- * <b>LSP</b> — every sub-service faithfully implements its interface contract,
- * so the facade can substitute any implementation without changes.</p>
- *
- * <p>The controller ({@code AdminStudentController}) keeps its single
- * {@code AdminStudentService} dependency — zero API breakage.</p>
- */
+
 @Service
 @RequiredArgsConstructor
 public class AdminStudentService {

@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 @RequiredArgsConstructor
@@ -88,7 +90,15 @@ public class AdminSubjectService {
       }
 
 
+    @Cacheable(value = "subjects", key = "'subject_' + #subjectId")
+    public SubjectResponseDTO getSubjectById(Long subjectId) {
+        Subject subject = subjectRepository.findByIdAndSchool_Id(subjectId, adminSchoolConfig.requireCurrentSchool().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Subject not found with id: " + subjectId));
+        return mapToResponse(subject);
+    }
+
     @Transactional
+    @CacheEvict(value = "subjects", key = "'subject_' + #subjectId")
     public void deleteSubject(Long subjectId) {
 
         Subject subject = subjectRepository.findByIdAndSchool_Id(subjectId, adminSchoolConfig.requireCurrentSchool().getId())
@@ -105,6 +115,7 @@ public class AdminSubjectService {
 
 
     @Transactional
+    @CacheEvict(value = "subjects", key = "'subject_' + #subjectId")
     public SubjectResponseDTO updateSubject(Long subjectId, SubjectRequestDTO dto) {
         String normalizedName = normalizeSubjectName(dto.getName());
         String normalizedCode = normalizeSubjectCode(dto.getCode());
