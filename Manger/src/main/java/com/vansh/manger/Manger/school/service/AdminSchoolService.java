@@ -33,7 +33,7 @@ public class AdminSchoolService {
     private final FileStorageService fileStorageService;
     private final UserRepo userRepo;
 
-    private Long getAuthenticatedUserId() {
+    public Long getAuthenticatedUserId() {
         return SecurityContextHelper.getCurrentUserId();
     }
 

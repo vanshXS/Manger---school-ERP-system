@@ -4,13 +4,11 @@ import { motion, useInView } from 'framer-motion';
 import {
   Activity,
   ArrowRight,
-  BookOpen,
   BookOpenCheck,
   Calendar,
   ChevronRight,
   ClipboardList,
   Clock,
-  Code2,
   Globe,
   GraduationCap,
   Heart,
@@ -19,7 +17,6 @@ import {
   School,
   ShieldCheck,
   Sparkles,
-  Star,
   Users,
   UserSquare,
   Zap
@@ -269,7 +266,7 @@ export default function LandingPage() {
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            {['features', 'how-it-works', 'about'].map((id) => (
+            {['features', 'how-it-works'].map((id) => (
               <button
                 key={id}
                 onClick={() => scrollToSection(id)}
@@ -293,23 +290,8 @@ export default function LandingPage() {
 
         {/* ═══════════ HERO ═══════════ */}
         <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
-          {/* Decorative elements */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-20 left-[10%] w-72 h-72 bg-blue-100/40 rounded-full blur-3xl animate-pulse-glow" />
-            <div className="absolute bottom-10 right-[8%] w-96 h-96 bg-indigo-100/30 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }} />
-            <div className="absolute top-32 right-[15%] animate-float opacity-20">
-              <BookOpen className="h-12 w-12 text-blue-400" />
-            </div>
-            <div className="absolute bottom-24 left-[12%] animate-float-reverse opacity-20">
-              <GraduationCap className="h-14 w-14 text-indigo-400" />
-            </div>
-            <div className="absolute top-48 left-[5%] animate-float-slow opacity-15">
-              <Star className="h-8 w-8 text-amber-400" />
-            </div>
-            <div className="absolute bottom-32 right-[20%] animate-float opacity-15" style={{ animationDelay: '1s' }}>
-              <Sparkles className="h-10 w-10 text-violet-400" />
-            </div>
-          </div>
+          {/* Simplified background */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden bg-slate-50/30" />
 
           <div className="relative max-w-5xl mx-auto px-4 text-center">
             {/* Badge */}
@@ -330,7 +312,7 @@ export default function LandingPage() {
               className="text-4xl sm:text-5xl md:text-7xl font-mono font-bold tracking-tight leading-[1.1]"
             >
               <span className="text-slate-900">The Modern </span>
-              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent animate-gradient">
+              <span className="text-indigo-600">
                 Command Center
               </span>
               <br />
@@ -541,55 +523,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ═══════════ ABOUT / DEVELOPER ═══════════ */}
-        <section id="about" className="py-24 md:py-32 bg-gradient-to-b from-slate-50 to-slate-100/50">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <AnimatedSection>
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-50 border border-rose-200/60 rounded-full text-xs font-semibold text-rose-600 mb-4 uppercase tracking-wider">
-                  <Heart className="h-3 w-3" />
-                  About the Project
-                </div>
-                <h2 className="text-3xl md:text-4xl font-mono font-bold text-slate-900 tracking-tight">
-                  Built with Purpose
-                </h2>
-                <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-                  Manger is a full-stack School ERP System designed to simplify the complexities of
-                  school administration. From managing student records and teacher assignments to
-                  scheduling exams and generating timetables — it brings everything under one roof.
-                </p>
-              </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="mt-14 bg-white rounded-2xl border border-slate-200 p-8 md:p-10 shadow-sm"
-              >
-                <div className="flex flex-col md:flex-row items-center gap-8">
-                  {/* Developer avatar */}
-                  <div className="shrink-0">
-                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-200/50">
-                      <Code2 className="h-10 w-10 text-white" />
-                    </div>
-                  </div>
-
-                  <div className="text-center md:text-left flex-1">
-                    <h3 className="text-2xl font-bold text-slate-900">Vansh Salgotra</h3>
-                    <p className="text-indigo-600 font-medium text-sm mt-1">Backend Developer & Project Creator</p>
-                    <p className="mt-3 text-slate-500 leading-relaxed">
-                      The brain behind Manger — Vansh designed and developed the entire backend
-                      architecture including REST APIs, secure authentication, database modeling,
-                      and business logic. The frontend interface was designed to deliver
-                      a modern and polished user experience.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatedSection>
-          </div>
-        </section>
 
         {/* ═══════════ CTA BANNER ═══════════ */}
         <AnimatedSection className="py-20 md:py-24">
@@ -623,7 +557,7 @@ export default function LandingPage() {
       {/* ═══════════ FOOTER ═══════════ */}
       <footer className="bg-slate-900 text-slate-400 pt-16 pb-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-10 pb-10 border-b border-slate-800">
+          <div className="grid md:grid-cols-2 gap-10 pb-10 border-b border-slate-800">
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-4">
@@ -645,7 +579,6 @@ export default function LandingPage() {
                 {[
                   { label: 'Features', action: () => scrollToSection('features') },
                   { label: 'How It Works', action: () => scrollToSection('how-it-works') },
-                  { label: 'About', action: () => scrollToSection('about') },
                   { label: 'Select Portal', href: '/select-role' },
                 ].map((link) => (
                   <li key={link.label}>
@@ -663,15 +596,7 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* About */}
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">About</h4>
-              <p className="text-sm leading-relaxed">
-                Built by <span className="text-white font-medium">Vansh Salgotra</span>. Backend
-                architecture & APIs developed from scratch. Frontend UI crafted
-                for a modern experience.
-              </p>
-            </div>
+
           </div>
 
           {/* Bottom bar */}
