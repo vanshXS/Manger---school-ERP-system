@@ -4,7 +4,6 @@ import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 
 @Slf4j
 public class ResendEmailService implements EmailSender {
@@ -17,7 +16,6 @@ public class ResendEmailService implements EmailSender {
         this.fromEmail = fromEmail;
     }
 
-    @Async
     @Override
     public void sendNewUserWelcomeEmail(String toEmail, String fullName, String rawPassword) {
         String html = generateHtmlTemplate(
@@ -32,7 +30,6 @@ public class ResendEmailService implements EmailSender {
         sendHtmlEmail(toEmail, "Welcome to Manger - Your School Portal Account", html);
     }
 
-    @Async
     @Override
     public void sendPasswordResetEmail(String toEmail, String fullName, String newRawPassword) {
         String html = generateHtmlTemplate(
@@ -46,7 +43,6 @@ public class ResendEmailService implements EmailSender {
         sendHtmlEmail(toEmail, "Manger - Your Password Has Been Reset", html);
     }
 
-    @Async
     @Override
     public void sendMarksheet(String to, byte[] pdfBytes, String studentName,
                               String examName, String rollNo, String subjectName) {
@@ -61,7 +57,6 @@ public class ResendEmailService implements EmailSender {
         sendHtmlEmail(to, examName + " | Your Marksheet for " + subjectName, html);
     }
 
-    @Async
     @Override
     public void sendOtpEmail(String toEmail, String otp, String subjectPrefix) {
         String html = generateHtmlTemplate(
