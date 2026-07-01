@@ -18,7 +18,7 @@ public class EmailConfig {
 //    }
 
     @Bean
-    public EmailSender renderEmailSender(@Value("${resend.api.key}") String apiKey) {
+    public EmailSender renderEmailSender(@Value("${RESEND_API_KEY}") String apiKey) {
         return new ResendEmailService(apiKey);
     }
 }

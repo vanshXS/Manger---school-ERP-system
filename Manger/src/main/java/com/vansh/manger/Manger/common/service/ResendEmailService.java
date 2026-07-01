@@ -12,7 +12,7 @@ public class ResendEmailService implements EmailSender {
 
     private final Resend resend;
 
-    @Value("${resend.from.email}")
+    @Value("${RESEND_FROM_EMAIL}")
     private String fromEmail;
 
     public ResendEmailService(String apiKey) {
