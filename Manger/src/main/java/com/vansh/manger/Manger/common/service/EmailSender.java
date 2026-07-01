@@ -15,4 +15,9 @@ public interface EmailSender {
      * Send a PDF marksheet to a student.
      */
     void sendMarksheet(String to, byte[] pdfBytes, String studentName, String examName, String rollNo, String subjectName);
+
+    /**
+     * Send a password reset OTP email.
+     */
+    void sendOtpEmail(String toEmail, String otp, String subjectPrefix);
 }

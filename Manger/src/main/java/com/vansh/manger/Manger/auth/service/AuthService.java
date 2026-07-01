@@ -21,8 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.vansh.manger.Manger.common.service.EmailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -49,7 +48,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
-    private final JavaMailSender mailsender;
+    private final EmailSender emailSender;
 
     public ResponseEntity<?> login(AuthLoginDTO authLoginDTO, Roles role, String cookieName, HttpServletResponse response) {
         try {
@@ -273,13 +272,7 @@ public class AuthService {
             userRepo.save(user);
 
             try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setTo(user.getEmail());
-                message.setSubject(subjectPrefix + " Password Reset OTP");
-                message.setText("Your OTP for password reset is: " + otp +
-                        "\n\nThis OTP will expire in 10 minutes." +
-                        "\n\nIf you did not request this, please ignore this email.");
-                mailsender.send(message);
+                emailSender.sendOtpEmail(user.getEmail(), otp, subjectPrefix);
                 log.info("OTP sent successfully to: {}", user.getEmail());
             } catch (Exception emailException) {
                 log.error("Failed to send OTP email to: {}", user.getEmail(), emailException);

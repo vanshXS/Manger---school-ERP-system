@@ -63,6 +63,20 @@ public class ResendEmailService implements EmailSender {
         sendHtmlEmail(to, examName + " | Your Marksheet for " + subjectName, html);
     }
 
+    @Async
+    @Override
+    public void sendOtpEmail(String toEmail, String otp, String subjectPrefix) {
+        String html = generateHtmlTemplate(
+                subjectPrefix + " Password Reset",
+                "Hello,",
+                "We received a request to reset your password on the <strong>Manger</strong> school portal.",
+                "Your OTP (One-Time Password) is:",
+                "<li><strong style='font-size: 22px; letter-spacing: 3px;'>" + otp + "</strong></li>",
+                "This OTP will expire in <strong>10 minutes</strong>.<br/><br/>If you did not request this, please ignore this email."
+        );
+        sendHtmlEmail(toEmail, subjectPrefix + " Password Reset OTP", html);
+    }
+
     private void sendHtmlEmail(String to, String subject, String html) {
         try {
             CreateEmailOptions params = CreateEmailOptions.builder()
