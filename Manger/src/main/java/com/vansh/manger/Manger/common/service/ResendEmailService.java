@@ -4,19 +4,17 @@ import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 
 @Slf4j
 public class ResendEmailService implements EmailSender {
 
     private final Resend resend;
+    private final String fromEmail;
 
-    @Value("${RESEND_FROM_EMAIL}")
-    private String fromEmail;
-
-    public ResendEmailService(String apiKey) {
+    public ResendEmailService(String apiKey, String fromEmail) {
         this.resend = new Resend(apiKey);
+        this.fromEmail = fromEmail;
     }
 
     @Async

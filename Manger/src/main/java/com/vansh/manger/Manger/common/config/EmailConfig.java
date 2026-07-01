@@ -10,7 +10,8 @@ import org.springframework.context.annotation.Configuration;
 public class EmailConfig {
 
     @Bean
-    public EmailSender resendEmailSender(@Value("${RESEND_API_KEY}") String apiKey) {
-        return new ResendEmailService(apiKey);
+    public EmailSender resendEmailSender(@Value("${RESEND_API_KEY}") String apiKey,
+                                         @Value("${RESEND_FROM_EMAIL}") String fromEmail) {
+        return new ResendEmailService(apiKey, fromEmail);
     }
 }
