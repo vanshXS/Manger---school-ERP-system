@@ -1,6 +1,6 @@
 'use client';
 
-import StudentProtectedRoute from '@/components/StudentProtectedRoute';
+import { AuthGuard, useStudentAuth } from '@/features/auth';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -16,7 +16,6 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
-import { useStudentAuth } from '@/contexts/StudentAuthContext';
 import studentApiClient from '@/lib/studentAxios';
 import { showSuccess } from '@/lib/toastHelper';
 import {
@@ -153,7 +152,7 @@ export default function StudentDashboardLayout({ children }) {
     }
 
     return (
-        <StudentProtectedRoute>
+        <AuthGuard useAuth={useStudentAuth} loginPath="/student/auth/student-login" accentColor="orange">
             <div className="flex h-screen bg-slate-50 overflow-hidden">
 
                 {/* DESKTOP SIDEBAR */}
@@ -257,6 +256,6 @@ export default function StudentDashboardLayout({ children }) {
                     </SheetContent>
                 </Sheet>
             </div>
-        </StudentProtectedRoute>
+        </AuthGuard>
     );
 }

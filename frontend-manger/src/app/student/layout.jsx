@@ -1,9 +1,9 @@
-import { StudentAuthProvider } from '@/contexts/StudentAuthContext';
+import { StudentAuthProvider } from '@/features/auth';
 
 export default function StudentRootLayout({ children }) {
-    return (
-        <StudentAuthProvider>
-            {children}
-        </StudentAuthProvider>
-    );
+  return (
+    <StudentAuthProvider>
+      {children}
+    </StudentAuthProvider>
+  );
 }

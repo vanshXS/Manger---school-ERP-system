@@ -1,6 +1,6 @@
 'use client';
 
-import TeacherProtectedRoute from '@/components/TeacherProtectedRoute';
+import { AuthGuard, useTeacherAuth } from '@/features/auth';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -16,7 +16,6 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
-import { useTeacherAuth } from '@/contexts/TeacherAuthContext';
 import teacherApiClient from '@/lib/teacherAxios';
 import { showSuccess } from '@/lib/toastHelper';
 import {
@@ -158,7 +157,7 @@ export default function TeacherDashboardLayout({ children }) {
     }
 
     return (
-        <TeacherProtectedRoute>
+        <AuthGuard useAuth={useTeacherAuth} loginPath="/teacher/auth/login" accentColor="blue">
             <div className="flex h-screen bg-slate-50 overflow-hidden">
 
                 {/* DESKTOP SIDEBAR */}
@@ -264,6 +263,6 @@ export default function TeacherDashboardLayout({ children }) {
                     </SheetContent>
                 </Sheet>
             </div>
-        </TeacherProtectedRoute>
+        </AuthGuard>
     );
 }

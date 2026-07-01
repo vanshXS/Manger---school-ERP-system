@@ -1,9 +1,9 @@
-import { AuthProvider } from '@/contexts/AdminAuthContext';
+import { AdminAuthProvider } from '@/features/auth';
 
 export default function AdminRootLayout({ children }) {
-    return (
-        <AuthProvider>
-            {children}
-        </AuthProvider>
-    );
+  return (
+    <AdminAuthProvider>
+      {children}
+    </AdminAuthProvider>
+  );
 }

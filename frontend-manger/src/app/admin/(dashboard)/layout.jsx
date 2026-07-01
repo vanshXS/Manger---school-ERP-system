@@ -1,7 +1,7 @@
 'use client';
 
 import GlobalSearch from '@/components/admin/GlobalSearch';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { AuthGuard, useAdminAuth } from '@/features/auth';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -17,7 +17,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useAuth } from '@/contexts/AdminAuthContext';
 import apiClient from '@/lib/axios';
 import { showSuccess } from '@/lib/toastHelper';
 import {
@@ -133,7 +132,7 @@ export default function AdminLayout({ children }) {
   const [adminName, setAdminName] = useState('');
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
-  const { logout, isAuthenticated, isLoading } = useAuth();
+  const { logout, isAuthenticated, isLoading } = useAdminAuth();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -157,7 +156,7 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <ProtectedRoute>
+    <AuthGuard useAuth={useAdminAuth} loginPath="/admin/auth/admin-login" accentColor="blue">
       <div className="flex h-screen bg-slate-50 overflow-hidden">
 
         {/* DESKTOP SIDEBAR - Pushes content instead of floating */}
@@ -267,6 +266,6 @@ export default function AdminLayout({ children }) {
           </SheetContent>
         </Sheet>
       </div>
-    </ProtectedRoute>
+    </AuthGuard>
   );
 }
