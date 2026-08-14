@@ -31,7 +31,5 @@ public final class SecurityContextHelper {
         return getCurrentPrincipal().userId();
     }
 
-    public static String getCurrentUsername() {
-        return getCurrentPrincipal().email();
-    }
+
 }
