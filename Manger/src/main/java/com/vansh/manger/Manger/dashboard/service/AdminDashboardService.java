@@ -35,6 +35,7 @@ import com.vansh.manger.Manger.timetable.repository.*;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.common.util.AdminSchoolConfig;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -43,6 +44,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,7 +65,8 @@ public class AdminDashboardService {
     /* ──────────────────────────────────────────────────────────────────────
        KPIs — all counts scoped to the admin's school
     ────────────────────────────────────────────────────────────────────── */
-    @Transactional
+    @Cacheable(value = "adminDashboardStats", key = "'kpis_' + @adminSchoolConfig.requireCurrentSchoolId()")
+    @Transactional(readOnly = true)
     public DashboardKpiDTO getKpis() {
 
         long schoolId = getCurrentSchool.requireCurrentSchool().getId();
@@ -101,6 +104,7 @@ public class AdminDashboardService {
        Enrollment overview — one row per classroom with enrolled vs capacity
        Returns ClassroomEnrollmentDTO: { classroomName, capacity, enrolled }
     ────────────────────────────────────────────────────────────────────── */
+    @Cacheable(value = "adminDashboardStats", key = "'enrollment_' + @adminSchoolConfig.requireCurrentSchoolId()")
     public List<ClassroomEnrollmentDTO> getEnrollmentOverview() {
 
         long schoolId = getCurrentSchool.requireCurrentSchool().getId();
@@ -112,22 +116,31 @@ public class AdminDashboardService {
             return Collections.emptyList();
         }
 
-        AcademicYear currentYear = optionalYear.get();
+        List<Classroom> classrooms = classroomRespository.findBySchool_Id(schoolId);
+        if (classrooms.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        return classroomRespository.findBySchool_Id(schoolId).stream()
+        List<Long> classroomIds = classrooms.stream().map(Classroom::getId).toList();
+        List<Object[]> countRows = enrollmentRepository.countCurrentEnrollmentsByClassroomIds(schoolId, classroomIds);
+
+        Map<Long, Long> countsMap = countRows.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1],
+                        (existing, replacement) -> existing
+                ));
+
+        return classrooms.stream()
                 .map(classroom -> {
-                    long enrolled = enrollmentRepository
-                            .countByClassroomAndAcademicYearAndSchool_Id(
-                                    classroom, currentYear, schoolId);
-
-                    // getDisplayName() returns e.g. "Grade 10 - A" or "Nursery - B"
+                    long enrolled = countsMap.getOrDefault(classroom.getId(), 0L);
                     String classroomName = classroom.getGradeLevel().getDisplayName()
                             + " - " + classroom.getSection().toUpperCase();
 
                     return new ClassroomEnrollmentDTO(
-                            classroomName,           // "Grade 10 - A"
-                            classroom.getCapacity(), // 40
-                            (int) enrolled           // 32
+                            classroomName,
+                            classroom.getCapacity(),
+                            (int) enrolled
                     );
                 })
                 .collect(Collectors.toList());
@@ -137,13 +150,26 @@ public class AdminDashboardService {
        Teacher workload — assignments count per teacher
        Returns TeacherWorkloadDTO: { name, assignedClassesCount }
     ────────────────────────────────────────────────────────────────────── */
+    @Cacheable(value = "adminDashboardStats", key = "'teacher_workload_' + @adminSchoolConfig.requireCurrentSchoolId()")
     public List<TeacherWorkloadDTO> getTeacherWorkload() {
-        return teacherRespository
-                .findBySchool_Id(getCurrentSchool.requireCurrentSchool().getId())
-                .stream()
+        long schoolId = getCurrentSchool.requireCurrentSchool().getId();
+        List<Teacher> teachers = teacherRespository.findBySchool_Id(schoolId);
+        if (teachers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Object[]> countRows = teacherAssignmentRepository.countAssignmentsGroupByTeacherId(schoolId);
+        Map<Long, Long> countsMap = countRows.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1],
+                        (existing, replacement) -> existing
+                ));
+
+        return teachers.stream()
                 .map(teacher -> new TeacherWorkloadDTO(
                         teacher.getFirstName() + " " + teacher.getLastName(),
-                        teacherAssignmentRepository.countByTeacher(teacher)
+                        countsMap.getOrDefault(teacher.getId(), 0L)
                 ))
                 .collect(Collectors.toList());
     }

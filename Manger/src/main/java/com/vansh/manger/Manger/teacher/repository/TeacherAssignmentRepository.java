@@ -30,10 +30,16 @@ public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssign
 
     Optional<TeacherAssignment> findByClassroomAndSubject(Classroom classroom, Subject subject);
 
-    @Query(value = "SELECT s.* FROM subjects s " +
-            "JOIN teacher_assignments ta ON s.id = ta.subject_id " +
-            "WHERE ta.classroom_id = :classroom_id", nativeQuery = true)
-    List<Subject> findSubjectByClassroom(@Param("classroom_id") Long classroom_id);
+    @Query("SELECT ta.subject FROM TeacherAssignment ta WHERE ta.classroom.id = :classroomId")
+    List<Subject> findSubjectByClassroom(@Param("classroomId") Long classroomId);
+
+    @Query("""
+            SELECT ta.teacher.id, count(ta)
+            FROM TeacherAssignment ta
+            WHERE ta.teacher.school.id = :schoolId
+            GROUP BY ta.teacher.id
+            """)
+    List<Object[]> countAssignmentsGroupByTeacherId(@Param("schoolId") Long schoolId);
 
     @EntityGraph(attributePaths = {"classroom", "subject", "teacher"})
     List<TeacherAssignment> findByTeacher(Teacher teacher);

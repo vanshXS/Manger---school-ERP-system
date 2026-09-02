@@ -179,9 +179,18 @@ export default function StudentsPage() {
 
   const handleSendReset = async (studentId) => {
     try {
-      await apiClient.post(`/api/admin/students/${studentId}/send-password-reset`);
-      toast.success('Reset email sent');
-    } catch { toast.error('Failed to send reset email'); }
+      const res = await apiClient.post(`/api/admin/students/${studentId}/send-password-reset`);
+      if (res.data?.newPassword) {
+        setNewStudentCredentials({
+          name: res.data.name,
+          email: res.data.email,
+          password: res.data.newPassword,
+        });
+      }
+      toast.success('Password reset successfully');
+    } catch {
+      toast.error('Failed to reset password');
+    }
   };
 
   const handleManageSubjects = async (student) => {

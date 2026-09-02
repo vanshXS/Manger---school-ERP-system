@@ -66,6 +66,10 @@ public class TeacherMarkService {
         distributionOperations.sendAllMarksheets(examId);
     }
 
+    public byte[] downloadMarksheet(Long examId, Long enrollmentId) {
+        return distributionOperations.generateMarksheetPdf(examId, enrollmentId);
+    }
+
     // ── Student Results ─────────────────────────────────────────
 
     public Page<StudentExamResultDTO> getStudentExamResults(Long studentId, Pageable pageable) {

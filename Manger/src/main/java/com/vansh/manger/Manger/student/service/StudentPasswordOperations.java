@@ -8,6 +8,6 @@ package com.vansh.manger.Manger.student.service;
  */
 public interface StudentPasswordOperations {
 
-    /** Generates a new password and emails it to the student. */
-    void sendPasswordReset(Long studentId);
+    /** Generates a new password, emails it to the student best-effort, and returns the raw password. */
+    String sendPasswordReset(Long studentId);
 }

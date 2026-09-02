@@ -22,6 +22,7 @@ import com.vansh.manger.Manger.student.repository.EnrollmentRepository;
 import com.vansh.manger.Manger.student.repository.StudentSubjectEnrollmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +56,7 @@ public class AdminAssignmentService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AssignmentResponseDTO createAssignment(AssignmentRequestDTO requestDTO) {
         School school = adminSchoolConfig.requireCurrentSchool();
 
@@ -104,6 +106,7 @@ public class AdminAssignmentService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AssignmentResponseDTO updateAssignmentTeacher(Long assignmentId, Long teacherId) {
            School school = adminSchoolConfig.requireCurrentSchool();
 
@@ -127,6 +130,7 @@ public class AdminAssignmentService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AssignmentResponseDTO unassignedTeacher(Long assignmentId) {
 
            TeacherAssignment existedAssignment = teacherAssignmentRepository.findById(assignmentId).orElseThrow(() -> new EntityNotFoundException("assingment not found with this id."));
@@ -139,6 +143,7 @@ public class AdminAssignmentService {
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void deleteAssignment(Long assignmentId) {
 
         TeacherAssignment teacherAssignment = teacherAssignmentRepository.findById(assignmentId)
@@ -175,6 +180,7 @@ public class AdminAssignmentService {
     }
 
     //toggle the mandatory subject
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AssignmentResponseDTO updateMandatorySubject(Long assignmentId, boolean mandatory) {
                TeacherAssignment assignment = teacherAssignmentRepository.findById(assignmentId)
                        .orElseThrow(() -> new EntityNotFoundException("Assignment not found with this id"));

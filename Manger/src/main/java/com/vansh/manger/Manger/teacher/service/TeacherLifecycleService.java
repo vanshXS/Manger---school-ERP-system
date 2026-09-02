@@ -31,7 +31,7 @@ public class TeacherLifecycleService implements TeacherLifecycleOperations {
     private final ImageCleanupHelper imageCleanupHelper;
 
     @Override
-    @CacheEvict(value = "teachers", key = "'teacher_' + #teacherId")
+    @CacheEvict(value = {"teachers", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void toggleStatus(Long teacherId, boolean active) {
         Teacher teacher = teacherRespository
                 .findByIdAndSchool_Id(teacherId, adminSchoolConfig.requireCurrentSchool().getId())
@@ -52,7 +52,7 @@ public class TeacherLifecycleService implements TeacherLifecycleOperations {
 
     @Override
     @Transactional
-    @CacheEvict(value = "teachers", key = "'teacher_' + #teacherId")
+    @CacheEvict(value = {"teachers", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void delete(Long teacherId) {
         Teacher teacher = teacherRespository
                 .findByIdAndSchool_Id(teacherId, adminSchoolConfig.requireCurrentSchool().getId())

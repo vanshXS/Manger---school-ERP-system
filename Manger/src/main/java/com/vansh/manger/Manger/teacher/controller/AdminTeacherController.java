@@ -102,9 +102,14 @@ public class AdminTeacherController {
         }
 
         @PostMapping("/{teacherId:\\d+}/send-password-reset")
-        public ResponseEntity<String> sendPasswordResetEmail(@PathVariable Long teacherId) {
-                adminTeacherService.sendPasswordReset(teacherId);
-                return ResponseEntity.ok("Password reset email sent successfully to the teacher.");
+        public ResponseEntity<java.util.Map<String, Object>> sendPasswordResetEmail(@PathVariable Long teacherId) {
+                TeacherResponseDTO teacher = adminTeacherService.getTeacherById(teacherId);
+                String newPassword = adminTeacherService.sendPasswordReset(teacherId);
+                java.util.Map<String, Object> response = new java.util.HashMap<>();
+                response.put("message", "Password reset successfully");
+                response.put("newPassword", newPassword);
+                response.put("email", teacher.getEmail());
+                response.put("name", teacher.getFirstName() + " " + teacher.getLastName());
+                return ResponseEntity.ok(response);
         }
-
 }

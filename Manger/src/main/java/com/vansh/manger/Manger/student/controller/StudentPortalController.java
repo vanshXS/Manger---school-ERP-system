@@ -70,6 +70,15 @@ public class StudentPortalController {
         return ResponseEntity.ok(studentPortalService.getExamResults(examId));
     }
 
+    @GetMapping("/exams/{examId}/marksheet")
+    public ResponseEntity<byte[]> downloadMarksheet(@PathVariable Long examId) {
+        byte[] pdfBytes = studentPortalService.downloadMarksheetPdf(examId);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=marksheet-" + examId + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
     // ─── Timetable ────────────────────────────────────────────────
 
     @GetMapping("/timetable")

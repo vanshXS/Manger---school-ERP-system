@@ -18,6 +18,7 @@ import com.vansh.manger.Manger.student.service.AdminStudentService;
 import com.vansh.manger.Manger.common.service.ActivityLogService;
 import com.vansh.manger.Manger.student.util.StudentAssignSubjects;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -59,6 +60,7 @@ public class EnrollmentService{
     }
 
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public SchoolPromotionResultDTO runSchoolPromotion() {
 
         School school = schoolConfig.requireCurrentSchool();

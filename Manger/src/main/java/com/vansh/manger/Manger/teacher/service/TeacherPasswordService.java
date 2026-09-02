@@ -41,7 +41,7 @@ public class TeacherPasswordService implements TeacherPasswordOperations {
 
     @Override
     @Transactional
-    public void sendPasswordReset(Long teacherId) {
+    public String sendPasswordReset(Long teacherId) {
         School school = getCurrentSchool.requireCurrentSchool();
         Teacher teacher = teacherRepository.findByIdAndSchool_Id(teacherId, school.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Teacher not found"));
@@ -60,16 +60,22 @@ public class TeacherPasswordService implements TeacherPasswordOperations {
         userRepo.save(user);
 
         // Send the new password to the teacher's email (non-blocking, failure resistant)
-        emailNotificationService.sendPasswordResetEmailSafe(
-                teacher.getEmail(), 
-                teacher.getFirstName() + " " + teacher.getLastName(), 
-                newRawPassword,
-                "Teacher"
-        );
+        try {
+            emailNotificationService.sendPasswordResetEmailSafe(
+                    teacher.getEmail(),
+                    teacher.getFirstName() + " " + teacher.getLastName(),
+                    newRawPassword,
+                    "Teacher"
+            );
+        } catch (Exception e) {
+            log.warn("Failed to dispatch password reset email for teacher {}: {}", teacher.getEmail(), e.getMessage());
+        }
         
         activityLogService.logActivity(
                 "Admin triggered password reset for teacher: " + teacher.getFirstName() + " "
                         + teacher.getLastName(),
                 "Security");
+
+        return newRawPassword;
     }
 }

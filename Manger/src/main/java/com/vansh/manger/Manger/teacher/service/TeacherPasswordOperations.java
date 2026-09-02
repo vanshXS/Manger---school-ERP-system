@@ -8,6 +8,6 @@ package com.vansh.manger.Manger.teacher.service;
  */
 public interface TeacherPasswordOperations {
 
-    /** Generates a new password and emails it to the teacher. */
-    void sendPasswordReset(Long teacherId);
+    /** Generates a new password, emails it to the teacher best-effort, and returns the raw password. */
+    String sendPasswordReset(Long teacherId);
 }

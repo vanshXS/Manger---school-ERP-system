@@ -182,26 +182,29 @@ public class AdminStudentController {
     }
 
     /**
-     * Send an Email for reset password
+     * Send an Email for reset password and return generated temporary credentials.
      */
-
     @PostMapping("/{studentId:\\d+}/send-password-reset")
-    public ResponseEntity<String> sendPasswordResetEmail(@PathVariable Long studentId) {
-        adminStudentService.sendPasswordReset(studentId);
-        return ResponseEntity.ok("Password reset email sent successfully to the student.");
+    public ResponseEntity<java.util.Map<String, Object>> sendPasswordResetEmail(@PathVariable Long studentId) {
+        StudentResponseDTO student = adminStudentService.getStudentById(studentId);
+        String newPassword = adminStudentService.sendPasswordReset(studentId);
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("message", "Password reset successfully");
+        response.put("newPassword", newPassword);
+        response.put("email", student.getEmail());
+        response.put("name", student.getFirstName() + " " + student.getLastName());
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Update a status of student
      */
-
     @PatchMapping("/{studentId}/active")
     public ResponseEntity<Void> changeStudentStatus(
             @PathVariable Long studentId,
             @RequestParam StudentStatus status
-            ) {
+    ) {
         adminStudentService.updateStatus(studentId, status);
-
         return ResponseEntity.ok().build();
     }
 }

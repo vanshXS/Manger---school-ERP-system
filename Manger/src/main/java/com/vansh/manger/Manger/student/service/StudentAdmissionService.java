@@ -3,6 +3,7 @@ package com.vansh.manger.Manger.student.service;
 import java.io.IOException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import com.vansh.manger.Manger.academicyear.entity.AcademicYear;
@@ -61,6 +62,7 @@ public class StudentAdmissionService implements StudentAdmissionOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public StudentResponseDTO createStudent(StudentRequestDTO studentRequestDTO) throws IOException {
 
         studentValidator.validate(studentRequestDTO);

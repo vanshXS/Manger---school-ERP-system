@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import com.vansh.manger.Manger.student.entity.Enrollment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.vansh.manger.Manger.student.entity.Student;
@@ -55,4 +59,22 @@ public interface StudentSubjectMarksRepository extends JpaRepository<StudentSubj
     List<StudentSubjectMarks> findByEnrollment_StudentAndExam_Id(Student student, Long examId);
 
     List<StudentSubjectMarks> findBySubjectAndExam_Id(Subject subject, Long examId);
+
+    @Query(value = """
+            SELECT DISTINCT m.exam.id
+            FROM StudentSubjectMarks m
+            WHERE m.enrollment.student.id = :studentId
+              AND m.exam IS NOT NULL
+            ORDER BY m.exam.id DESC
+            """,
+           countQuery = """
+            SELECT COUNT(DISTINCT m.exam.id)
+            FROM StudentSubjectMarks m
+            WHERE m.enrollment.student.id = :studentId
+              AND m.exam IS NOT NULL
+            """)
+    Page<Long> findDistinctExamIdsByStudentId(@Param("studentId") Long studentId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"subject", "exam", "exam.classroom", "exam.academicYear", "enrollment"})
+    List<StudentSubjectMarks> findByEnrollment_StudentIdAndExam_IdIn(Long studentId, List<Long> examIds);
 }

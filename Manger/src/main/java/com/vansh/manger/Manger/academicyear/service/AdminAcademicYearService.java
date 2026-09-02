@@ -62,7 +62,7 @@ public class AdminAcademicYearService {
 
     // ─── CREATE ──────────────────────────────────────────────────────────────
     @Transactional
-    @CacheEvict(value = "academicYears", allEntries = true)
+    @CacheEvict(value = {"academicYears", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AcademicYearDTO createAcademicYear(AcademicYearDTO dto) {
 
 
@@ -133,7 +133,7 @@ public class AdminAcademicYearService {
 
     // ─── UPDATE ───────────────────────────────────────────────────────────────
     @Transactional
-    @CacheEvict(value = "academicYears", allEntries = true)
+    @CacheEvict(value = {"academicYears", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AcademicYearDTO updateAcademicYear(Long yearId, AcademicYearDTO dto) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
         AcademicYear year = academicYearRepository
@@ -173,7 +173,7 @@ public class AdminAcademicYearService {
     // ─── SET CURRENT ─────────────────────────────────────────────────────────
 
     @Transactional
-    @CacheEvict(value = "academicYears", allEntries = true)
+    @CacheEvict(value = {"academicYears", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public AcademicYearDTO setCurrentAcademicYear(Long yearId) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
 
@@ -226,7 +226,7 @@ public class AdminAcademicYearService {
 
 
     @Transactional
-    @CacheEvict(value = "academicYears", allEntries = true)
+    @CacheEvict(value = {"academicYears", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void closeAcademicYear() {
         School school = adminSchoolConfig.requireCurrentSchool();
 
@@ -247,7 +247,7 @@ public class AdminAcademicYearService {
 
     // ─── DELETE ───────────────────────────────────────────────────────────────
     @Transactional
-    @CacheEvict(value = "academicYears", allEntries = true)
+    @CacheEvict(value = {"academicYears", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void deleteAcademicYear(Long yearId) {
         Long schoolId = adminSchoolConfig.requireCurrentSchool().getId();
 

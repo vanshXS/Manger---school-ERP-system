@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,7 @@ public class TeacherDashboardService {
     private final ExamStatusResolver examStatusResolver;
 
 
+    @Cacheable(value = "teacherDashboardStats", key = "'summary_' + @teacherSchoolConfig.requireCurrentSchoolId() + '_' + @teacherSchoolConfig.getTeacher().id")
     @Transactional(readOnly = true)
     public TeacherDashboardResponseDTO getDashboardSummary() {
         School currentSchool = schoolConfig.requireCurrentSchool();

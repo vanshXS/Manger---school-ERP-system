@@ -22,6 +22,7 @@ import com.vansh.manger.Manger.teacher.entity.Teacher;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * SRP: Handles marksheet PDF generation and email distribution only.
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MarksheetDistributionService implements MarksheetDistributionOperations {
 
     private final TeacherSchoolConfig schoolConfig;
@@ -77,13 +79,7 @@ public class MarksheetDistributionService implements MarksheetDistributionOperat
         }
 
         byte[] pdfBytes = pdfService.generateMarksSheet(enrollment, subjectRecords, exam.getName());
-        emailSender.sendMarksheet(
-                enrollment.getStudent().getEmail(),
-                pdfBytes,
-                enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName(),
-                exam.getName(),
-                enrollment.getRollNo(),
-                exam.getExamType() != null ? exam.getExamType().name() : "Exam");
+        sendMarksheetEmail(enrollment, exam, pdfBytes);
 
         activityLogService.logTeacherActivity(
                 currentSchool,
@@ -123,13 +119,7 @@ public class MarksheetDistributionService implements MarksheetDistributionOperat
             }
 
             byte[] pdfBytes = pdfService.generateMarksSheet(enrollment, subjectRecords, exam.getName());
-            emailSender.sendMarksheet(
-                    enrollment.getStudent().getEmail(),
-                    pdfBytes,
-                    enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName(),
-                    exam.getName(),
-                    enrollment.getRollNo(),
-                    exam.getExamType() != null ? exam.getExamType().name() : "Exam");
+            sendMarksheetEmail(enrollment, exam, pdfBytes);
             sentCount++;
         }
 
@@ -137,5 +127,55 @@ public class MarksheetDistributionService implements MarksheetDistributionOperat
                 currentSchool,
                 "Sent " + sentCount + " marksheet(s) for " + exam.getName(),
                 "Exams");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] generateMarksheetPdf(Long examId, Long enrollmentId) {
+        Teacher teacher = schoolConfig.getTeacher();
+        School currentSchool = teacher.getSchool();
+
+        Exam exam = examRepository.findByIdAndSchool_Id(examId, currentSchool.getId())
+                .orElseThrow(() -> new RuntimeException("Exam not found"));
+        exam = examStatusResolver.synchronize(exam);
+
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .filter(e -> e.getStudent().getSchool().getId().equals(currentSchool.getId()))
+                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+
+        if (!teacherAssignmentRepository.existsByTeacherAndClassroom(teacher, exam.getClassroom())) {
+            throw new RuntimeException("Teacher is not assigned to this classroom");
+        }
+
+        if (!enrollment.getClassroom().getId().equals(exam.getClassroom().getId())) {
+            throw new RuntimeException("Student is not enrolled in this exam's classroom");
+        }
+
+        if (exam.getStatus() != ExamStatus.COMPLETED) {
+            throw new RuntimeException("Marksheets can only be downloaded after the exam is completed.");
+        }
+
+        List<StudentSubjectMarks> subjectRecords = marksRepository.findByEnrollment_StudentAndExam_Id(
+                enrollment.getStudent(), examId);
+
+        if (subjectRecords.isEmpty()) {
+            throw new RuntimeException("No marks found for this student in the selected exam");
+        }
+
+        return pdfService.generateMarksSheet(enrollment, subjectRecords, exam.getName());
+    }
+
+    private void sendMarksheetEmail(Enrollment enrollment, Exam exam, byte[] pdfBytes) {
+        try {
+            emailSender.sendMarksheet(
+                    enrollment.getStudent().getEmail(),
+                    pdfBytes,
+                    enrollment.getStudent().getFirstName() + " " + enrollment.getStudent().getLastName(),
+                    exam.getName(),
+                    enrollment.getRollNo(),
+                    exam.getExamType() != null ? exam.getExamType().name() : "Exam");
+        } catch (Exception exception) {
+            log.warn("Marksheet email delivery failed for enrollment {} and exam {}", enrollment.getId(), exam.getId(), exception);
+        }
     }
 }

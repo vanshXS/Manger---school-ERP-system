@@ -28,6 +28,7 @@ import com.vansh.manger.Manger.teacher.entity.Teacher;
 import com.vansh.manger.Manger.teacher.repository.TeacherAssignmentRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -49,6 +50,7 @@ public class AttendanceMarkingService implements AttendanceMarkingOperations {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public List<AttendanceResponseDTO> markAttendance(BulkAttendanceRequestDTO requestDTO) {
         Teacher teacher = schoolConfig.getTeacher();
 

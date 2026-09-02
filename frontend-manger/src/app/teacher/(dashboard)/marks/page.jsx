@@ -47,7 +47,7 @@ export default function TeacherMarksPage() {
     const [loadingExams, setLoadingExams] = useState(false);
     const [loadingSheet, setLoadingSheet] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [sendingId, setSendingId] = useState(null);
+    const [downloadingId, setDownloadingId] = useState(null);
 
     const isMounted = useRef(false);
 
@@ -188,36 +188,31 @@ export default function TeacherMarksPage() {
         }
     };
 
-    /* ── Send marksheets ── */
-    const handleSendMarksheet = async (enrollmentId) => {
+    /* ── Download marksheet ── */
+    const handleDownloadMarksheet = async (enrollmentId, studentName = 'student') => {
         if (!gradingSheet?.marksheetAllowed) {
-            showError('Marksheets can only be sent after the exam is completed.');
+            showError('Marksheets can only be downloaded after the exam is completed.');
             return;
         }
         try {
-            setSendingId(enrollmentId);
-            await teacherApiClient.post(`/api/teacher/marks/send-marksheet/${selectedExamId}/${enrollmentId}`);
-            showSuccess("Marksheet sent successfully!");
+            setDownloadingId(enrollmentId);
+            const res = await teacherApiClient.get(`/api/teacher/marks/exams/${selectedExamId}/enrollments/${enrollmentId}/marksheet`, {
+                responseType: 'blob'
+            });
+            const blob = new Blob([res.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `marksheet_${selectedExamId}_${studentName.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            showSuccess("Marksheet downloaded!");
         } catch (err) {
-            showError(err.response?.data?.message || "Failed to send marksheet.");
+            showError(err.response?.data?.message || "Failed to download marksheet.");
         } finally {
-            setSendingId(null);
-        }
-    };
-
-    const handleSendAllMarksheets = async () => {
-        if (!gradingSheet?.marksheetAllowed) {
-            showError('Marksheets can only be sent after the exam is completed.');
-            return;
-        }
-        try {
-            setSendingId('all');
-            const res = await teacherApiClient.post(`/api/teacher/marks/send-all-marksheets/${selectedExamId}`);
-            showSuccess(res.data || "Marksheets sent!");
-        } catch (err) {
-            showError(err.response?.data?.message || "Failed to send marksheets.");
-        } finally {
-            setSendingId(null);
+            setDownloadingId(null);
         }
     };
 
@@ -373,27 +368,15 @@ export default function TeacherMarksPage() {
                         gradingSheet={gradingSheet}
                         marks={marks}
                         handleMarkChange={handleMarkChange}
-                        onSendMarksheet={handleSendMarksheet}
-                        sendingId={sendingId}
+                        onDownloadMarksheet={handleDownloadMarksheet}
+                        downloadingId={downloadingId}
                         marksEditable={Boolean(gradingSheet?.marksEditable)}
                         marksheetAllowed={Boolean(gradingSheet?.marksheetAllowed)}
                     />
 
                     {/* Action Footer */}
                     {gradingSheet.students.length > 0 && (
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between gap-3">
-                            <button
-                                onClick={handleSendAllMarksheets}
-                                disabled={sendingId === 'all' || gradingSheet.gradedCount === 0 || !gradingSheet.marksheetAllowed}
-                                className="bg-violet-600 hover:bg-violet-700 text-white font-medium px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                            >
-                                {sendingId === 'all' ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <Mail className="w-4 h-4" />
-                                )}
-                                {sendingId === 'all' ? 'Sending...' : `Send All Marksheets (${gradingSheet.gradedCount})`}
-                            </button>
+                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
                             <button
                                 onClick={handleSaveMarks}
                                 disabled={saving || !gradingSheet.marksEditable}

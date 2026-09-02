@@ -133,7 +133,7 @@ public class StudentClassroomService implements StudentClassroomOperations {
 
     @Override
     @Transactional
-    @CacheEvict(value = "students", key = "'student:' + #studentId")
+    @CacheEvict(value = {"students", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void updateStatus(Long studentId, StudentStatus status) {
         School school = getCurrentSchool.requireCurrentSchool();
 

@@ -64,7 +64,7 @@ public class AdminTeacherService {
 
     // ── Security ────────────────────────────────────────────────
 
-    public void sendPasswordReset(Long teacherId) {
-        passwordOperations.sendPasswordReset(teacherId);
+    public String sendPasswordReset(Long teacherId) {
+        return passwordOperations.sendPasswordReset(teacherId);
     }
 }

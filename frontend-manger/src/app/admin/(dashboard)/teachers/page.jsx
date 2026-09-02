@@ -120,8 +120,15 @@ export default function TeachersPage() {
   const handleSendReset = async (teacherId) => {
     if (!teacherId) return toast.error('Invalid teacher');
     try {
-      await apiClient.post(`/api/admin/teachers/${teacherId}/send-password-reset`);
-      toast.success('Password reset email sent');
+      const res = await apiClient.post(`/api/admin/teachers/${teacherId}/send-password-reset`);
+      if (res.data?.newPassword) {
+        setNewTeacherCredentials({
+          name: res.data.name,
+          email: res.data.email,
+          password: res.data.newPassword,
+        });
+      }
+      toast.success('Password reset successfully');
     } catch (err) {
       toast.error(err.customMessage || 'Failed to send reset email');
     }

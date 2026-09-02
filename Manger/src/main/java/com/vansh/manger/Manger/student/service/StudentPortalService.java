@@ -10,6 +10,7 @@ import com.vansh.manger.Manger.common.entity.School;
 import com.vansh.manger.Manger.common.util.RiskScoreCalculator;
 import com.vansh.manger.Manger.common.util.StudentSchoolConfig;
 import com.vansh.manger.Manger.exam.entity.Exam;
+import com.vansh.manger.Manger.exam.entity.ExamStatus;
 import com.vansh.manger.Manger.exam.entity.StudentSubjectMarks;
 import com.vansh.manger.Manger.exam.repository.ExamRepository;
 import com.vansh.manger.Manger.exam.repository.StudentSubjectMarksRepository;
@@ -53,6 +54,7 @@ public class StudentPortalService implements StudentPortalOperations {
     private final ExamRepository examRepository;
     private final TimeTableRepository timeTableRepository;
     private final AcademicYearRepository academicYearRepository;
+    private final com.vansh.manger.Manger.common.service.PDFService pdfService;
 
     // ──────────────────────────────────────────────────────────────
     //  Profile
@@ -356,5 +358,33 @@ public class StudentPortalService implements StudentPortalOperations {
 
     private static double roundTwo(double value) {
         return Math.round(value * 100.0) / 100.0;
+    }
+
+    @Override
+    public byte[] downloadMarksheetPdf(Long examId) {
+        Student student = studentSchoolConfig.currentStudent();
+        School school = studentSchoolConfig.requireCurrentSchool();
+
+        Exam exam = examRepository.findByIdAndSchool_Id(examId, school.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Exam not found"));
+
+        Enrollment enrollment = studentSchoolConfig.getCurrentEnrollment();
+
+        if (!enrollment.getClassroom().getId().equals(exam.getClassroom().getId())) {
+            throw new EntityNotFoundException("Exam not found");
+        }
+
+        if (exam.getStatus() != ExamStatus.COMPLETED) {
+            throw new IllegalStateException("Marksheets can only be downloaded after the exam is completed.");
+        }
+
+        List<StudentSubjectMarks> subjectRecords = marksRepository
+                .findByEnrollment_StudentAndExam_Id(student, examId);
+
+        if (subjectRecords.isEmpty()) {
+            throw new RuntimeException("No marks found for this exam");
+        }
+
+        return pdfService.generateMarksSheet(enrollment, subjectRecords, exam.getName());
     }
 }

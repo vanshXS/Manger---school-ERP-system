@@ -39,4 +39,7 @@ public interface StudentPortalOperations {
 
     /** MVP: Student Self Risk Analysis. */
     StudentRiskAnalysisDTO getRiskAnalysis();
+
+    /** Download student marksheet PDF for a specific exam. */
+    byte[] downloadMarksheetPdf(Long examId);
 }

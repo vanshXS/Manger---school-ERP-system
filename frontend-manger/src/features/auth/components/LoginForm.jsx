@@ -101,14 +101,6 @@ export default function LoginForm({ role, useAuthHook }) {
               <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Password
               </label>
-              {role === 'student' && (
-                <Link
-                  href="/student/auth/forgot-password"
-                  className={`text-xs font-medium ${styles.linkText} transition-colors`}
-                >
-                  Forgot password?
-                </Link>
-              )}
             </div>
             <PasswordInput
               id="password"
@@ -128,20 +120,20 @@ export default function LoginForm({ role, useAuthHook }) {
             )}
           </div>
 
-          {/* Forgot Password Link (for non-student roles) */}
-          {role !== 'student' && (
+          {/* Forgot Password / Admin Contact Note */}
+          {role === 'admin' ? (
             <div className="flex items-center justify-end">
               <Link
-                href={
-                  role === 'admin'
-                    ? '/admin/auth/forgot-password'
-                    : '/teacher/auth/forgot-password'
-                }
+                href="/admin/auth/forgot-password"
                 className={`text-sm font-medium ${styles.linkText} transition-colors`}
               >
                 Forgot your password?
               </Link>
             </div>
+          ) : (
+            <p className="text-xs text-slate-500 text-right">
+              Contact your school administrator to reset your password.
+            </p>
           )}
 
           {/* Server Error Message */}

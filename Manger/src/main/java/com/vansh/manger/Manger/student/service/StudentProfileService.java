@@ -130,7 +130,7 @@ public class StudentProfileService implements StudentProfileOperations {
 
     @Override
     @Transactional
-    @CacheEvict(value = "students", key = "'student:' + #studentId")
+    @CacheEvict(value = {"students", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public StudentResponseDTO updateStudent(Long studentId, StudentRequestDTO studentRequestDTO)
             throws IOException {
         School school = getCurrentSchool.requireCurrentSchool();
@@ -211,7 +211,7 @@ public class StudentProfileService implements StudentProfileOperations {
 
     @Override
     @Transactional
-    @CacheEvict(value = "students", key = "'student:' + #studentId")
+    @CacheEvict(value = {"students", "adminDashboardStats", "teacherDashboardStats"}, allEntries = true)
     public void deleteById(Long studentId) {
         School school = getCurrentSchool.requireCurrentSchool();
         Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())

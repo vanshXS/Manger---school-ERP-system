@@ -54,32 +54,35 @@ public class StudentAcademicQueryService implements StudentAcademicQueryOperatio
     private final StudentResponseMapper studentResponseMapper;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<StudentExamResultDTO> getStudentExamResults(Long studentId, Pageable pageable) {
         School school = getCurrentSchool.requireCurrentSchool();
 
         Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
 
-        List<StudentSubjectMarks> allMarks = studentSubjectsRepository
-                .findByEnrollment_StudentId(student.getId());
+        Page<Long> examIdPage = studentSubjectsRepository.findDistinctExamIdsByStudentId(student.getId(), pageable);
+        List<Long> examIds = examIdPage.getContent();
+        if (examIds.isEmpty()) {
+            return new PageImpl<>(java.util.Collections.emptyList(), pageable, examIdPage.getTotalElements());
+        }
 
-        Map<Long, List<StudentSubjectMarks>> marksByExam = allMarks.stream()
+        List<StudentSubjectMarks> pageMarks = studentSubjectsRepository
+                .findByEnrollment_StudentIdAndExam_IdIn(student.getId(), examIds);
+
+        Map<Long, List<StudentSubjectMarks>> marksByExam = pageMarks.stream()
                 .filter(mark -> mark.getExam() != null)
                 .collect(Collectors.groupingBy(mark -> mark.getExam().getId()));
 
-        List<StudentExamResultDTO> allResults = marksByExam.values().stream()
-                .map(marks -> studentResponseMapper.toExamResultDTO(marks.get(0).getExam(), marks))
-                .sorted((a, b) -> b.getExamId().compareTo(a.getExamId()))
+        List<StudentExamResultDTO> results = examIds.stream()
+                .filter(marksByExam::containsKey)
+                .map(examId -> {
+                    List<StudentSubjectMarks> marks = marksByExam.get(examId);
+                    return studentResponseMapper.toExamResultDTO(marks.get(0).getExam(), marks);
+                })
                 .toList();
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), allResults.size());
-        List<StudentExamResultDTO> pagedList = start >= allResults.size()
-                ? new ArrayList<>()
-                : allResults.subList(start, end);
-
-        return new PageImpl<>(pagedList, pageable, allResults.size());
+        return new PageImpl<>(results, pageable, examIdPage.getTotalElements());
     }
 
     @Override

@@ -1,12 +1,12 @@
-import { Mail, Search, X } from 'lucide-react';
+import { Download, Search, X } from 'lucide-react';
 import { useState } from 'react';
 
 export function GradingSheetTable({
     gradingSheet,
     marks,
     handleMarkChange,
-    onSendMarksheet,
-    sendingId,
+    onDownloadMarksheet,
+    downloadingId,
     marksEditable = false,
     marksheetAllowed = false
 }) {
@@ -113,27 +113,27 @@ export function GradingSheetTable({
                                 </td>
                                 <td className="px-4 sm:px-6 py-4 text-center">
                                     <button
-                                        onClick={() => onSendMarksheet?.(student.enrollmentId)}
+                                        onClick={() => onDownloadMarksheet?.(student.enrollmentId, student.studentName)}
                                         disabled={
                                             !marksheetAllowed ||
-                                            sendingId === student.enrollmentId ||
+                                            downloadingId === student.enrollmentId ||
                                             student.marksObtained === null
                                         }
                                         title={
                                             !marksheetAllowed
-                                                ? 'Marksheets can be sent only after the exam is completed'
+                                                ? 'Marksheets can be downloaded only after the exam is completed'
                                                 : student.marksObtained === null
                                                     ? 'Save marks first'
-                                                    : 'Send marksheet via email'
+                                                    : 'Download marksheet PDF'
                                         }
-                                        className="inline-flex items-center justify-center gap-1.5 w-full max-w-[80px] mx-auto px-3 py-1.5 text-xs font-bold rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 hover:shadow-sm hover:border-violet-300 border border-violet-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                                        className="inline-flex items-center justify-center gap-1.5 w-full max-w-[80px] mx-auto px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:shadow-sm hover:border-blue-300 border border-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                                     >
-                                        {sendingId === student.enrollmentId ? (
-                                            <div className="w-3.5 h-3.5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                                        {downloadingId === student.enrollmentId ? (
+                                            <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                                         ) : (
-                                            <Mail size={14} className="group-hover:scale-110 transition-transform" />
+                                            <Download size={14} className="group-hover:scale-110 transition-transform" />
                                         )}
-                                        <span className="hidden sm:inline">Send</span>
+                                        <span className="hidden sm:inline">PDF</span>
                                     </button>
                                 </td>
                             </tr>

@@ -87,8 +87,8 @@ public class AdminStudentService {
 
     // ─── Password / Security ────────────────────────────────────────
 
-    public void sendPasswordReset(Long studentId) {
-        passwordService.sendPasswordReset(studentId);
+    public String sendPasswordReset(Long studentId) {
+        return passwordService.sendPasswordReset(studentId);
     }
 
     // ─── Academic Queries ───────────────────────────────────────────

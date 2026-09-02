@@ -54,6 +54,15 @@ public class TeacherMarkController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/exams/{examId}/enrollments/{enrollmentId}/marksheet")
+    public ResponseEntity<byte[]> downloadMarksheet(@PathVariable Long examId, @PathVariable Long enrollmentId) {
+        byte[] pdfBytes = teacherMarkService.downloadMarksheet(examId, enrollmentId);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=marksheet-" + examId + "-" + enrollmentId + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
     @PostMapping("/send-marksheet/{examId}/{enrollmentId}")
     public ResponseEntity<Void> sendMarksheet(@PathVariable Long examId, @PathVariable Long enrollmentId) {
         teacherMarkService.sendMarksheet(examId, enrollmentId);

@@ -39,7 +39,7 @@ public class StudentPasswordService implements StudentPasswordOperations {
 
     @Override
     @Transactional
-    public void sendPasswordReset(Long studentId) {
+    public String sendPasswordReset(Long studentId) {
         School school = getCurrentSchool.requireCurrentSchool();
         Student student = studentRepository.findByIdAndSchool_Id(studentId, school.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
@@ -58,12 +58,18 @@ public class StudentPasswordService implements StudentPasswordOperations {
         userRepo.save(user);
 
         // Send the new password to the student's email (non-blocking, failure resistant)
-        emailNotificationService.sendNewUserWelcomeEmailSafe(
-                student.getEmail(), student.getFirstName(), newRawPassword, "Student");
+        try {
+            emailNotificationService.sendPasswordResetEmailSafe(
+                    student.getEmail(), student.getFirstName() + " " + student.getLastName(), newRawPassword, "Student");
+        } catch (Exception e) {
+            // Best effort - never block the password reset
+        }
         
         activityLogService.logActivity(
                 "Admin triggered password reset for student: " + student.getFirstName() + " "
                         + student.getLastName(),
                 "Security");
+
+        return newRawPassword;
     }
 }

@@ -43,16 +43,23 @@ public class StudentExamResultService implements StudentExamResultOperations {
                 .filter(s -> s.getSchool().getId().equals(currentSchool.getId()))
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        List<StudentSubjectMarks> allMarks = marksRepository.findByEnrollment_StudentId(studentId);
+        Page<Long> examIdPage = marksRepository.findDistinctExamIdsByStudentId(studentId, pageable);
+        List<Long> examIds = examIdPage.getContent();
+        if (examIds.isEmpty()) {
+            return new PageImpl<>(java.util.Collections.emptyList(), pageable, examIdPage.getTotalElements());
+        }
 
-        Map<String, List<StudentSubjectMarks>> marksByExam = allMarks.stream()
-                .filter(m -> m.getExam().getName() != null)
-                .collect(Collectors.groupingBy(ss -> ss.getExam().getName()));
+        List<StudentSubjectMarks> pageMarks = marksRepository
+                .findByEnrollment_StudentIdAndExam_IdIn(studentId, examIds);
 
-        List<StudentExamResultDTO> allResults = marksByExam.entrySet().stream()
-                .map(entry -> {
-                    String examName = entry.getKey();
-                    List<StudentSubjectMarks> marks = entry.getValue();
+        Map<Long, List<StudentSubjectMarks>> marksByExam = pageMarks.stream()
+                .filter(m -> m.getExam() != null && m.getExam().getId() != null)
+                .collect(Collectors.groupingBy(m -> m.getExam().getId()));
+
+        List<StudentExamResultDTO> results = examIds.stream()
+                .filter(marksByExam::containsKey)
+                .map(examId -> {
+                    List<StudentSubjectMarks> marks = marksByExam.get(examId);
                     StudentSubjectMarks firstMark = marks.get(0);
                     var exam = examStatusResolver.synchronize(firstMark.getExam());
 
@@ -73,7 +80,7 @@ public class StudentExamResultService implements StudentExamResultOperations {
 
                     return StudentExamResultDTO.builder()
                             .examId(exam.getId())
-                            .examName(examName)
+                            .examName(exam.getName())
                             .examStatus(exam.getStatus() != null ? exam.getStatus().getDisplayName() : "Completed")
                             .academicYearName(exam.getAcademicYear() != null ? exam.getAcademicYear().getName() : null)
                             .examType(exam.getExamType() != null ? exam.getExamType().name() : null)
@@ -88,20 +95,8 @@ public class StudentExamResultService implements StudentExamResultOperations {
                             .subjectMarks(subjectMarks)
                             .build();
                 })
-                .sorted((a, b) -> b.getExamId().compareTo(a.getExamId()))
                 .collect(Collectors.toList());
 
-        // Manual pagination
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), allResults.size());
-
-        List<StudentExamResultDTO> pagedList;
-        if (start > allResults.size()) {
-            pagedList = new ArrayList<>();
-        } else {
-            pagedList = allResults.subList(start, end);
-        }
-
-        return new PageImpl<>(pagedList, pageable, allResults.size());
+        return new PageImpl<>(results, pageable, examIdPage.getTotalElements());
     }
 }
