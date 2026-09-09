@@ -160,19 +160,30 @@ export default function LoginForm({ role, useAuthHook }) {
       </form>
 
       {/* Footer Links */}
-      <div className="mt-6 text-center text-sm text-slate-600">
+      <div className="mt-6 text-center text-sm text-slate-600 space-y-2">
         {role === 'admin' ? (
           <>
-            Don't have an account?{' '}
-            <Link
-              href="/admin/auth/register-school"
-              className={`font-medium ${styles.linkText} transition-colors`}
-            >
-              Register your school
-            </Link>
+            <div>
+              Don't have an account?{' '}
+              <Link
+                href="/admin/auth/register-school"
+                className={`font-medium ${styles.linkText} transition-colors`}
+              >
+                Register your school
+              </Link>
+            </div>
+            <div>
+              Not an admin?{' '}
+              <Link
+                href="/select-role"
+                className={`font-medium ${styles.linkText} transition-colors`}
+              >
+                Go back to role selection
+              </Link>
+            </div>
           </>
         ) : (
-          <>
+          <div>
             {role === 'student' ? 'Not a student?' : 'Not a teacher?'}{' '}
             <Link
               href="/select-role"
@@ -180,7 +191,7 @@ export default function LoginForm({ role, useAuthHook }) {
             >
               Go back to role selection
             </Link>
-          </>
+          </div>
         )}
       </div>
     </AuthLayout>

@@ -104,47 +104,47 @@ const FEATURES = [
   {
     icon: Users,
     title: 'Student & Teacher Management',
-    desc: 'Centralized profiles with personal details, academic records, and role-based access for every member of your institution.',
+    desc: 'Admissions, student enrollment, staff profiles, and role-based permissions organized by academic year.',
     color: 'text-blue-600',
     bg: 'bg-blue-50',
     border: 'border-blue-100',
   },
   {
-    icon: ClipboardList,
-    title: 'Exam & Results',
-    desc: 'Schedule exams, track completion status, and manage marks with an intuitive exam lifecycle workflow.',
-    color: 'text-violet-600',
-    bg: 'bg-violet-50',
-    border: 'border-violet-100',
-  },
-  {
     icon: Calendar,
-    title: 'Timetable Scheduling',
-    desc: 'Build and manage class timetables with drag-and-drop simplicity. Assign subjects, teachers, and time slots effortlessly.',
+    title: 'Daily Attendance Tracking',
+    desc: 'Fast bulk attendance marking for classrooms (Present, Absent, Leave) with monthly summaries and percentage calculations.',
     color: 'text-emerald-600',
     bg: 'bg-emerald-50',
     border: 'border-emerald-100',
   },
   {
-    icon: Layers,
-    title: 'Classroom Management',
-    desc: 'Create classrooms, manage capacity, track enrollment, and archive old classes — all from one unified dashboard.',
+    icon: ClipboardList,
+    title: 'Exams & Marksheet Grading',
+    desc: 'Schedule exams by subject, enter marks, calculate grades automatically, and generate student marksheets.',
+    color: 'text-violet-600',
+    bg: 'bg-violet-50',
+    border: 'border-violet-100',
+  },
+  {
+    icon: Clock,
+    title: 'Weekly Timetable Matrix',
+    desc: 'Configure weekly schedules with structured time slots, mapping classrooms, subjects, and assigned teachers.',
     color: 'text-amber-600',
     bg: 'bg-amber-50',
     border: 'border-amber-100',
   },
   {
-    icon: BookOpenCheck,
-    title: 'Assignments & Academics',
-    desc: 'Create assignments, set deadlines, and track academic progress. Keep students and teachers aligned on coursework.',
+    icon: Layers,
+    title: 'Classroom & Subject Allocations',
+    desc: 'Manage grades, sections, classroom capacity limits, and assign teachers to specific subjects and classrooms.',
     color: 'text-rose-600',
     bg: 'bg-rose-50',
     border: 'border-rose-100',
   },
   {
     icon: Activity,
-    title: 'Activity & Audit Logs',
-    desc: 'Full transparency with detailed activity logs. Track every action across the platform for accountability and compliance.',
+    title: 'Activity Logs & Risk Insights',
+    desc: 'Audit trail of administrative and teacher actions, paired with student academic and attendance risk score indicators.',
     color: 'text-cyan-600',
     bg: 'bg-cyan-50',
     border: 'border-cyan-100',
@@ -159,21 +159,21 @@ const STEPS = [
     num: '01',
     icon: Globe,
     title: 'Choose Your Portal',
-    desc: 'Select from Admin, Teacher, or Student portal based on your role in the institution.',
+    desc: 'Select from Admin, Teacher, or Student portal based on your assigned school role.',
     color: 'from-blue-500 to-indigo-500',
   },
   {
     num: '02',
     icon: Lock,
-    title: 'Secure Login',
-    desc: 'Access your personalized dashboard with secure, role-based authentication powered by JWT.',
+    title: 'Sign In Securely',
+    desc: 'Log in with your credentials through role-based JWT authentication.',
     color: 'from-indigo-500 to-violet-500',
   },
   {
     num: '03',
-    icon: Zap,
-    title: 'Manage Everything',
-    desc: 'From students and classrooms to exams and timetables — manage your entire school from one place.',
+    icon: BookOpenCheck,
+    title: 'Manage Operations',
+    desc: 'Record attendance, manage weekly timetables, enter exam marks, and monitor records smoothly.',
     color: 'from-violet-500 to-purple-500',
   },
 ];
@@ -185,7 +185,7 @@ const PORTALS = [
   {
     icon: ShieldCheck,
     title: 'Admin Portal',
-    desc: 'Complete control over students, teachers, classrooms, exams, timetables, subjects, and system settings.',
+    desc: 'Manage academic years, student admissions, teacher profiles, classroom allocations, subject assignments, timetables, exams, and audit logs.',
     color: 'text-blue-600',
     bg: 'bg-gradient-to-br from-blue-50 to-indigo-50',
     border: 'border-blue-200',
@@ -195,7 +195,7 @@ const PORTALS = [
   {
     icon: UserSquare,
     title: 'Teacher Portal',
-    desc: 'Manage your assigned classes, mark attendance, create assignments, enter exam marks, and track student progress.',
+    desc: 'View assigned classrooms, take daily student attendance, enter exam marks, manage grading sheets, and check your teaching schedule.',
     color: 'text-emerald-600',
     bg: 'bg-gradient-to-br from-emerald-50 to-teal-50',
     border: 'border-emerald-200',
@@ -205,7 +205,7 @@ const PORTALS = [
   {
     icon: GraduationCap,
     title: 'Student Portal',
-    desc: 'View your timetable, check exam schedules, access assignment details, and track your academic performance.',
+    desc: 'View your class timetable, check monthly attendance records, review exam results and marksheets, and monitor academic progress.',
     color: 'text-orange-600',
     bg: 'bg-gradient-to-br from-orange-50 to-amber-50',
     border: 'border-orange-200',
@@ -219,9 +219,9 @@ const PORTALS = [
 ═══════════════════════════════════════════════════════════════════ */
 const STATS = [
   { value: '3', suffix: '', label: 'Role Portals', icon: Users },
-  { value: '11', suffix: '+', label: 'Modules', icon: Layers },
-  { value: '100', suffix: '%', label: 'Real-time', icon: Activity },
-  { value: '24', suffix: '/7', label: 'Secure Access', icon: Lock },
+  { value: '10', suffix: '+', label: 'Core Modules', icon: Layers },
+  { value: '6', suffix: ' Days', label: 'Weekly Schedule', icon: Calendar },
+  { value: '1', suffix: '', label: 'Unified System', icon: School },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -302,7 +302,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 border border-blue-200/60 rounded-full text-sm font-medium text-blue-700 mb-8"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              School ERP System — Built for Modern Institutions
+              School ERP System — Dedicated Admin, Teacher & Student Portals
             </motion.div>
 
             <motion.h1
@@ -325,9 +325,9 @@ export default function LandingPage() {
               transition={{ duration: 0.7, delay: 0.25 }}
               className="mt-6 text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed"
             >
-              Manger is a unified ERP platform that brings administrators, teachers, and students
-              together. Simplify operations, track academics, and manage your entire institution
-              from a single dashboard.
+              Manger connects administrators, teachers, and students in one unified ERP platform.
+              Manage admissions, classroom allocations, daily attendance, class timetables, and exam
+              grading in a single structured system.
             </motion.p>
 
             <motion.div
@@ -535,17 +535,17 @@ export default function LandingPage() {
 
               <div className="relative z-10">
                 <h2 className="text-3xl md:text-4xl font-mono font-bold text-white tracking-tight">
-                  Ready to Transform Your School?
+                  Ready to Manage Your School Operations?
                 </h2>
                 <p className="mt-4 text-blue-100 text-lg max-w-xl mx-auto">
-                  Join the future of school management. Start using Manger today.
+                  Access your dedicated portal for admissions, attendance, timetables, and academic results.
                 </p>
                 <button
                   onClick={handleGetStarted}
                   disabled={isLoading}
                   className="mt-8 inline-flex items-center gap-2 px-8 py-3.5 bg-white text-indigo-700 text-base font-bold rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-lg hover:-translate-y-0.5 disabled:opacity-60"
                 >
-                  {isLoading ? 'Redirecting...' : 'Get Started Now'}
+                  {isLoading ? 'Redirecting...' : 'Select Your Portal'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
